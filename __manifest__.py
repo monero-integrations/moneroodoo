@@ -44,5 +44,7 @@
     ],
     'installable': True,
     'application': True,
-    'license': 'MIT License',
+    'classifiers': [
+        'License :: OSI Approved :: MIT License'
+    ]
 }
