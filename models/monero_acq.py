@@ -20,10 +20,8 @@ class MoneroPaymentAcquirer(models.Model):
         selection_add=[("monero", "Monero")], ondelete={"monero": "set default"}
     )
 
-    def _get_providers(self, context=None):
-        providers = super(MoneroPaymentAcquirer, self)._get_providers(
-            cr, uid, context=context
-        )
+    def _get_providers(self):
+        providers = super(MoneroPaymentAcquirer, self)._get_providers()
         providers.append(["monero", "Monero"])
         return providers
 
