@@ -1,3 +1,4 @@
+dist: Focal
 language: python
 cache:
   directories:
