@@ -2,9 +2,9 @@
    :target: https://mit-license.org/
    :alt: License: MIT
 
-==============
+================================
 Test Monero Payment Acquirer
-==============
+================================
 
 This addon is not meant to be used. It extends the Odoo Models
 in order to run automated tests on the payment acquirer.
@@ -43,6 +43,7 @@ Contributors
 ------------
 
 * t-900-a
+
 Maintainer
 ----------
 
