@@ -3,10 +3,6 @@
     "name": "moneroodoo",
     "summary": """
         Allows you to accept Monero as Payment within your Odoo Ecommerce shop""",
-    "description": """
-        Payment Acquierer built for Odoo 14; The private Monero cryptocurrency can be accepted.
-        Transactions can be configured to be almost instant and are low-cost
-    """,
     "author": "Monero Integrations",
     "website": "https://monerointegrations.com/",
     # Categories can be used to filter modules in modules listing
