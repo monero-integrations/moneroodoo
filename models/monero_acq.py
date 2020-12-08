@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import base64
 import logging
 
 from odoo import fields, models
@@ -17,7 +16,8 @@ class MoneroPaymentAcquirer(models.Model):
     _recent_transactions = []
 
     provider = fields.Selection(
-        selection_add=[("monero", "Monero")], ondelete={"monero": "set default"}
+        selection_add=[("monero", "Monero")],
+        ondelete={"monero": "set default"}
     )
 
     def _get_providers(self):
@@ -48,10 +48,14 @@ class MoneroPaymentAcquirer(models.Model):
         default="127.0.0.1",
     )
     monero_rpc_config_port = fields.Integer(
-        string="RPC Port", help="The port the Monero RPC is listening on", default=18082
+        string="RPC Port",
+        help="The port the Monero RPC is listening on",
+        default=18082
     )
     monero_rpc_config_path = fields.Char(
-        string="RPC Path", help="The path of the Monero RPC", default="/json_rpc"
+        string="RPC Path",
+        help="The path of the Monero RPC",
+        default="/json_rpc"
     )
     monero_rpc_config_user = fields.Char(
         string="RPC User",
