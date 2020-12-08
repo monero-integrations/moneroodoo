@@ -20,18 +20,22 @@ class MoneroSalesOrder(models.Model):
             else:
                 record.transaction = False
 
-    # < ------Fields for Model--------------------------------------------------------------------------------------- >
-
     is_payment_recorded = fields.Boolean(
         "Is the Payment Recorded in this ERP",
-        help="Cryptocurrency transactions need to be recorded and associated with this server for order handling.",
+        help="Cryptocurrency transactions need to be recorded and "
+             "associated with this server for order handling.",
         default=False,
     )
     transaction = fields.Many2one(
-        "payment.transaction", string="Transaction", compute=_get_transaction_id
+        "payment.transaction",
+        string="Transaction",
+        compute=_get_transaction_id
     )
 
-    # An order that is submitted, will have a sale order, an associated invoice, a payment, and a payment token
+    # An order that is submitted,
+    # will have a sale order,
+    # an associated invoice,
+    # a payment, and a payment token
     # check if the payment has been completed, if so mark the payment as done
     def salesorder_payment_sync(self):
         # retrieve all the cryptocurrency payment acquirers
