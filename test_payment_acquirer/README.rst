@@ -51,5 +51,3 @@ Maintainer
    :target: https://monerointegrations.com/
 
 This module is maintained by Monero Integrations.
-
-
