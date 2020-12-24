@@ -17,7 +17,6 @@
         <record id="payment_acquirer_monero_xmr" model="payment.acquirer">
             <field name="name">Monero XMR</field>
             <field name="provider">monero</field>
-            <field name="image_128" type="base64" file="moneroodoo/monero-rpc-odoo/static/src/img/monero-symbol-480.png"/>
             <field name="company_id" ref="base.main_company"/>
             <field name="view_template_id" ref="xmr_acquirer_button"/>
             <field name="registration_view_template_id" ref="xmr_payment_form"/>
