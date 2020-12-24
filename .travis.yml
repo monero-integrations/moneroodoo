@@ -19,11 +19,10 @@ addons:
       - python-lxml  # because pip installation is slow
 #     For wkhtmltopdf, see the env section below
 
-# Sometimes complicated website repos need Compass & SaSS:
-#before_install:
-#  - rvm install ruby --latest
-#  - gem install bootstrap-sass
-#  - gem install compass --pre
+before_script:
+  - sudo systemctl start postgresql
+  - psql -c 'create database openerp_test;' -U postgres
+  - psql -c "CREATE USER travis WITH PASSWORD 'travis';" -U postgres
 
 stages:
   - linting
