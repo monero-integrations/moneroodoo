@@ -4,7 +4,7 @@
         <template id="xmr_payment_form">
             <input type="hidden" name="data_set" data-create-route="/shop/payment/monero/submit"/>
 <!--            TODO https://taiga.getmonero.org/project/t-900-monero-x-odoo-integrations/task/9 -->
-            <input type="hidden" id="wallet_address" name="wallet_address" data-is-required="true" t-att-value="request.wallet_address"/>
+            <input type="hidden" id="wallet_address" name="wallet_address" data-is-required="true" t-att-value="'?request.wallet_address?'"/>
             <input type="hidden" name="type" t-att-value="'XMR'"/>
             <input type="hidden" name="acquirer_id" t-att-value="id"/>
             <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
@@ -17,6 +17,7 @@
         <record id="payment_acquirer_monero_xmr" model="payment.acquirer">
             <field name="name">Monero XMR</field>
             <field name="provider">monero</field>
+            <field name="image_128" type="base64" file="moneroodoo/monero-rpc-odoo/static/src/img/monero-symbol-480.png"/>
             <field name="company_id" ref="base.main_company"/>
             <field name="view_template_id" ref="xmr_acquirer_button"/>
             <field name="registration_view_template_id" ref="xmr_payment_form"/>
