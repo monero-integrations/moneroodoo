@@ -52,11 +52,6 @@ class MoneroPaymentAcquirer(models.Model):
         help="The port the Monero RPC is listening on",
         default=18082
     )
-    monero_rpc_config_path = fields.Char(
-        string="RPC Path",
-        help="The path of the Monero RPC",
-        default="/json_rpc"
-    )
     monero_rpc_config_user = fields.Char(
         string="RPC User",
         help="The user to authenticate with the Monero RPC",

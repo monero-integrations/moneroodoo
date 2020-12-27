@@ -38,7 +38,6 @@
             <field name="monero_rpc_config_protocol">http</field>
             <field name="monero_rpc_config_host">127.0.0.1</field>
             <field name="monero_rpc_config_port">18082</field>
-            <field name="monero_rpc_config_path">/json_rpc</field>
             <field name="monero_rpc_config_user"></field>
             <field name="monero_rpc_config_password"></field>
         </record>
