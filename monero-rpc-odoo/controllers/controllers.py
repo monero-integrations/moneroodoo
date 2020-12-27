@@ -48,8 +48,7 @@ class MoneroController(http.Controller):
             "active": True,
             "acquirer_id": payment_acquirer_id,
             # surrogate key for payment acquirer
-            "acquirer_ref": "cryptocurrency",
-            # this should be the tx hash?
+            "acquirer_ref": "payment.payment_acquirer_monero_rpc",
         }
 
         # TODO reuse token
