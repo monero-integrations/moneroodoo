@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from . import monero_acq, sales_order
+from . import monero_acq, sales_order, exceptions
 
 # TODO automate prices list for currencies,
 #  the lists would be updated at a chosen interval with the correct conversion

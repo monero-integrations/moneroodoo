@@ -34,11 +34,11 @@ class MoneroController(http.Controller):
 
         # TODO verify the wallet_address is a valid monero address
         # TODO verify that the specified address has the needed amount in it
-        source_wallet_address = kwargs.get("wallet_address")
+        wallet_sub_address = kwargs.get("wallet_address")
 
         # define payment token
         payment_token = {
-            "name": str(source_wallet_address).strip() + " - " + kwargs.get("type"),
+            "name": wallet_sub_address,
             "partner_id": payment_partner_id,
             # partner_id creating sales order
             "active": True,
