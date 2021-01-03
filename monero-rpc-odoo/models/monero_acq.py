@@ -60,6 +60,7 @@ class MoneroPaymentAcquirer(models.Model):
             _logger.info("Connection to Monero RPC successful")
             warning = {"title": title, "message": "Connection is successful"}
         else:
+            _logger.info(message)
             warning = {"title": title, "message": f"{message}"}
 
         return {"warning": warning}
