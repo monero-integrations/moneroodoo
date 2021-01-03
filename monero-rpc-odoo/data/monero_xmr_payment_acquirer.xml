@@ -14,7 +14,7 @@
 
         <template id="xmr_acquirer_button"></template>
 
-        <record id="payment.payment_acquirer_monero_rpc" model="payment.acquirer">
+        <record id="payment_acquirer_monero_rpc" model="payment.acquirer">
             <field name="name">Monero RPC</field>
             <field name="provider">monero-rpc</field>
             <field name="company_id" ref="base.main_company"/>
