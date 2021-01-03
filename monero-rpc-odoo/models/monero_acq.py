@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from odoo import api, fields, models
-
+from monero.backends.jsonrpc import JSONRPCWallet, Unauthorized
 from monero.wallet import Wallet
-from monero.backends.jsonrpc import JSONRPCWallet
-from monero.backends.jsonrpc import Unauthorized
+from odoo import api, fields, models
 from requests.exceptions import SSLError
 
 _logger = logging.getLogger(__name__)
@@ -20,18 +18,23 @@ class MoneroPaymentAcquirer(models.Model):
     _inherit = "payment.acquirer"
     _recent_transactions = []
 
-    @api.onchange('rpc_protocol', 'monero_rpc_config_host', 'monero_rpc_config_port',
-                  'monero_rpc_config_user', 'monero_rpc_config_password')
+    @api.onchange(
+        "rpc_protocol",
+        "monero_rpc_config_host",
+        "monero_rpc_config_port",
+        "monero_rpc_config_user",
+        "monero_rpc_config_password",
+    )
     def update_rpc_server(self):
         _logger.info("Trying new Monero RPC Server configuration")
         connection = False
         rpc_server: JSONRPCWallet = JSONRPCWallet(
-                protocol=self.rpc_protocol,
-                host=self.monero_rpc_config_host,
-                port=self.monero_rpc_config_port,
-                user=self.monero_rpc_config_user,
-                password=self.monero_rpc_config_password,
-            )
+            protocol=self.rpc_protocol,
+            host=self.monero_rpc_config_host,
+            port=self.monero_rpc_config_port,
+            user=self.monero_rpc_config_user,
+            password=self.monero_rpc_config_password,
+        )
         wallet = None
         try:
             wallet = Wallet(rpc_server)
@@ -42,7 +45,9 @@ class MoneroPaymentAcquirer(models.Model):
             message = "Monero RPC TLS Error"
             pass
         except Exception as e:
-            message = f"Monero RPC Connection Failed or other error: {e.__class__.__name__}"
+            message = (
+                f"Monero RPC Connection Failed or other error: {e.__class__.__name__}"
+            )
             pass
 
         if type(wallet) is Wallet:
@@ -50,24 +55,17 @@ class MoneroPaymentAcquirer(models.Model):
             self.env["ir.config_parameter"].set_param("monero_rpc_server", rpc_server)
             self.env["ir.config_parameter"].set_param("monero_wallet", wallet)
 
-        title = 'Monero RPC Connection Test'
+        title = "Monero RPC Connection Test"
         if connection:
-            _logger.info('Connection to Monero RPC successful')
-            warning = {
-                'title': title,
-                'message': 'Connection is successful'
-            }
+            _logger.info("Connection to Monero RPC successful")
+            warning = {"title": title, "message": "Connection is successful"}
         else:
-            warning = {
-                'title': title,
-                'message': f'{message}'
-            }
+            warning = {"title": title, "message": f"{message}"}
 
-        return {'warning': warning}
+        return {"warning": warning}
 
     provider = fields.Selection(
-        selection_add=[("monero-rpc", "Monero")],
-        ondelete={"monero-rpc": "set default"}
+        selection_add=[("monero-rpc", "Monero")], ondelete={"monero-rpc": "set default"}
     )
 
     is_cryptocurrency = fields.Boolean("Cryptocurrency?", default=False)
@@ -92,7 +90,7 @@ class MoneroPaymentAcquirer(models.Model):
     monero_rpc_config_port = fields.Char(
         string="RPC Port",
         help="The port the Monero RPC is listening on",
-        default="18082"
+        default="18082",
     )
     monero_rpc_config_user = fields.Char(
         string="RPC User",

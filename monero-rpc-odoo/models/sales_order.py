@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import logging
+
 from odoo import fields, models
 
 _logger = logging.getLogger(__name__)
@@ -11,7 +12,7 @@ class MoneroSalesOrder(models.Model):
     is_payment_recorded = fields.Boolean(
         "Is the Payment Recorded in this ERP",
         help="Cryptocurrency transactions need to be recorded and "
-             "associated with this server for order handling.",
+        "associated with this server for order handling.",
         default=False,
     )
 
