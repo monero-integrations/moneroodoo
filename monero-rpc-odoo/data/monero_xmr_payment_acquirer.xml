@@ -38,8 +38,8 @@
             <field name="rpc_protocol">http</field>
             <field name="monero_rpc_config_host">127.0.0.1</field>
             <field name="monero_rpc_config_port">18082</field>
-            <field name="monero_rpc_config_user"></field>
-            <field name="monero_rpc_config_password"></field>
+            <field name="monero_rpc_config_user">user</field>
+            <field name="monero_rpc_config_password">password</field>
         </record>
     </data>
 </odoo>

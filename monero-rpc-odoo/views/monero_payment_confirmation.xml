@@ -5,12 +5,12 @@
         <template id="monero_payment_confirmation" inherit_id="website_sale.payment_confirmation_status">
             <xpath expr="//*[@class='card-header']" position="inside">
 <!--           TODO     https://taiga.getmonero.org/project/t-900-monero-x-odoo-integrations/task/33-->
-                <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.address and payment_tx_id.state == 'pending'">
+                <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.payment_token_id.name and payment_tx_id.state == 'pending'">
                     <p>Payment should be made to
                         <ul>
                             <b>
                                 <li style="clear: both;">
-                                    Address: <t t-raw="payment_tx_id.address"/>
+                                    Address: <t t-raw="payment_tx_id.payment_token_id.name"/>
                                 </li>
                             </b>
                         </ul>
