@@ -17,6 +17,7 @@
         "payment",
         "base_setup",
         "web",
+        "monero",
     ],
     # always loaded
     "data": [
