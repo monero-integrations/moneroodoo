@@ -19,9 +19,9 @@
         "web",
     ],
     "external_dependencies": {
-      "python": [
-          "monero"
-      ]
+        "python": [
+            "monero"
+        ]
     },
     # always loaded
     "data": [
