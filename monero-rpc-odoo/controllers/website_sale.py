@@ -1,7 +1,6 @@
 import logging
 
 from odoo import http
-from odoo.addons.payment.models.payment_acquirer import PaymentAcquirer
 from odoo.addons.website_sale.controllers.main import WebsiteSale
 # from odoo.api.payment import acquirer
 from odoo.http import request
@@ -14,12 +13,15 @@ class MoneroWebsiteSale(WebsiteSale):
         super().__init__(**kwargs)
 
     @http.route(
-        ["/shop/payment"], type="http", auth="public", website=True, sitemap=False
+        ["/shop/payment"], type="http", auth="public",
+        website=True, sitemap=False
     )
     def payment(self, **post):
         """
-        OVERRIDING METHOD FROM odoo/addons/website_sale/controllers/main.py
-        Payment step. This page proposes several payment means based on available
+        OVERRIDING METHOD FROM
+        odoo/addons/website_sale/controllers/main.py
+        Payment step. This page proposes several
+        payment means based on available
         payment.acquirer. State at this point :
          - a draft sales order with lines; otherwise, clean context / session and
            back to the shop

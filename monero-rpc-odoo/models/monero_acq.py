@@ -38,10 +38,10 @@ class MoneroPaymentAcquirer(models.Model):
         wallet = None
         try:
             wallet = Wallet(rpc_server)
-        except Unauthorized as ue:
+        except Unauthorized:
             message = "Invalid Monero RPC user name or password"
             pass
-        except SSLError as se:
+        except SSLError:
             message = "Monero RPC TLS Error"
             pass
         except Exception as e:
