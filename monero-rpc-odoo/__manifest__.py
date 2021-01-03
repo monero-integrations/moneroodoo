@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    "name": "moneroodoo",
+    "name": "monero-rpc-odoo",
     "summary": "Allows you to accept Monero Payments",
     "author": "Monero Integrations",
     "website": "https://monerointegrations.com/",
