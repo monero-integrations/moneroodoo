@@ -17,8 +17,12 @@
         "payment",
         "base_setup",
         "web",
-        "monero",
     ],
+    "external_dependencies": {
+      "python": [
+          "monero"
+      ]
+    },
     # always loaded
     "data": [
         "views/scheduler.xml",
