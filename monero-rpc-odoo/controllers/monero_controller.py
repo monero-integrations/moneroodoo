@@ -95,6 +95,19 @@ class MoneroController(http.Controller):
         )
         request.env.user.sale_order_ids.sudo().update({"state": "sent"})
 
+        # Add payment token and sale order to transaction processing queue
+        # TODO adjust retry pattern depending on whether
+        #  the acquirer is configured to accept 0-conf transactions
+
+        # assumes 0-conf transactions
+        security_level = 0
+        sales_order.with_delay(channel="channel_monero_zeroconf_processing", max_retries=44).process_transaction(transaction, token, security_level)
+        # assume confirmation
+        # since the monero block time is 2 minutes
+        # we multiply that by the num_confirmations configured
+        # delay = num_confirmations * 2 * 60
+        # sales_order.with_delay(eta=delay, channel="channel_monero_secure_processing", max_retries=25).process_secure_transaction(transaction, token, security_level)
+
         if transaction:
             res = {
                 "result": True,
