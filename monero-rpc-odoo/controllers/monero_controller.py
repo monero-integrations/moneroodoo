@@ -47,7 +47,6 @@ class MoneroController(http.Controller):
             "acquirer_ref": "payment.payment_acquirer_monero_rpc",
         }
 
-        # TODO reuse token
         _logger.info(f"creating payment token " f"for sales_order: {sales_order.id}")
         token = request.env["payment.token"].sudo().create(payment_token)
         token_id = token.id

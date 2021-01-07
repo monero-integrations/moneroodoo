@@ -22,8 +22,6 @@ class MoneroSalesOrder(models.Model):
     )
 
     def process_transaction(self, transaction, token, security_level):
-        _logger.info('PROCESS ZEROCONF TRANSACTION')
-        _logger.info(a for a in dir(self) if not a.startswith('__'))
         try:
             wallet = transaction.acquirer_id.get_wallet()
         except MoneroPaymentAcquirerRPCUnauthorized:
@@ -69,19 +67,14 @@ class MoneroSalesOrder(models.Model):
 
         this_payment: IncomingPayment = incoming_payment.pop()
 
-        _logger.info(f"comparing amount: {this_payment.amount}, {transaction.amount}")
+        transaction_amount_rounded = float(round(this_payment.amount, self.currency_id.decimal_places))
 
-        _logger.info("transaction amount")
-        _logger.info(transaction.amount)
-        _logger.info(type(transaction.amount))
-        _logger.info("this_payment.amount")
-        _logger.info(this_payment.amount)
-        _logger.info(type(this_payment.amount))
-
-        transaction_amount_rounded = round(this_payment.amount, self.currency_id.decimal_places)
-
-        if transaction.amount == this_payment.amount:
+        if transaction.amount == transaction_amount_rounded:
             self.write({"is_payment_recorded": True,
                                "state": "sale"})
             transaction.write({"state": "done"})
             _logger.info(f"Monero payment recorded for sale order: {self.id}, associated with subaddress: {token.name}")
+
+            # set token to inactive
+            # we do not want to reuse subaddresses
+            token.write({"active": "false"})
