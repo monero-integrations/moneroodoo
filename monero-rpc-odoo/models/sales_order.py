@@ -71,25 +71,17 @@ class MoneroSalesOrder(models.Model):
 
         _logger.info(f"comparing amount: {this_payment.amount}, {transaction.amount}")
 
+        _logger.info("transaction amount")
+        _logger.info(transaction.amount)
+        _logger.info(type(transaction.amount))
+        _logger.info("this_payment.amount")
+        _logger.info(this_payment.amount)
+        _logger.info(type(this_payment.amount))
+
+        transaction_amount_rounded = round(this_payment.amount, self.currency_id.decimal_places)
+
         if transaction.amount == this_payment.amount:
             self.write({"is_payment_recorded": True,
                                "state": "sale"})
             transaction.write({"state": "done"})
             _logger.info(f"Monero payment recorded for sale order: {self.id}, associated with subaddress: {token.name}")
-
-
-    # An order that is submitted,
-    # will have a sale order,
-    # an associated invoice,
-    # a payment, and a payment token
-    # check if the payment has been completed, if so mark the payment as done
-    def salesorder_payment_sync(self):
-        # retrieve all the cryptocurrency payment acquirers
-        # TODO search 'is_enabled' '=' True?
-        cryptocurrency_payment_acquirers = self.env["payment.acquirer"].search(
-            [("is_cryptocurrency", "=", True)]
-        )
-
-        for acquirer in cryptocurrency_payment_acquirers:
-            pass
-            # TODO
