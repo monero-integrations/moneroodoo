@@ -8,7 +8,9 @@
             <field name="symbol">ɱ</field>
             <field name="position">after</field>
             <field name="active">True</field>
-            <field name="decimal_places">12</field>
+<!-- Monero has 12 decimal places, but Odoo only allows up to 6            -->
+            <field name="decimal_places">6</field>
+            <field name="rounding">0.000001</field>
         </record>
     </data>
 </odoo>
