@@ -8,6 +8,7 @@
             <field name="symbol">ɱ</field>
             <field name="position">after</field>
             <field name="active">True</field>
+            <field name="decimal_places">12</field>
         </record>
     </data>
 </odoo>
