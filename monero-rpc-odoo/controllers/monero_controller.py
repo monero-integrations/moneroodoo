@@ -94,18 +94,27 @@ class MoneroController(http.Controller):
         )
         request.env.user.sale_order_ids.sudo().update({"state": "sent"})
 
-        # Add payment token and sale order to transaction processing queue
-        # TODO adjust retry pattern depending on whether
-        #  the acquirer is configured to accept 0-conf transactions
+        payment_acquirer = (
+            request.env["payment.acquirer"].sudo().browse(payment_acquirer_id)
+        )
+        _logger.info(f"payment_acquirer_id{payment_acquirer}")
+        _logger.info(type(payment_acquirer.num_confirmation_required))
+        _logger.info(payment_acquirer.num_confirmation_required)
+        # set queue channel and max_retries settings
+        # for queue depending on num conf settings
+        num_conf_req = int(payment_acquirer.num_confirmation_required)
+        if num_conf_req == 0:
+            queue_channel = "monero_zeroconf_processing"
+            queue_max_retries = 44
+        else:
+            queue_channel = "monero_secure_processing"
+            queue_max_retries = num_conf_req * 25
 
-        # assumes 0-conf transactions
-        security_level = 0
-        sales_order.with_delay(channel="channel_monero_zeroconf_processing", max_retries=44).process_transaction(transaction, token, security_level)
-        # assume confirmation
-        # since the monero block time is 2 minutes
-        # we multiply that by the num_confirmations configured
-        # delay = num_confirmations * 2 * 60
-        # sales_order.with_delay(eta=delay, channel="channel_monero_secure_processing", max_retries=25).process_secure_transaction(transaction, token, security_level)
+        # Add payment token and sale order to transaction processing queue
+
+        sales_order.with_delay(
+            channel=queue_channel, max_retries=queue_max_retries
+        ).process_transaction(transaction, token, num_conf_req)
 
         if transaction:
             res = {
@@ -180,7 +189,6 @@ class MoneroController(http.Controller):
                 f"created transaction: {transaction.id} "
                 f"for payment token: {token.id}"
             )
-            _logger.info(f"token.acquirer_ref = {token.acquirer_ref}")
             if transaction.acquirer_id.is_cryptocurrency:
                 _logger.info(
                     f"Processing cryptocurrency "

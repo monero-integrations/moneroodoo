@@ -3,6 +3,7 @@ import logging
 from odoo import http
 from odoo.addons.website_sale.controllers.main import WebsiteSale
 from odoo.exceptions import ValidationError
+
 # from odoo.api.payment import acquirer
 from ..models.monero_acq import MoneroPaymentAcquirer
 from ..models.exceptions import MoneroPaymentAcquirerRPCUnauthorized
@@ -18,8 +19,7 @@ class MoneroWebsiteSale(WebsiteSale):
         super().__init__(**kwargs)
 
     @http.route(
-        ["/shop/payment"], type="http", auth="public",
-        website=True, sitemap=False
+        ["/shop/payment"], type="http", auth="public", website=True, sitemap=False
     )
     def payment(self, **post):
         """
@@ -48,24 +48,36 @@ class MoneroWebsiteSale(WebsiteSale):
                 try:
                     wallet = acquirer.get_wallet()
                 except MoneroPaymentAcquirerRPCUnauthorized:
-                    _logger.error("USER IMPACT: Monero Payment Acquirer "
-                                  "can't authenticate with RPC "
-                                  "due to user name or password")
-                    raise ValidationError("Current technical issues "
-                                          "prevent Monero from being accepted, "
-                                          "choose another payment method")
+                    _logger.error(
+                        "USER IMPACT: Monero Payment Acquirer "
+                        "can't authenticate with RPC "
+                        "due to user name or password"
+                    )
+                    raise ValidationError(
+                        "Current technical issues "
+                        "prevent Monero from being accepted, "
+                        "choose another payment method"
+                    )
                 except MoneroPaymentAcquirerRPCSSLError:
-                    _logger.error("USER IMPACT: Monero Payment Acquirer "
-                                  "experienced an SSL Error with RPC")
-                    raise ValidationError("Current technical issues "
-                                          "prevent Monero from being accepted, "
-                                          "choose another payment method")
+                    _logger.error(
+                        "USER IMPACT: Monero Payment Acquirer "
+                        "experienced an SSL Error with RPC"
+                    )
+                    raise ValidationError(
+                        "Current technical issues "
+                        "prevent Monero from being accepted, "
+                        "choose another payment method"
+                    )
                 except Exception as e:
-                    _logger.error(f"USER IMPACT: Monero Payment Acquirer "
-                                  f"experienced an Error with RPC: {e.__class__.__name__}")
-                    raise ValidationError("Current technical issues"
-                                          "prevent Monero from being accepted, "
-                                          "choose another payment method")
+                    _logger.error(
+                        f"USER IMPACT: Monero Payment Acquirer "
+                        f"experienced an Error with RPC: {e.__class__.__name__}"
+                    )
+                    raise ValidationError(
+                        "Current technical issues"
+                        "prevent Monero from being accepted, "
+                        "choose another payment method"
+                    )
 
                 request.wallet_address = wallet.new_address()[0]
                 _logger.info("new monero payment subaddress generated")

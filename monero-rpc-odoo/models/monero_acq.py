@@ -5,7 +5,10 @@ from monero.backends.jsonrpc import JSONRPCWallet, Unauthorized
 from monero.wallet import Wallet
 from odoo import api, fields, models
 from requests.exceptions import SSLError
-from .exceptions import MoneroPaymentAcquirerRPCUnauthorized, MoneroPaymentAcquirerRPCSSLError
+from .exceptions import (
+    MoneroPaymentAcquirerRPCUnauthorized,
+    MoneroPaymentAcquirerRPCSSLError,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -88,7 +91,11 @@ class MoneroPaymentAcquirer(models.Model):
     )
 
     rpc_protocol = fields.Selection(
-        [("http", "HTTP"), ("https", "HTTPS")],
+        [
+            ("http", "HTTP"),
+            ("https", "HTTPS"),
+        ],
+        "RPC Protocol",
         default="http",
     )
     monero_rpc_config_host = fields.Char(
@@ -110,4 +117,19 @@ class MoneroPaymentAcquirer(models.Model):
         string="RPC Password",
         help="The password to authenticate with the Monero RPC",
         default=None,
+    )
+    num_confirmation_required = fields.Selection(
+        [
+            ("0", "Low; 0-conf"),
+            ("1", "Low-Med; 1-conf"),
+            ("3", "Med; 3-conf"),
+            ("6", "Med-High; 6-conf"),
+            ("9", "High; 9-conf"),
+            ("12", "High-Extreme; 12-conf"),
+            ("15", "Extreme; 15-conf"),
+        ],
+        "Security Level (Confirmations)",
+        default="0",
+        help="Required Number of confirmations "
+             "before an order's transactions is set to done",
     )

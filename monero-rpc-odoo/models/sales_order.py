@@ -17,11 +17,11 @@ class MoneroSalesOrder(models.Model):
     is_payment_recorded = fields.Boolean(
         "Is the Payment Recorded in this ERP",
         help="Cryptocurrency transactions need to be recorded and "
-             "associated with this server for order handling.",
+        "associated with this server for order handling.",
         default=False,
     )
 
-    def process_transaction(self, transaction, token, security_level):
+    def process_transaction(self, transaction, token, num_confirmation_required):
         try:
             wallet = transaction.acquirer_id.get_wallet()
         except MoneroPaymentAcquirerRPCUnauthorized:
@@ -42,55 +42,77 @@ class MoneroSalesOrder(models.Model):
                 f"experienced an Error with RPC: {e.__class__.__name__}"
             )
 
-        if security_level == 0:
-            # get transaction in mem_pool
-            incoming_payment = wallet.incoming(local_address=token.name, unconfirmed=True, confirmed=True)
-        else:
-            incoming_payment = wallet.incoming(local_address=token.name)
+        incoming_payment = wallet.incoming(local_address=token.name, unconfirmed=True)
 
         if incoming_payment == []:
-            job = self.env["queue.job"].sudo().search([("uuid", "=", self.env.context["job_uuid"])])
+            job = (
+                self.env["queue.job"]
+                .sudo()
+                .search([("uuid", "=", self.env.context["job_uuid"])])
+            )
             _logger.info(job.max_retries)
             _logger.info(job.retry)
             if job.retry == job.max_retries - 1:
-                self.write({"is_payment_recorded": "false",
-                            "state": "cancel"})
+                self.write({"is_payment_recorded": "false", "state": "cancel"})
 
-                log_msg = f"PaymentAcquirer: {transaction.acquirer_id.provider} Subaddress: {token.name} "\
-                    "Status: No transaction found. Too much time has passed, customer has most likely not sent payment. "\
-                    f"Cancelling order # {self.id}. "\
+                log_msg = (
+                    f"PaymentAcquirer: {transaction.acquirer_id.provider} "
+                    f"Subaddress: {token.name} "
+                    "Status: No transaction found. Too much time has passed, "
+                    "customer has most likely not sent payment. "
+                    f"Cancelling order # {self.id}. "
                     f"Action: Nothing"
+                )
                 _logger.warning(log_msg)
                 return log_msg
             else:
-                exception_msg = f"PaymentAcquirer: {transaction.acquirer_id.provider} Subaddress: {token.name} "\
-                "Status: No transaction found. TX probably hasn't been added to a block or mem-pool yet. "\
-                "This is fine. "\
-                f"Another job will execute. Action: Nothing"
+                exception_msg = (
+                    f"PaymentAcquirer: {transaction.acquirer_id.provider} "
+                    f"Subaddress: {token.name} "
+                    "Status: No transaction found. "
+                    "TX probably hasn't been added to a block or mem-pool yet. "
+                    "This is fine. "
+                    f"Another job will execute. Action: Nothing"
+                )
                 raise NoTXFound(exception_msg)
-
 
         if len(incoming_payment) > 1:
             # TODO custom logic if the end user sends
             #  multiple transactions for one order
             raise MoneroAddressReuse(
-                f"PaymentAcquirer: {transaction.acquirer_id.provider} Subaddress: {token.name} "
-                "Status: Address reuse found. The end user most likely sent multiple transactions for a single order. "
+                f"PaymentAcquirer: {transaction.acquirer_id.provider} "
+                f"Subaddress: {token.name} "
+                "Status: Address reuse found. "
+                "The end user most likely sent "
+                "multiple transactions for a single order. "
                 "Action: Reconcile transactions manually"
             )
 
         if len(incoming_payment) == 1:
             this_payment: IncomingPayment = incoming_payment.pop()
 
-            transaction_amount_rounded = float(round(this_payment.amount, self.currency_id.decimal_places))
+            if this_payment.transaction.confirmations < num_confirmation_required:
+                raise NumConfirmationsNotMet(
+                    f"PaymentAcquirer: {transaction.acquirer_id.provider} "
+                    f"Subaddress: {token.name} "
+                    "Status: Waiting for more confirmations "
+                    f"Confirmations: current {this_payment.transaction.confirmations}, "
+                    f"expected {num_confirmation_required} "
+                    "Action: none"
+                )
+
+            transaction_amount_rounded = float(
+                round(this_payment.amount, self.currency_id.decimal_places)
+            )
 
             if transaction.amount == transaction_amount_rounded:
-
-                self.write({"is_payment_recorded": "true",
-                                   "state": "sale"})
-                transaction.write({"state": "done"})
-                _logger.info(f"Monero payment recorded for sale order: {self.id}, associated with subaddress: {token.name}")
-
                 # set token to inactive
                 # we do not want to reuse subaddresses
-                token.write({"active": "false"})
+                token.write({"active": False})
+
+                self.write({"is_payment_recorded": "true", "state": "sale"})
+                transaction.write({"state": "done"})
+                _logger.info(
+                    f"Monero payment recorded for sale order: {self.id}, "
+                    f"associated with subaddress: {token.name}"
+                )

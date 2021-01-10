@@ -35,6 +35,7 @@
             </field>
             <field name="is_cryptocurrency">True</field>
             <field name="type">xmr</field>
+            <field name="num_confirmation_required">0</field>
             <field name="rpc_protocol">http</field>
             <field name="monero_rpc_config_host">127.0.0.1</field>
             <field name="monero_rpc_config_port">18082</field>

@@ -14,6 +14,7 @@
                     <field name="monero_rpc_config_user" on_change="update_rpc_server()"/>
                     <field name="monero_rpc_config_password" on_change="update_rpc_server()"/>
                     <field name="type" readonly="1" string="Type" groups="base.group_no_one"/>
+                    <field name="num_confirmation_required"/>
                 </group>
             </xpath>
         </field>

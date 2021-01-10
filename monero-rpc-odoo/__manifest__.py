@@ -19,11 +19,7 @@
         "web",
         "queue_job",
     ],
-    "external_dependencies": {
-        "python": [
-            "monero"
-        ]
-    },
+    "external_dependencies": {"python": ["monero"]},
     # always loaded
     "data": [
         "views/monero_acquirer_form.xml",
