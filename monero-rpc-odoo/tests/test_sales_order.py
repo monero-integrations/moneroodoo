@@ -118,7 +118,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
         self.assertEqual(invoice.amount_total, 740.0,
                          'Sale: invoice total amount is wrong')
         self.assertTrue(self.sale_order.invoice_status == 'no',
-                        'Sale: SO status after invoicing should be "nothing to invoice"')
+                        'Sale: SO status after invoicing '
+                        'should be "nothing to invoice"')
         self.assertTrue(len(self.sale_order.invoice_ids) == 1,
                         'Sale: invoice is missing')
         self.sale_order.order_line._compute_product_updatable()
@@ -135,7 +136,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
         self.assertEqual(invoice2.amount_total, 500.0,
                          'Sale: second invoice total amount is wrong')
         self.assertTrue(self.sale_order.invoice_status == 'invoiced',
-                        'Sale: SO status after invoicing everything should be "invoiced"')
+                        'Sale: SO status after invoicing '
+                        'everything should be "invoiced"')
         self.assertTrue(len(self.sale_order.invoice_ids) == 2,
                         'Sale: invoice is missing')
 
@@ -153,7 +155,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
         # this other new wont have the updated value of the
         # origin record, but the one from the previous new
         # Here the problem lies in the use of `new` in `move = self_ctx.new(new_vals)`,
-        # and the fact this method is called multiple times in the same transaction test case.
+        # and the fact this method is called
+        # multiple times in the same transaction test case.
         # Here, we update `qty_delivered` on the origin record,
         # but the `new` records which are in cache with this order line
         # as origin are not updated, nor the fields that depends on it.
@@ -173,7 +176,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
                         '(including the upsel) should be "invoiced"')
 
     def test_sale_order_send_to_self(self):
-        # when sender(logged in user) is also present in recipients of the mail composer,
+        # when sender(logged in user) is
+        # also present in recipients of the mail composer,
         # user should receive mail.
         sale_order = self.env['sale.order'].with_user(
             self.company_data['default_user_salesman']).create({
@@ -186,9 +190,12 @@ class TestMoneroSalesOrder(TestSaleCommon):
                 }]]
             })
         email_ctx = sale_order.action_quotation_send().get('context', {})
-        # We need to prevent auto mail deletion, and so we copy the template and send the mail with
-        # added configuration in copied template. It will allow us to check whether mail is being
-        # sent to to author or not (in case author is present in 'Recipients' of composer).
+        # We need to prevent auto mail deletion,
+        # and so we copy the template and send the mail with
+        # added configuration in copied template.
+        # It will allow us to check whether mail is being
+        # sent to to author or not (in case author is
+        # present in 'Recipients' of composer).
         mail_template = self.env['mail.template'].browse(
             email_ctx.get('default_template_id')).copy({'auto_delete': False})
         # send the mail with same user as customer
@@ -205,7 +212,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
                          'recipients thanks to "partner_to" field set on template')
         self.assertEqual(mail_message.partner_ids,
                          mail_message.sudo().mail_ids.recipient_ids,
-                         'Sale: author should receive mail due to presence in composer recipients')
+                         'Sale: author should receive '
+                         'mail due to presence in composer recipients')
 
     def test_sale_sequence(self):
         self.env['ir.sequence'].search([
@@ -300,7 +308,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
         inv.action_post()
         sol = so.order_line.filtered(lambda l: l.product_id == serv_cost)
         self.assertTrue(sol,
-                        'Sale: cost invoicing does not add lines when confirming vendor invoice')
+                        'Sale: cost invoicing does not add '
+                        'lines when confirming vendor invoice')
         self.assertEqual(
             (sol.price_unit, sol.qty_delivered, sol.product_uom_qty, sol.qty_invoiced),
             (160, 2, 0, 0), 'Sale: line is wrong after confirming vendor invoice')
@@ -374,8 +383,10 @@ class TestMoneroSalesOrder(TestSaleCommon):
         so_1.action_confirm()
         # i'm not interested in groups/acls, but in the multi-company flow only
         # the sudo is there for that and does not impact the invoice that gets created
-        # the goal here is to invoice in company 1 (because the order is in company 1) while being
-        # 'mainly' in company 2 (through the context), the invoice should be in company 1
+        # the goal here is to invoice in company 1
+        # (because the order is in company 1) while being
+        # 'mainly' in company 2 (through the context),
+        # the invoice should be in company 1
         inv = so_1.sudo() \
             .with_context(allowed_company_ids=(
                 self.company_data['company'] + self.company_data_2['company']).ids) \
@@ -400,7 +411,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
         orders.action_confirm()
         # Create the invoicing wizard and invoice all of them at once
         wiz = self.env['sale.advance.payment.inv'].with_context(active_ids=orders.ids,
-                                                                open_invoices=True).create(
+                                                                open_invoices=True). \
+            create(
             {})
         res = wiz.create_invoices()
         # Check that exactly 2 invoices are generated
@@ -418,7 +430,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
         main_company = self.env.ref('base.main_company')
         main_curr = main_company.currency_id
         other_curr = (self.env.ref('base.USD') + self.env.ref('base.EUR')) - main_curr
-        # main_company.currency_id = other_curr # product.currency_id when no company_id set
+        # main_company.currency_id =
+        # other_curr # product.currency_id when no company_id set
         other_company = self.env["res.company"].create({
             "name": "Test",
             "currency_id": other_curr.id
@@ -560,7 +573,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
                          'Should assign to team of sales person')
 
     def test_assign_sales_team_from_partner_team(self):
-        """If no team set on the customer's sales person, fall back to the customer's team"""
+        """If no team set on the customer's sales person,
+        fall back to the customer's team"""
         partner = self.env['res.partner'].create({
             'name': 'Customer of User Not In Team',
             'user_id': self.user_not_in_team.id,
@@ -574,7 +588,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
                          'Should assign to team of partner')
 
     def test_assign_sales_team_when_changing_user(self):
-        """When we assign a sales person, change the team on the sales order to their team"""
+        """When we assign a sales person,
+        change the team on the sales order to their team"""
         sale_order = self.env['sale.order'].create({
             'user_id': self.user_not_in_team.id,
             'partner_id': self.partner_a.id,
@@ -586,7 +601,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
                          'Should assign to team of sales person')
 
     def test_keep_sales_team_when_changing_user_with_no_team(self):
-        """When we assign a sales person that has no team, do not reset the team to default"""
+        """When we assign a sales person that has no team,
+        do not reset the team to default"""
         sale_order = self.env['sale.order'].create({
             'partner_id': self.partner_a.id,
             'team_id': self.crm_team1.id
