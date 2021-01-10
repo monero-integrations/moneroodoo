@@ -6,7 +6,7 @@ from odoo.tools import float_compare
 
 from odoo.addons.sale.tests.common import TestSaleCommon
 
-from ..models.sales_order import MoneroSalesOrder
+# from ..models.sales_order import MoneroSalesOrder
 
 
 @tagged('post_install', '-at_install')
@@ -182,14 +182,14 @@ class TestMoneroSalesOrder(TestSaleCommon):
         # user should receive mail.
         sale_order = self.env['sale.order'].with_user(
             self.company_data['default_user_salesman']).create({
-            'partner_id': self.company_data['default_user_salesman'].partner_id.id,
-            'order_line': [[0, 0, {
-                'name': self.company_data['product_order_no'].name,
-                'product_id': self.company_data['product_order_no'].id,
-                'product_uom_qty': 1,
-                'price_unit': self.company_data['product_order_no'].list_price,
-            }]]
-        })
+                'partner_id': self.company_data['default_user_salesman'].partner_id.id,
+                'order_line': [[0, 0, {
+                    'name': self.company_data['product_order_no'].name,
+                    'product_id': self.company_data['product_order_no'].id,
+                    'product_uom_qty': 1,
+                    'price_unit': self.company_data['product_order_no'].list_price,
+                }]]
+            })
         email_ctx = sale_order.action_quotation_send().get('context', {})
         # We need to prevent auto mail deletion,
         # and so we copy the template and send the mail with
@@ -292,8 +292,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
         so.action_confirm()
         so._create_analytic_account()
 
-        inv = self.env['account.move'].with_context(
-            default_move_type='in_invoice').create({
+        account_move = {
             'partner_id': self.partner_a.id,
             'invoice_line_ids': [
                 (0, 0, {
@@ -305,7 +304,10 @@ class TestMoneroSalesOrder(TestSaleCommon):
                     'analytic_account_id': so.analytic_account_id.id,
                 }),
             ],
-        })
+        }
+
+        inv = self.env['account.move'].with_context(
+            default_move_type='in_invoice').create(account_move)
         inv.action_post()
         sol = so.order_line.filtered(lambda l: l.product_id == serv_cost)
         self.assertTrue(sol,
@@ -363,16 +365,16 @@ class TestMoneroSalesOrder(TestSaleCommon):
             'invoice_policy': 'order',
             'taxes_id': [(6, False, (
                     self.company_data['default_tax_sale'] + self.company_data_2[
-                'default_tax_sale']).ids)],
-            'property_account_income_id': self.company_data[
-                'default_account_revenue'].id,
+                        'default_tax_sale']).ids)],
+                    'property_account_income_id': self.company_data[
+                        'default_account_revenue'].id,
         })
 
         so_1 = self.env['sale.order'].with_user(
             self.company_data['default_user_salesman']).create({
-            'partner_id': self.env['res.partner'].create({'name': 'A partner'}).id,
-            'company_id': self.company_data['company'].id,
-        })
+                'partner_id': self.env['res.partner'].create({'name': 'A partner'}).id,
+                'company_id': self.company_data['company'].id,
+            })
         so_1.write({
             'order_line': [(0, False,
                             {'product_id': product_shared.product_variant_id.id,
@@ -502,19 +504,19 @@ class TestMoneroSalesOrder(TestSaleCommon):
         sales_order = \
             product_1_ctxt.with_context(mail_notrack=True, mail_create_nolog=True).env[
                 "sale.order"].create({
-                "partner_id": self.env.user.partner_id.id,
-                "pricelist_id": pricelist.id,
-                "order_line": [
-                    (0, 0, {
-                        "product_id": product_1.id,
-                        "product_uom_qty": 1.0
-                    }),
-                    (0, 0, {
-                        "product_id": product_2.id,
-                        "product_uom_qty": 1.0
-                    })
-                ]
-            })
+                    "partner_id": self.env.user.partner_id.id,
+                    "pricelist_id": pricelist.id,
+                    "order_line": [
+                        (0, 0, {
+                            "product_id": product_1.id,
+                            "product_uom_qty": 1.0
+                        }),
+                        (0, 0, {
+                            "product_id": product_2.id,
+                            "product_uom_qty": 1.0
+                        })
+                    ]
+                })
         for line in sales_order.order_line:
             # Create values autofill does not compute discount.
             line._onchange_discount()
@@ -535,20 +537,20 @@ class TestMoneroSalesOrder(TestSaleCommon):
             mail_notrack=True,
             mail_create_nolog=True).env[
             "sale.order"].create({
-            "partner_id": self.env.user.partner_id.id,
-            "pricelist_id": pricelist.id,
-            "order_line": [
-                # Verify discount is considered in create hack
-                (0, 0, {
-                    "product_id": product_1.id,
-                    "product_uom_qty": 1.0
-                }),
-                (0, 0, {
-                    "product_id": product_2.id,
-                    "product_uom_qty": 1.0
-                })
-            ]
-        })
+                "partner_id": self.env.user.partner_id.id,
+                "pricelist_id": pricelist.id,
+                "order_line": [
+                    # Verify discount is considered in create hack
+                    (0, 0, {
+                        "product_id": product_1.id,
+                        "product_uom_qty": 1.0
+                    }),
+                    (0, 0, {
+                        "product_id": product_2.id,
+                        "product_uom_qty": 1.0
+                    })
+                ]
+            })
         for line in sales_order.order_line:
             line._onchange_discount()
 
