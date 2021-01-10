@@ -90,15 +90,19 @@ class MoneroSalesOrder(models.Model):
         if len(incoming_payment) == 1:
             this_payment = incoming_payment.pop()
 
-            if this_payment.transaction.confirmations < num_confirmation_required:
-                raise NumConfirmationsNotMet(
-                    f"PaymentAcquirer: {transaction.acquirer_id.provider} "
-                    f"Subaddress: {token.name} "
-                    "Status: Waiting for more confirmations "
-                    f"Confirmations: current {this_payment.transaction.confirmations}, "
-                    f"expected {num_confirmation_required} "
-                    "Action: none"
-                )
+            conf_err_msg = f"PaymentAcquirer: {transaction.acquirer_id.provider} " \
+                f"Subaddress: {token.name} " \
+                "Status: Waiting for more confirmations " \
+                f"Confirmations: current {this_payment.transaction.confirmations}, " \
+                f"expected {num_confirmation_required} " \
+                "Action: none"
+
+            if this_payment.transaction.confirmations is None:
+                if num_confirmation_required > 0:
+                    raise NumConfirmationsNotMet(conf_err_msg)
+            else:
+                if this_payment.transaction.confirmations < num_confirmation_required:
+                    raise NumConfirmationsNotMet(conf_err_msg)
 
             transaction_amount_rounded = float(
                 round(this_payment.amount, self.currency_id.decimal_places)
