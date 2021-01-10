@@ -3,7 +3,6 @@ import logging
 
 from odoo import fields, models
 
-from monero.transaction import IncomingPayment
 from ..models.exceptions import NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse
 from ..models.exceptions import MoneroPaymentAcquirerRPCUnauthorized
 from ..models.exceptions import MoneroPaymentAcquirerRPCSSLError
@@ -89,7 +88,7 @@ class MoneroSalesOrder(models.Model):
             )
 
         if len(incoming_payment) == 1:
-            this_payment: IncomingPayment = incoming_payment.pop()
+            this_payment = incoming_payment.pop()
 
             if this_payment.transaction.confirmations < num_confirmation_required:
                 raise NumConfirmationsNotMet(

@@ -4,11 +4,8 @@ from odoo import http
 from odoo.addons.website_sale.controllers.main import WebsiteSale
 from odoo.exceptions import ValidationError
 
-# from odoo.api.payment import acquirer
-from ..models.monero_acq import MoneroPaymentAcquirer
 from ..models.exceptions import MoneroPaymentAcquirerRPCUnauthorized
 from ..models.exceptions import MoneroPaymentAcquirerRPCSSLError
-from monero.wallet import Wallet
 from odoo.http import request
 
 _logger = logging.getLogger(__name__)
