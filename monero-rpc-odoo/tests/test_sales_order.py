@@ -16,7 +16,9 @@ class TestMoneroSalesOrder(TestSaleCommon):
     def setUpClass(cls, chart_template_ref=None):
         super().setUpClass(chart_template_ref=chart_template_ref)
 
-        MoneroSalesOrder = cls.env['sale.order'].with_context(tracking_disable=True)
+        # MoneroSalesOrder = cls.env['sale.order'].with_context(tracking_disable=True)
+        sales_order = MoneroSalesOrder.with_context(tracking_disable=True)
+
 
         # set up users
         cls.crm_team0 = cls.env['crm.team'].create({
@@ -40,7 +42,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
         })
 
         # create a generic Sale Order with all classical products and empty pricelist
-        cls.sale_order = MoneroSalesOrder.create({
+        cls.sale_order = sales_order.create({
             'partner_id': cls.partner_a.id,
             'partner_invoice_id': cls.partner_a.id,
             'partner_shipping_id': cls.partner_a.id,
