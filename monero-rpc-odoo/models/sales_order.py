@@ -90,12 +90,14 @@ class MoneroSalesOrder(models.Model):
         if len(incoming_payment) == 1:
             this_payment = incoming_payment.pop()
 
-            conf_err_msg = f"PaymentAcquirer: {transaction.acquirer_id.provider} " \
-                f"Subaddress: {token.name} " \
-                "Status: Waiting for more confirmations " \
-                f"Confirmations: current {this_payment.transaction.confirmations}, " \
-                f"expected {num_confirmation_required} " \
+            conf_err_msg = (
+                f"PaymentAcquirer: {transaction.acquirer_id.provider} "
+                f"Subaddress: {token.name} "
+                "Status: Waiting for more confirmations "
+                f"Confirmations: current {this_payment.transaction.confirmations}, "
+                f"expected {num_confirmation_required} "
                 "Action: none"
+            )
 
             if this_payment.transaction.confirmations is None:
                 if num_confirmation_required > 0:

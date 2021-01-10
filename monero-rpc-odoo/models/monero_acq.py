@@ -131,5 +131,5 @@ class MoneroPaymentAcquirer(models.Model):
         "Security Level (Confirmations)",
         default="0",
         help="Required Number of confirmations "
-             "before an order's transactions is set to done",
+        "before an order's transactions is set to done",
     )
