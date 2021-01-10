@@ -16,7 +16,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
     def setUpClass(cls, chart_template_ref=None):
         super().setUpClass(chart_template_ref=chart_template_ref)
 
-        # MoneroSalesOrder = cls.env['sale.order'].with_context(tracking_disable=True)
+        MoneroSalesOrder = cls.env['sale.order'].with_context(tracking_disable=True)
 
         # set up users
         cls.crm_team0 = cls.env['crm.team'].create({
