@@ -53,7 +53,9 @@ class MoneroSalesOrder(models.Model):
             _logger.info(job.retry)
             if job.retry == job.max_retries - 1:
                 self.write({"is_payment_recorded": "false", "state": "cancel"})
-
+                # setting token to inactive, if another order is submitted it will be
+                # confusing for the user to see the subaddress as a payment acquirer
+                token.write({"active": False})
                 log_msg = (
                     f"PaymentAcquirer: {transaction.acquirer_id.provider} "
                     f"Subaddress: {token.name} "
