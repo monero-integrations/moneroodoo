@@ -13,6 +13,13 @@ _logger = logging.getLogger(__name__)
 class MoneroSalesOrder(models.Model):
     _inherit = "sale.order"
 
+    is_payment_recorded = fields.Boolean(
+        "Is the Payment Recorded in this ERP",
+        help="Cryptocurrency transactions need to be recorded and "
+        "associated with this server for order handling.",
+        default=False,
+    )
+
     def process_transaction(self, transaction, token, num_confirmation_required):
         try:
             wallet = transaction.acquirer_id.get_wallet()
@@ -45,8 +52,10 @@ class MoneroSalesOrder(models.Model):
             _logger.info(job.max_retries)
             _logger.info(job.retry)
             if job.retry == job.max_retries - 1:
-                self.write({"state": "cancel",
-                            "is_expired": "true"})
+                self.write({"is_payment_recorded": "false", "state": "cancel"})
+                # setting token to inactive, if another order is submitted it will be
+                # confusing for the user to see the subaddress as a payment acquirer
+                token.write({"active": False})
                 log_msg = (
                     f"PaymentAcquirer: {transaction.acquirer_id.provider} "
                     f"Subaddress: {token.name} "
@@ -71,8 +80,6 @@ class MoneroSalesOrder(models.Model):
         if len(incoming_payment) > 1:
             # TODO custom logic if the end user sends
             #  multiple transactions for one order
-            # this would involve creating another "payment.transaction"
-            # and notifying both the buyer and seller
             raise MoneroAddressReuse(
                 f"PaymentAcquirer: {transaction.acquirer_id.provider} "
                 f"Subaddress: {token.name} "
@@ -93,10 +100,7 @@ class MoneroSalesOrder(models.Model):
                 f"expected {num_confirmation_required} "
                 "Action: none"
             )
-            # TODO set transaction state to "authorized" once a monero transaction is
-            #  found within the transaction pool
-            # note that when the NumConfirmationsNotMe is raised any database commits
-            # are lost
+
             if this_payment.transaction.confirmations is None:
                 if num_confirmation_required > 0:
                     raise NumConfirmationsNotMet(conf_err_msg)
@@ -109,8 +113,12 @@ class MoneroSalesOrder(models.Model):
             )
 
             if transaction.amount == transaction_amount_rounded:
-                self.write({"state": "sale"})
-                transaction.write({"state": "done", "is_processed": "true"})
+                # set token to inactive
+                # we do not want to reuse subaddresses
+                token.write({"active": False})
+
+                self.write({"is_payment_recorded": "true", "state": "sale"})
+                transaction.write({"state": "done"})
                 _logger.info(
                     f"Monero payment recorded for sale order: {self.id}, "
                     f"associated with subaddress: {token.name}"
