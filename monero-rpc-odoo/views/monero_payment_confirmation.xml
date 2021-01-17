@@ -53,7 +53,6 @@
                         </ul>
                     </p>
                 </t>
-                <!--    TODO monero: uri https://taiga.getmonero.org/project/t-900-monero-x-odoo-integrations/us/32         -->
                 <!--    TODO add qrcode: accept the payment via their mobile wallet https://taiga.getmonero.org/project/t-900-monero-x-odoo-integrations/us/31        -->
             </xpath>
         </template>
