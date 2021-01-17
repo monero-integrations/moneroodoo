@@ -71,7 +71,7 @@ class MoneroWebsiteSale(WebsiteSale):
                         f"experienced an Error with RPC: {e.__class__.__name__}"
                     )
                     raise ValidationError(
-                        "Current technical issues"
+                        "Current technical issues "
                         "prevent Monero from being accepted, "
                         "choose another payment method"
                     )

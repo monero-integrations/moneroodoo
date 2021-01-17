@@ -25,6 +25,7 @@
                         console.log(e);
                     });
                 </script>
+
                 <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.payment_token_id.name and payment_tx_id.state == 'pending'">
                     <p>Payment should be made to the address below:
                         <ul>
