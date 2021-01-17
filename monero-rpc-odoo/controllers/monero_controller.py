@@ -97,9 +97,6 @@ class MoneroController(http.Controller):
         payment_acquirer = (
             request.env["payment.acquirer"].sudo().browse(payment_acquirer_id)
         )
-        _logger.info(f"payment_acquirer_id{payment_acquirer}")
-        _logger.info(type(payment_acquirer.num_confirmation_required))
-        _logger.info(payment_acquirer.num_confirmation_required)
         # set queue channel and max_retries settings
         # for queue depending on num conf settings
         num_conf_req = int(payment_acquirer.num_confirmation_required)
