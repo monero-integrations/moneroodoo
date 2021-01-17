@@ -14,7 +14,8 @@
                     var clipboard = new ClipboardJS(btn);
 
                     clipboard.on('success', function(e) {
-                        $('.copy_btn').tooltip('hide').attr('data-original-title', 'Copied destination address!').tooltip('show');
+                        $('.copy_btn').tooltip('hide').attr('data-original-title',
+                    'Copied payment address!').tooltip('show');
                         setTimeout(function() {
                             $('.copy_btn').tooltip('hide');
                         }, 1000);
@@ -32,9 +33,20 @@
                                     <button id="copy_address_button" class="copy_btn"
                                             name="copy_address_button"
                                             t-att-data-clipboard-text="payment_tx_id.payment_token_id.name"
-                                            style="font-size:20px">
+                                            style="font-size:20px"
+                                            title="Copy payment address">
                                         <i class="fa fa-clipboard"></i>
                                     </button>
+                                    <a
+                                            t-att-href="'monero:%s?tx_amount=%s' % (payment_tx_id.payment_token_id.name, payment_tx_id.amount)" target="_blank">
+                                        <button id="open_wallet" class="open_btn"
+                                            name="open_wallet"
+                                            style="font-size:20px"
+                                            title="Open with Monero Wallet">
+                                            <i class="fa fa-external-link"></i>
+                                        </button>
+                                    </a>
+
                                     <t t-raw="payment_tx_id.payment_token_id.name"/>
                                 </li>
                             </b>
