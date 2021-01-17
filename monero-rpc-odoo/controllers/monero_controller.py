@@ -41,7 +41,8 @@ class MoneroController(http.Controller):
             "name": wallet_sub_address,
             "partner_id": payment_partner_id,
             # partner_id creating sales order
-            "active": True,
+            "active": False,
+            # token shoudn't be active, the subaddress shouldn't be reused
             "acquirer_id": payment_acquirer_id,
             # surrogate key for payment acquirer
             "acquirer_ref": "payment.payment_acquirer_monero_rpc",
