@@ -38,7 +38,7 @@
                                         <i class="fa fa-clipboard"></i>
                                     </button>
                                     <a
-                                            t-att-href="'monero:%s?tx_amount=%s' % (payment_tx_id.payment_token_id.name, payment_tx_id.amount)" target="_blank">
+                                            t-att-href="'monero:%s?tx_amount=%s&amp;tx_description=%s&amp;recipient_name=%s' % (payment_tx_id.payment_token_id.name, payment_tx_id.amount, order.name, order.company_id.name)" target="_blank">
                                         <button id="open_wallet" class="open_btn"
                                             name="open_wallet"
                                             style="font-size:20px"
@@ -46,7 +46,11 @@
                                             <i class="fa fa-external-link"></i>
                                         </button>
                                     </a>
-
+                                    <button id="show_qr" class="show_qr"
+                                            name="show_qr" style="font-size:20px"
+                                            title="Show QR Code">
+                                        <i class="fa fa-qrcode"></i>
+                                    </button>
                                     <t t-raw="payment_tx_id.payment_token_id.name"/>
                                 </li>
                             </b>
