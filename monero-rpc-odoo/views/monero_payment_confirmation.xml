@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
-
-        <template id="monero_payment_confirmation"
-                  inherit_id="website_sale.payment_confirmation_status">
-            <xpath expr="//*[@class='card-header']" position="inside">
+        <template id="monero_confirmation"
+                  inherit_id="website_sale.confirmation">
+            <xpath expr="." position="inside">
                 <script>
                     var btn = document.getElementById('copy_address_button');
                     $('.copy_btn').tooltip({
@@ -25,7 +24,42 @@
                         console.log(e);
                     });
                 </script>
+<!--                <script>$(document).ready(function() { $.getScript("/monero-rpc-odoo/static/src/js/jquery.qrcode.min.js") });</script>-->
+                <script>
+                    var show_qr = false;
+                </script>
+                <script>function enable_qr(uri)
+                    {
+                    if (show_qr === false) {
+                        show_qr = uri
+                        jQuery('#qrcode_monero_payment').qrcode(uri);
+                        document.getElementById("qr_div1").style.display = "block";
+                        document.getElementById("qr_div2").style.display = "block";
+                    } else if (show_qr === 0) {
+                        document.getElementById("qr_div1").style.display = "block";
+                        document.getElementById("qr_div2").style.display = "block";
+                    } else {
+                        show_qr = 0
+                        document.getElementById("qr_div1").style.display = "none";
+                        document.getElementById("qr_div2").style.display = "none";
+                    }
+                    }
+                </script>
+            </xpath>
+            <xpath expr="//*[@class='card mt-3']" position="before">
+                <div id="qr_div1" class="card mt-3" style="display:none">
+                    <div id="qr_div2" class="card-body" style="display:none">
+                        <div id="qrcode_monero_payment"></div>
+                    </div>
+                </div>
+            </xpath>
+        </template>
 
+
+        <template id="monero_payment_confirmation"
+                  inherit_id="website_sale.payment_confirmation_status">
+            <xpath expr="//*[@class='card-header']" position="inside">
+                <script type="text/javascript" src="/monero-rpc-odoo/static/src/js/jquery.qrcode.min.js"></script>
                 <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.payment_token_id.name and payment_tx_id.state == 'pending'">
                     <p>Payment should be made to the address below:
                         <ul>
@@ -49,16 +83,18 @@
                                     </a>
                                     <button id="show_qr" class="show_qr"
                                             name="show_qr" style="font-size:20px"
-                                            title="Show QR Code">
+                                            title="Show QR Code"
+                                            t-attf-onclick="enable_qr('{{payment_tx_id.payment_token_id.name}}')">
                                         <i class="fa fa-qrcode"></i>
                                     </button>
-                                    <t t-raw="payment_tx_id.payment_token_id.name"/>
+                                    <div id="monero_payment_address">
+                                       <t t-raw="payment_tx_id.payment_token_id.name"/>
+                                    </div>
                                 </li>
                             </b>
                         </ul>
                     </p>
                 </t>
-                <!--    TODO add qrcode: accept the payment via their mobile wallet https://taiga.getmonero.org/project/t-900-monero-x-odoo-integrations/us/31        -->
             </xpath>
         </template>
 
