@@ -47,7 +47,6 @@ class TestMoneroSalesOrder(TestSaleCommon):
                 "partner_invoice_id": cls.partner_a.id,
                 "partner_shipping_id": cls.partner_a.id,
                 "pricelist_id": cls.company_data["default_pricelist"].id,
-                "is_payment_recorded": False,
             }
         )
         cls.sol_product_order = cls.env["sale.order.line"].create(
