@@ -7,11 +7,6 @@ Monero Odoo
 
 Allows you to accept Monero as Payment within your Odoo Ecommerce shop
 
-**Table of contents**
-
-.. contents::
-   :local:
-
 Configuration
 =============
 
@@ -66,8 +61,7 @@ Contributors
 Maintainers
 
 This module is maintained by Monero-Integrations.
-
-![](https://monerointegrations.com/img/monero-integrations-logo.png)
+![](/monero-rpc-odoo/static/src/img/monero-integrations.png)
 
 
 This module is part of the [monero-integrations/moneroodoo](https://github.com/monero-integrations/moneroodoo) project on GitHub.
