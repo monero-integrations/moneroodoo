@@ -27,6 +27,14 @@ class MoneroController(http.Controller):
             return False
 
         assert sales_order.partner_id.id != request.website.partner_id.id
+        # at this time the sales order has to be in xmr
+        # the user cannot use a fiat pricelist when checking out
+        # this won't be fixed until after a job is added to automatically
+        # update res.currency.rate
+        currency = request.env["res.currency"].sudo().browse(sales_order.currency_id.id)
+        if currency.name != "XMR":
+            raise Exception("This pricelist is not supported, go back and select the "
+                            "Monero Pricelist")
 
         payment_acquirer_id = int(kwargs.get("acquirer_id"))
 
