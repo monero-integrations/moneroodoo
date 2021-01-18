@@ -3,6 +3,7 @@ import logging
 from odoo import http
 from odoo.addons.payment.controllers.portal import PaymentProcessing
 from odoo.http import request
+from monero.address import SubAddress
 
 _logger = logging.getLogger(__name__)
 
@@ -40,13 +41,11 @@ class MoneroController(http.Controller):
 
         payment_partner_id = int(kwargs.get("partner_id"))
 
-        # TODO verify the wallet_address is a valid monero address
-        # TODO verify that the specified address has the needed amount in it
-        wallet_sub_address = kwargs.get("wallet_address")
+        wallet_sub_address = SubAddress(kwargs.get("wallet_address"))
 
         # define payment token
         payment_token = {
-            "name": wallet_sub_address,
+            "name": wallet_sub_address.__repr__(),
             "partner_id": payment_partner_id,
             # partner_id creating sales order
             "active": False,
