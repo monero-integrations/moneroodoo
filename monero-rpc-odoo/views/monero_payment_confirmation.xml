@@ -42,24 +42,40 @@
                 <script type="text/javascript" src="/monero-rpc-odoo/static/src/js/jquery.qrcode.min.js"></script>
                 <script>
                     var btn = document.getElementById('copy_address_button');
-                    $('.copy_btn').tooltip({
-                        trigger: 'click',
-                        placement: 'bottom'
-                    });
-                    var clipboard = new ClipboardJS(btn);
 
-                    clipboard.on('success', function(e) {
-                        $('.copy_btn').tooltip('hide').attr('data-original-title',
-                    'Copied payment address!').tooltip('show');
-                        setTimeout(function() {
-                            $('.copy_btn').tooltip('hide');
-                        }, 1000);
-                    });
+                        $('.copy_btn').tooltip({
+                            trigger: 'click',
+                            placement: 'bottom'
+                        });
+                        var clipboard = new ClipboardJS(btn);
 
-                    clipboard.on('error', function(e) {
-                        console.log(e);
-                    });
+                        clipboard.on('success', function(e) {
+                            $('.copy_btn').tooltip('hide').attr('data-original-title',
+                                'Copied payment address!').tooltip('show');
+                            setTimeout(function() {
+                                $('.copy_btn').tooltip('hide');
+                            }, 1000);
+                        });
+
+                        clipboard.on('error', function(e) {
+                            console.log(e);
+                        });
                 </script>
+                <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.state == 'done'">
+                    <!--    PATCH when the payment is done the page refreshes and
+                    clipboardjs still expects a button to be there
+                        would be better to do clipboard.destroy(); but I don't know
+                        where / when / how that would be executed
+                         -->
+                        <button id="copy_address_button" class="copy_btn"
+                                name="copy_address_button"
+                                t-att-data-clipboard-text="payment_tx_id.payment_token_id.name"
+                                style="font-size:20px"
+                                hidden="true"
+                                title="Copy payment address">
+                            <i class="fa fa-clipboard"></i>
+                        </button>
+                </t>
                 <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.payment_token_id.name and payment_tx_id.state == 'pending'">
                     <p>Payment should be made to the address below:
                         <ul>
