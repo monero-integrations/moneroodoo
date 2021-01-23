@@ -16,6 +16,12 @@
         <record id="payment_acquirer_monero_rpc" model="payment.acquirer">
             <field name="name">Monero RPC</field>
             <field name="provider">monero-rpc</field>
+            <field name="image_128" type="base64"
+                   file="monero-rpc-odoo/static/description/icon.png"/>
+
+<!--        <field name="payment_icon_ids">payment.payment_icon_monero</field>-->
+<!--         Odoo bug, the payment icon isn't generated yet so there will be an-->
+<!--           error on install, the user has to manually set the payment icon-->
             <field name="company_id" ref="base.main_company"/>
             <field name="view_template_id" ref="xmr_acquirer_button"/>
             <field name="registration_view_template_id" ref="xmr_payment_form"/>
