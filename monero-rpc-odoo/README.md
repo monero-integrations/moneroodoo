@@ -61,7 +61,7 @@ Contributors
 Maintainers
 
 This module is maintained by Monero-Integrations.
-![](/monero-rpc-odoo/static/src/img/monero-integrations.png)
+![Monero-Integrations](/monero-rpc-odoo/static/src/img/monero-integrations.png)
 
 
 This module is part of the [monero-integrations/moneroodoo](https://github.com/monero-integrations/moneroodoo) project on GitHub.
