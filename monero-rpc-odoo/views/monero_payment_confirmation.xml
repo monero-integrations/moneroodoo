@@ -54,7 +54,7 @@
                                 'Copied payment address!').tooltip('show');
                             setTimeout(function() {
                                 $('.copy_btn').tooltip('hide');
-                            }, 1000);
+                            }, 500);
                         });
 
                         clipboard.on('error', function(e) {
