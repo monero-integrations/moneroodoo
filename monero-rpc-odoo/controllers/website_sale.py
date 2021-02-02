@@ -71,20 +71,14 @@ class MoneroWebsiteSale(WebsiteSale):
                         f"experienced an Error with RPC: {e.__class__.__name__}"
                     )
                     raise ValidationError(
-                        "Current technical issues"
+                        "Current technical issues "
                         "prevent Monero from being accepted, "
                         "choose another payment method"
                     )
 
                 request.wallet_address = wallet.new_address()[0]
-                _logger.info("new monero payment subaddress generated")
+                _logger.debug("new monero payment subaddress generated")
 
-        # tokens = render_values['tokens']
-        # for token in tokens:
-        # TODO remove any Monero related tokens, we don't want to reuse subaddresses
-        # _logger.info(f'payment_token:{token}')
-
-        _logger.info(f"render_values{render_values}")
 
         if render_values["errors"]:
             render_values.pop("acquirers", "")
