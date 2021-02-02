@@ -3,6 +3,7 @@ import logging
 from odoo import http
 from odoo.addons.payment.controllers.portal import PaymentProcessing
 from odoo.http import request
+from monero.address import SubAddress
 
 _logger = logging.getLogger(__name__)
 
@@ -27,21 +28,28 @@ class MoneroController(http.Controller):
             return False
 
         assert sales_order.partner_id.id != request.website.partner_id.id
+        # at this time the sales order has to be in xmr
+        # the user cannot use a fiat pricelist when checking out
+        # this won't be fixed until after a job is added to automatically
+        # update res.currency.rate
+        currency = request.env["res.currency"].sudo().browse(sales_order.currency_id.id)
+        if currency.name != "XMR":
+            raise Exception("This pricelist is not supported, go back and select the "
+                            "Monero Pricelist")
 
         payment_acquirer_id = int(kwargs.get("acquirer_id"))
 
         payment_partner_id = int(kwargs.get("partner_id"))
 
-        # TODO verify the wallet_address is a valid monero address
-        # TODO verify that the specified address has the needed amount in it
-        wallet_sub_address = kwargs.get("wallet_address")
+        wallet_sub_address = SubAddress(kwargs.get("wallet_address"))
 
         # define payment token
         payment_token = {
-            "name": wallet_sub_address,
+            "name": wallet_sub_address.__repr__(),
             "partner_id": payment_partner_id,
             # partner_id creating sales order
-            "active": True,
+            "active": False,
+            # token shoudn't be active, the subaddress shouldn't be reused
             "acquirer_id": payment_acquirer_id,
             # surrogate key for payment acquirer
             "acquirer_ref": "payment.payment_acquirer_monero_rpc",
@@ -92,14 +100,12 @@ class MoneroController(http.Controller):
         _logger.info(
             f'setting sales_order state to "sent" ' f"for sales_order: {sales_order.id}"
         )
-        request.env.user.sale_order_ids.sudo().update({"state": "sent"})
+        request.env.user.sale_order_ids.sudo().update({"require_payment": "true",
+                                                       "state": "sent"})
 
         payment_acquirer = (
             request.env["payment.acquirer"].sudo().browse(payment_acquirer_id)
         )
-        _logger.info(f"payment_acquirer_id{payment_acquirer}")
-        _logger.info(type(payment_acquirer.num_confirmation_required))
-        _logger.info(payment_acquirer.num_confirmation_required)
         # set queue channel and max_retries settings
         # for queue depending on num conf settings
         num_conf_req = int(payment_acquirer.num_confirmation_required)

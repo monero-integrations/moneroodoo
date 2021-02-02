@@ -5,6 +5,7 @@
         <record id="currency_xmr" model="res.currency">
             <field name="name">XMR</field>
             <field name="currency_unit_label">Monero</field>
+            <field name="display_name">Monero</field>
             <field name="symbol">ɱ</field>
             <field name="position">after</field>
             <field name="active">True</field>
