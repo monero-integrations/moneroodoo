@@ -34,7 +34,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
             pm = IncomingPayment(
                 amount=Decimal("1"),
                 local_address=address(
-                    "Bf6ngv7q2TBWup13nEm9AjZ36gLE6i4QCaZ7XScZUKDUeGbYEHmPRdegKGwLT8tBBK7P6L32RELNzCR6QzNFkmogDjvypyV"
+                    "Bf6ngv7q2TBWup13nEm9AjZ36gLE6i4QCaZ7XScZUKDUeGbYEHmPRdegKGwLT8tBBK"
+                    "7P6L32RELNzCR6QzNFkmogDjvypyV"
                 ),
                 payment_id=PaymentID(
                     "0166d8da6c0045c51273dd65d6f63734beb8a84e0545a185b2cfd053fced9f5d"
@@ -51,7 +52,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
             pm = IncomingPayment(
                 amount=Decimal("3.000000000000"),
                 local_address=address(
-                    "BhE3cQvB7VF2uuXcpXp28Wbadez6GgjypdRS1F1Mzqn8Advd6q8VfaX8ZoEDobjejrMfpHeNXoX8MjY8q8prW1PEALgr1En"
+                    "BhE3cQvB7VF2uuXcpXp28Wbadez6GgjypdRS1F1Mzqn8Advd6q8VfaX8ZoEDobjejr"
+                    "MfpHeNXoX8MjY8q8prW1PEALgr1En"
                 ),
                 payment_id=PaymentID("f75ad90e25d71a12"),
                 transaction=tx,
@@ -66,7 +68,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
             pm = IncomingPayment(
                 amount=Decimal("10.000000000000"),
                 local_address=address(
-                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6K3fhq3scsyY88tdB1MqucULcKzWZC"
+                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6"
+                    "K3fhq3scsyY88tdB1MqucULcKzWZC"
                 ),
                 payment_id=PaymentID("f75ad90e25d71a12"),
                 transaction=tx,
@@ -82,7 +85,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
             pm = IncomingPayment(
                 amount=Decimal("4.000000000000"),
                 local_address=address(
-                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6K3fhq3scsyY88tdB1MqucULcKzWZC"
+                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6"
+                    "K3fhq3scsyY88tdB1MqucULcKzWZC"
                 ),
                 payment_id=PaymentID("f75ad90e25d71a12"),
                 transaction=tx,
@@ -97,7 +101,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
             pm = IncomingPayment(
                 amount=Decimal("2.120000000000"),
                 local_address=address(
-                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6K3fhq3scsyY88tdB1MqucULcKzWZC"
+                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6"
+                    "K3fhq3scsyY88tdB1MqucULcKzWZC"
                 ),
                 payment_id=PaymentID("cb248105ea6a9189"),
                 transaction=tx,
@@ -112,7 +117,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
             pm = IncomingPayment(
                 amount=Decimal("7.000000000000"),
                 local_address=address(
-                    "BhE3cQvB7VF2uuXcpXp28Wbadez6GgjypdRS1F1Mzqn8Advd6q8VfaX8ZoEDobjejrMfpHeNXoX8MjY8q8prW1PEALgr1En"
+                    "BhE3cQvB7VF2uuXcpXp28Wbadez6GgjypdRS1F1Mzqn8Advd6q8VfaX8ZoEDobjejr"
+                    "MfpHeNXoX8MjY8q8prW1PEALgr1En"
                 ),
                 payment_id=PaymentID("0000000000000000"),
                 transaction=tx,
@@ -127,7 +133,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
             pm = IncomingPayment(
                 amount=Decimal("10.000000000000"),
                 local_address=address(
-                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6K3fhq3scsyY88tdB1MqucULcKzWZC"
+                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6"
+                    "K3fhq3scsyY88tdB1MqucULcKzWZC"
                 ),
                 payment_id=PaymentID("0000000000000000"),
                 transaction=tx,
@@ -142,7 +149,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
             pm = IncomingPayment(
                 amount=Decimal("3.140000000000"),
                 local_address=address(
-                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6K3fhq3scsyY88tdB1MqucULcKzWZC"
+                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6"
+                    "K3fhq3scsyY88tdB1MqucULcKzWZC"
                 ),
                 payment_id=PaymentID("03f6649304ea4cb2"),
                 transaction=tx,
@@ -188,11 +196,11 @@ class TestMoneroSalesOrder(TestSaleCommon):
         )
 
         # over ride the predefined partner, as it is missing a country id
-        cls.partner_a = cls.env['res.partner'].create(
+        cls.partner_a = cls.env["res.partner"].create(
             {
-                'name': "test",
-                'email': "test@example.com",
-                'country_id': 1,
+                "name": "test",
+                "email": "test@example.com",
+                "country_id": 1,
             }
         )
 
@@ -251,14 +259,15 @@ class TestMoneroSalesOrder(TestSaleCommon):
         )
 
         # define payment acquirer
-        cls.payment_acquirer = cls.env['payment.acquirer'].create({
-            'name': 'Monero RPC',
-            'journal_id': 1})
+        cls.payment_acquirer = cls.env["payment.acquirer"].create(
+            {"name": "Monero RPC", "journal_id": 1}
+        )
         payment_acquirer_id = cls.payment_acquirer.id
 
         # define payment token
         payment_token = {
-            "name": "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6K3fhq3scsyY88tdB1MqucULcKzWZC",
+            "name": "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6"
+            "K3fhq3scsyY88tdB1MqucULcKzWZC",
             "partner_id": cls.sale_order.partner_id.id,
             "active": False,
             "acquirer_id": payment_acquirer_id,
@@ -279,7 +288,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
             "state": "pending",
         }
 
-        cls.transaction = cls.env['payment.transaction'].create(tx_val)
+        cls.transaction = cls.env["payment.transaction"].create(tx_val)
         # cls.sale_order._create_payment_transaction(tx_val)
 
     @patch("odoo.addons.monero-rpc-odoo.models.monero_acq.JSONRPCWallet")
@@ -299,10 +308,9 @@ class TestMoneroSalesOrder(TestSaleCommon):
 
         num_confirmation_required = 0
         with self.assertRaises(MoneroAddressReuse):
-            MoneroSalesOrder.process_transaction(self.sale_order,
-                                                 self.transaction,
-                                                 self.token,
-                                                 num_confirmation_required)
+            MoneroSalesOrder.process_transaction(
+                self.sale_order, self.transaction, self.token, num_confirmation_required
+            )
 
         # self.assertEqual(
         #     self.sale_order.state, "sale"
@@ -310,5 +318,3 @@ class TestMoneroSalesOrder(TestSaleCommon):
         # self.assertEqual(
         #     self.transaction.state, "done"
         # )
-
-

@@ -79,7 +79,6 @@ class MoneroWebsiteSale(WebsiteSale):
                 request.wallet_address = wallet.new_address()[0]
                 _logger.debug("new monero payment subaddress generated")
 
-
         if render_values["errors"]:
             render_values.pop("acquirers", "")
             render_values.pop("tokens", "")
