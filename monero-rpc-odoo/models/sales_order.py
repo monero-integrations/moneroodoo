@@ -45,8 +45,7 @@ class MoneroSalesOrder(models.Model):
             _logger.info(job.max_retries)
             _logger.info(job.retry)
             if job.retry == job.max_retries - 1:
-                self.write({"state": "cancel",
-                            "is_expired": "true"})
+                self.write({"state": "cancel", "is_expired": "true"})
                 log_msg = (
                     f"PaymentAcquirer: {transaction.acquirer_id.provider} "
                     f"Subaddress: {token.name} "
