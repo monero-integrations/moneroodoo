@@ -34,8 +34,10 @@ class MoneroController(http.Controller):
         # update res.currency.rate
         currency = request.env["res.currency"].sudo().browse(sales_order.currency_id.id)
         if currency.name != "XMR":
-            raise Exception("This pricelist is not supported, go back and select the "
-                            "Monero Pricelist")
+            raise Exception(
+                "This pricelist is not supported, go back and select the "
+                "Monero Pricelist"
+            )
 
         payment_acquirer_id = int(kwargs.get("acquirer_id"))
 
@@ -100,8 +102,9 @@ class MoneroController(http.Controller):
         _logger.info(
             f'setting sales_order state to "sent" ' f"for sales_order: {sales_order.id}"
         )
-        request.env.user.sale_order_ids.sudo().update({"require_payment": "true",
-                                                       "state": "sent"})
+        request.env.user.sale_order_ids.sudo().update(
+            {"require_payment": "true", "state": "sent"}
+        )
 
         payment_acquirer = (
             request.env["payment.acquirer"].sudo().browse(payment_acquirer_id)
