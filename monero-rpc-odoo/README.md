@@ -20,7 +20,7 @@ components. https://monero-python.readthedocs.io/en/latest/quickstart.html
         * https://www.getmonero.org/resources/developer-guides/wallet-rpc.html
         * Download: https://www.getmonero.org/downloads/#cli
 * Odoo - Add-ons are installed by adding the specific module folder to the add-ons
-  directory (restart 
+  directory (restart
   required)
     * queue-job
         * https://github.com/OCA/queue
@@ -34,8 +34,8 @@ components. https://monero-python.readthedocs.io/en/latest/quickstart.html
     * Pricelist
         * A pricelist should be created specifically for Monero
         * https://www.odoo.com/documentation/user/14.0/website/publish/multi_website.html#pricelists
-    
-    
+
+
 
 Usage
 =====
