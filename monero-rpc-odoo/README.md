@@ -10,7 +10,7 @@ Allows you to accept Monero as Payment within your Odoo Ecommerce shop
 Configuration
 =============
 
-* Monero - This quickstart guide can guide you through the configuration of Monero specific 
+* Monero - This quickstart guide can guide you through the configuration of Monero specific
 components. https://monero-python.readthedocs.io/en/latest/quickstart.html
   * monerod
     * https://www.getmonero.org/resources/moneropedia/daemon.html
@@ -19,7 +19,7 @@ components. https://monero-python.readthedocs.io/en/latest/quickstart.html
         * Use a view-key on the server
         * https://www.getmonero.org/resources/developer-guides/wallet-rpc.html
         * Download: https://www.getmonero.org/downloads/#cli
-* Odoo - Add-ons are installed by adding the specific module folder to the add-ons 
+* Odoo - Add-ons are installed by adding the specific module folder to the add-ons
   directory (restart 
   required)
     * queue-job
@@ -40,7 +40,7 @@ components. https://monero-python.readthedocs.io/en/latest/quickstart.html
 Usage
 =====
 
-* At Ecommerce checkout your customer's will be presented with the option to pay 
+* At Ecommerce checkout your customer's will be presented with the option to pay
   with Monero
 
 Bug Tracker
