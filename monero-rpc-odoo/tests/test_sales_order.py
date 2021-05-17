@@ -1,13 +1,8 @@
-# -*- coding: utf-8 -*-
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
-from odoo.exceptions import UserError, AccessError
 from odoo.tests import tagged
-from odoo.tools import float_compare
 
 from datetime import datetime
 from decimal import Decimal
-from unittest import TestCase
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from ..models.exceptions import NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse
 
 from monero.account import Account
