@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
 import logging
 
-from odoo import fields, models
+from odoo import models
 
 from ..models.exceptions import NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse
 from ..models.exceptions import MoneroPaymentAcquirerRPCUnauthorized

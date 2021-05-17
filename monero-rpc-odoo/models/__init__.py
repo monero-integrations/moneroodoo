@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from . import monero_acq, sales_order, exceptions
 
 # TODO automate prices list for currencies,
