@@ -40,7 +40,7 @@ class MoneroSalesOrder(models.Model):
             job = (
                 self.env["queue.job"]
                 .sudo()
-                .search([("uuid", "=", self.env.context["job_uuid"])])
+                .search([("uuid", "=", self.env.context.get("job_uuid"))])
             )
             _logger.info(job.max_retries)
             _logger.info(job.retry)
@@ -106,7 +106,6 @@ class MoneroSalesOrder(models.Model):
             transaction_amount_rounded = float(
                 round(this_payment.amount, self.currency_id.decimal_places)
             )
-
             if transaction.amount == transaction_amount_rounded:
                 self.write({"state": "sale"})
                 transaction.write({"state": "done", "is_processed": "true"})
@@ -114,3 +113,4 @@ class MoneroSalesOrder(models.Model):
                     f"Monero payment recorded for sale order: {self.id}, "
                     f"associated with subaddress: {token.name}"
                 )
+                # TODO handle situation where the transaction amount is not equal
