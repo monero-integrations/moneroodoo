@@ -30,6 +30,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
                 height=1087606,
                 hash="a0b876ebcf7c1d499712d84cedec836f9d50b608bb22d6cb49fd2feae3ffed14",
                 fee=Decimal("0.00352891"),
+                confirmations=3,
             )
             pm = IncomingPayment(
                 amount=Decimal("1"),
@@ -40,22 +41,6 @@ class TestMoneroSalesOrder(TestSaleCommon):
                 payment_id=PaymentID(
                     "0166d8da6c0045c51273dd65d6f63734beb8a84e0545a185b2cfd053fced9f5d"
                 ),
-                transaction=tx,
-            )
-            self.transfers.append(pm)
-            tx = Transaction(
-                timestamp=datetime(2018, 1, 29, 14, 57, 47),
-                height=1087601,
-                hash="f34b495cec77822a70f829ec8a5a7f1e727128d62e6b1438e9cb7799654d610e",
-                fee=Decimal("0.008661870000"),
-            )
-            pm = IncomingPayment(
-                amount=Decimal("3.000000000000"),
-                local_address=address(
-                    "BhE3cQvB7VF2uuXcpXp28Wbadez6GgjypdRS1F1Mzqn8Advd6q8VfaX8ZoEDobjejr"
-                    "MfpHeNXoX8MjY8q8prW1PEALgr1En"
-                ),
-                payment_id=PaymentID("f75ad90e25d71a12"),
                 transaction=tx,
             )
             self.transfers.append(pm)
@@ -115,7 +100,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
                 fee=Decimal("0.000962430000"),
             )
             pm = IncomingPayment(
-                amount=Decimal("7.000000000000"),
+                amount=Decimal("1240.0000000"),
                 local_address=address(
                     "BhE3cQvB7VF2uuXcpXp28Wbadez6GgjypdRS1F1Mzqn8Advd6q8VfaX8ZoEDobjejr"
                     "MfpHeNXoX8MjY8q8prW1PEALgr1En"
@@ -262,34 +247,6 @@ class TestMoneroSalesOrder(TestSaleCommon):
         cls.payment_acquirer = cls.env["payment.acquirer"].create(
             {"name": "Monero RPC", "journal_id": 1}
         )
-        payment_acquirer_id = cls.payment_acquirer.id
-
-        # define payment token
-        payment_token = {
-            "name": "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6"
-            "K3fhq3scsyY88tdB1MqucULcKzWZC",
-            "partner_id": cls.sale_order.partner_id.id,
-            "active": False,
-            "acquirer_id": payment_acquirer_id,
-            "acquirer_ref": "payment.payment_acquirer_monero_rpc",
-        }
-
-        cls.token = cls.env["payment.token"].sudo().create(payment_token)
-        token_id = cls.token.id
-
-        # setup transaction
-        tx_val = {
-            "amount": cls.sale_order.amount_total,
-            "reference": cls.sale_order.name,
-            "currency_id": cls.sale_order.currency_id.id,
-            "partner_id": cls.partner_a.id,
-            "payment_token_id": token_id,  # Associating the Payment Token ID.
-            "acquirer_id": payment_acquirer_id,  # Payment Acquirer - Monero
-            "state": "pending",
-        }
-
-        cls.transaction = cls.env["payment.transaction"].create(tx_val)
-        # cls.sale_order._create_payment_transaction(tx_val)
 
     @patch("odoo.addons.monero-rpc-odoo.models.monero_acq.JSONRPCWallet")
     def test_sale_order_process_transaction(self, mock_backend):
@@ -304,17 +261,152 @@ class TestMoneroSalesOrder(TestSaleCommon):
         # TODO test all exceptions
         # TODO test that a transaction is processed to completion
 
+        # START MAIN TEST
+
+        # define payment token
+        payment_token = {
+            "name": "BhE3cQvB7VF2uuXcpXp28Wbadez6GgjypdRS1F1Mzqn8Advd6q8VfaX8ZoEDobjejr"
+                    "MfpHeNXoX8MjY8q8prW1PEALgr1En",
+            "partner_id": self.sale_order.partner_id.id,
+            "active": False,
+            "acquirer_id": self.payment_acquirer.id,
+            "acquirer_ref": "payment.payment_acquirer_monero_rpc",
+        }
+
+        token = self.env["payment.token"].sudo().create(payment_token)
+
+        # setup transaction
+        tx_val = {
+            "amount": self.sale_order.amount_total,
+            "reference": self.sale_order.name + "main",
+            "currency_id": self.sale_order.currency_id.id,
+            "partner_id": self.partner_a.id,
+            "payment_token_id": token.id,  # Associating the Payment Token ID.
+            "acquirer_id": self.payment_acquirer.id,  # Payment Acquirer - Monero
+            "state": "pending",
+        }
+
+        transaction = self.env["payment.transaction"].create(tx_val)
+
+        mock_backend.side_effect = self.MockBackend
+
+        num_confirmation_required = 0
+        MoneroSalesOrder.process_transaction(
+            self.sale_order, transaction, token, num_confirmation_required
+        )
+        self.assertEqual(self.sale_order.state, "sale")
+        self.assertEqual(transaction.state, "done")
+
+        # END MAIN TEST
+
+        # START EXCEPTION TEST: MoneroAddressReuse
+
+        # define payment token
+        payment_token = {
+            "name": "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6"
+                    "K3fhq3scsyY88tdB1MqucULcKzWZC",
+            "partner_id": self.sale_order.partner_id.id,
+            "active": False,
+            "acquirer_id": self.payment_acquirer.id,
+            "acquirer_ref": "payment.payment_acquirer_monero_rpc",
+        }
+
+        token = self.env["payment.token"].sudo().create(payment_token)
+
+        # setup transaction
+        tx_val = {
+            "amount": self.sale_order.amount_total,
+            "reference": self.sale_order.name,
+            "currency_id": self.sale_order.currency_id.id,
+            "partner_id": self.partner_a.id,
+            "payment_token_id": token.id,  # Associating the Payment Token ID.
+            "acquirer_id": self.payment_acquirer.id,  # Payment Acquirer - Monero
+            "state": "pending",
+        }
+
+        transaction = self.env["payment.transaction"].create(tx_val)
+
         mock_backend.side_effect = self.MockBackend
 
         num_confirmation_required = 0
         with self.assertRaises(MoneroAddressReuse):
             MoneroSalesOrder.process_transaction(
-                self.sale_order, self.transaction, self.token, num_confirmation_required
+                self.sale_order, transaction, token, num_confirmation_required
             )
 
-        # self.assertEqual(
-        #     self.sale_order.state, "sale"
-        # )
-        # self.assertEqual(
-        #     self.transaction.state, "done"
-        # )
+        # END EXCEPTION TEST: MoneroAddressReuse
+
+        # START EXCEPTION TEST: NumConfirmationsNotMet
+
+        # define payment token
+        payment_token = {
+            "name": "Bf6ngv7q2TBWup13nEm9AjZ36gLE6i4QCaZ7XScZUKDUeGbYEHmPRdegKGwLT8tBBK"
+                    "7P6L32RELNzCR6QzNFkmogDjvypyV",
+            "partner_id": self.sale_order.partner_id.id,
+            "active": False,
+            "acquirer_id": self.payment_acquirer.id,
+            "acquirer_ref": "payment.payment_acquirer_monero_rpc",
+        }
+
+        token = self.env["payment.token"].sudo().create(payment_token)
+        # setup transaction
+        tx_val = {
+            "amount": self.sale_order.amount_total,
+            "reference": self.sale_order.name + "NumConfirmationsNotMet",
+            "currency_id": self.sale_order.currency_id.id,
+            "partner_id": self.partner_a.id,
+            "payment_token_id": token.id,  # Associating the Payment Token ID.
+            "acquirer_id": self.payment_acquirer.id,  # Payment Acquirer - Monero
+            "state": "pending",
+        }
+
+        transaction = self.env["payment.transaction"].create(tx_val)
+
+        mock_backend.side_effect = self.MockBackend
+
+        num_confirmation_required = 10
+        with self.assertRaises(NumConfirmationsNotMet):
+            MoneroSalesOrder.process_transaction(
+                self.sale_order, transaction, token, num_confirmation_required
+            )
+
+        # END EXCEPTION TEST: NumConfirmationsNotMet
+
+        # START EXCEPTION TEST: NoTXFound
+
+        # define payment token
+        # this address doesn't exist, so there will be no transactions returned
+        payment_token = {
+            "name":
+                "Bbvf3yAShddPnnhzUbzN4CLSaKaY8HG3kJ2pQUHiJx7ZfCDXHJ87M"
+                "aZHWL13xKz7s9LESB4tWWFKsYAkrAd74K38Uw98cfc",
+            "partner_id": self.sale_order.partner_id.id,
+            "active": False,
+            "acquirer_id": self.payment_acquirer.id,
+            "acquirer_ref": "payment.payment_acquirer_monero_rpc",
+        }
+
+        token = self.env["payment.token"].sudo().create(payment_token)
+        # setup transaction
+        tx_val = {
+            "amount": self.sale_order.amount_total,
+            "reference": self.sale_order.name + "NoTXFound",
+            "currency_id": self.sale_order.currency_id.id,
+            "partner_id": self.partner_a.id,
+            "payment_token_id": token.id,  # Associating the Payment Token ID.
+            "acquirer_id": self.payment_acquirer.id,  # Payment Acquirer - Monero
+            "state": "pending",
+        }
+
+        transaction = self.env["payment.transaction"].create(tx_val)
+
+        mock_backend.side_effect = self.MockBackend
+
+        num_confirmation_required = 10
+        with self.assertRaises(NoTXFound):
+            MoneroSalesOrder.process_transaction(
+                self.sale_order, transaction, token, num_confirmation_required
+            )
+
+        # END EXCEPTION TEST: NoTXFound
+
