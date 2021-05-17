@@ -266,7 +266,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
         # define payment token
         payment_token = {
             "name": "BhE3cQvB7VF2uuXcpXp28Wbadez6GgjypdRS1F1Mzqn8Advd6q8VfaX8ZoEDobjejr"
-                    "MfpHeNXoX8MjY8q8prW1PEALgr1En",
+            "MfpHeNXoX8MjY8q8prW1PEALgr1En",
             "partner_id": self.sale_order.partner_id.id,
             "active": False,
             "acquirer_id": self.payment_acquirer.id,
@@ -304,7 +304,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
         # define payment token
         payment_token = {
             "name": "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6"
-                    "K3fhq3scsyY88tdB1MqucULcKzWZC",
+            "K3fhq3scsyY88tdB1MqucULcKzWZC",
             "partner_id": self.sale_order.partner_id.id,
             "active": False,
             "acquirer_id": self.payment_acquirer.id,
@@ -341,7 +341,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
         # define payment token
         payment_token = {
             "name": "Bf6ngv7q2TBWup13nEm9AjZ36gLE6i4QCaZ7XScZUKDUeGbYEHmPRdegKGwLT8tBBK"
-                    "7P6L32RELNzCR6QzNFkmogDjvypyV",
+            "7P6L32RELNzCR6QzNFkmogDjvypyV",
             "partner_id": self.sale_order.partner_id.id,
             "active": False,
             "acquirer_id": self.payment_acquirer.id,
@@ -377,9 +377,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
         # define payment token
         # this address doesn't exist, so there will be no transactions returned
         payment_token = {
-            "name":
-                "Bbvf3yAShddPnnhzUbzN4CLSaKaY8HG3kJ2pQUHiJx7ZfCDXHJ87M"
-                "aZHWL13xKz7s9LESB4tWWFKsYAkrAd74K38Uw98cfc",
+            "name": "Bbvf3yAShddPnnhzUbzN4CLSaKaY8HG3kJ2pQUHiJx7ZfCDXHJ87M"
+            "aZHWL13xKz7s9LESB4tWWFKsYAkrAd74K38Uw98cfc",
             "partner_id": self.sale_order.partner_id.id,
             "active": False,
             "acquirer_id": self.payment_acquirer.id,
@@ -409,4 +408,3 @@ class TestMoneroSalesOrder(TestSaleCommon):
             )
 
         # END EXCEPTION TEST: NoTXFound
-
