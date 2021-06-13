@@ -21,8 +21,9 @@ class MoneroPosPaymentMethod(models.Model):
     _inherit = "pos.payment.method"
 
     def _get_payment_terminal_selection(self):
-        return super(MoneroPosPaymentMethod, self)._get_payment_terminal_selection() \
-               + [('monero-rpc', 'Monero RPC')]
+        return super(MoneroPosPaymentMethod, self)._get_payment_terminal_selection() + [
+            ("monero-rpc", "Monero RPC")
+        ]
 
     def get_wallet(self):
         rpc_server: JSONRPCWallet = JSONRPCWallet(
