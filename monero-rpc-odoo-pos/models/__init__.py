@@ -1,4 +1,4 @@
-from . import monero_acq, sales_order, exceptions
+from . import pos_order, pos_payment, pos_payment_method, exceptions
 
 # TODO automate prices list for currencies,
 #  the lists would be updated at a chosen interval with the correct conversion

@@ -24,7 +24,7 @@ components. https://monero-python.readthedocs.io/en/latest/quickstart.html
   required)
     * queue-job
         * https://github.com/OCA/queue
-    * monero-rpc-odoo
+    * monero-rpc-odoo-pos
         * https://github.com/monero-integrations/moneroodoo
         * The Monero payment acquirer is configured similar to other payment acquirers
             * https://www.odoo.com/documentation/user/14.0/general/payment_acquirers/payment_acquirers.html#configuration
