@@ -5,21 +5,25 @@ from monero.wallet import Wallet
 from odoo import api, fields, models
 from requests.exceptions import SSLError
 from .exceptions import (
-    MoneroPaymentAcquirerRPCUnauthorized,
-    MoneroPaymentAcquirerRPCSSLError,
+    MoneroPaymentMethodRPCUnauthorized,
+    MoneroPaymentMethodRPCSSLError,
 )
 
 _logger = logging.getLogger(__name__)
 
 
-class MoneroPaymentAcquirer(models.Model):
+class MoneroPosPaymentMethod(models.Model):
     """
-    Inherits from payment.acquirer
+    Inherits from pos.payment.method
     Custom fields added: is_cryptocurrency, environment, type
     """
 
-    _inherit = "payment.acquirer"
-    _recent_transactions = []
+    _inherit = "pos.payment.method"
+
+    def _get_payment_terminal_selection(self):
+        return super(MoneroPosPaymentMethod, self)._get_payment_terminal_selection() + [
+            ("monero-rpc", "Monero RPC")
+        ]
 
     def get_wallet(self):
         rpc_server: JSONRPCWallet = JSONRPCWallet(
@@ -30,11 +34,11 @@ class MoneroPaymentAcquirer(models.Model):
             password=self.monero_rpc_config_password,
         )
         try:
-            wallet = Wallet(rpc_server)
+            wallet: Wallet = Wallet(rpc_server)
         except Unauthorized:
-            raise MoneroPaymentAcquirerRPCUnauthorized
+            raise MoneroPaymentMethodRPCUnauthorized
         except SSLError:
-            raise MoneroPaymentAcquirerRPCSSLError
+            raise MoneroPaymentMethodRPCSSLError
         except Exception as e:
             _logger.critical("Monero RPC Error", exc_info=True)
             raise e
@@ -53,10 +57,10 @@ class MoneroPaymentAcquirer(models.Model):
         wallet = None
         try:
             wallet = self.get_wallet()
-        except MoneroPaymentAcquirerRPCUnauthorized:
+        except MoneroPaymentMethodRPCUnauthorized:
             message = "Invalid Monero RPC user name or password"
             pass
-        except MoneroPaymentAcquirerRPCSSLError:
+        except MoneroPaymentMethodRPCSSLError:
             message = "Monero RPC TLS Error"
             pass
         except Exception as e:
@@ -74,10 +78,6 @@ class MoneroPaymentAcquirer(models.Model):
             warning = {"title": title, "message": f"{message}"}
 
         return {"warning": warning}
-
-    provider = fields.Selection(
-        selection_add=[("monero-rpc", "Monero")], ondelete={"monero-rpc": "set default"}
-    )
 
     is_cryptocurrency = fields.Boolean("Cryptocurrency?", default=False)
     # not used right now, could be used to update price data?

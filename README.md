@@ -6,15 +6,9 @@ Allows you to accept Monero as Payment within your Odoo Ecommerce shop
 
 ![Monero](https://raw.githubusercontent.com/t-900-a/moneroodoo/dev/monero-rpc-odoo/static/src/img/logo.png)
 
-<!-- prettier-ignore-start -->
-[//]: # (addons)
 
 Available addons
 ----------------
-addon | version | summary
---- | --- | ---
-[monero-rpc-odoo](monero-rpc-odoo/) | 14.0.1.0.1 | Accept Monero Payment via a Wallet RPC
-
-[//]: # (end addons)
-<!-- prettier-ignore-end -->
-
+|  addon | version  | summary  |
+|---|---|---|
+|  [monero-rpc-odoo](monero-rpc-odoo/) |  14.0.1.0.2 |  Accept Monero Payment via a Wallet RPC |

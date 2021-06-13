@@ -15,4 +15,4 @@ class MoneroCommon(PaymentAcquirerCommon):
     def test_update_rpc_server(self):
         # this is going to fail
         # self.monero.update_rpc_server()
-        self.assertEquals("test", "test")
+        self.assertEqual("test", "test")
