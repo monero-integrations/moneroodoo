@@ -11,4 +11,4 @@ Available addons
 ----------------
 |  addon | version  | summary  |
 |---|---|---|
-|  [monero-rpc-odoo](monero-rpc-odoo/) |  14.0.1.0.1 |  Accept Monero Payment via a Wallet RPC |
+|  [monero-rpc-odoo](monero-rpc-odoo/) |  14.0.1.0.2 |  Accept Monero Payment via a Wallet RPC |

@@ -2,8 +2,8 @@ from odoo import api, fields, models, _
 
 from monero.wallet import Wallet
 from .exceptions import NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse
-# from .exceptions import MoneroPaymentMethodRPCUnauthorized
-# from .exceptions import MoneroPaymentMethodRPCSSLError
+from .exceptions import MoneroPaymentMethodRPCUnauthorized
+from .exceptions import MoneroPaymentMethodRPCSSLError
 
 import logging
 
@@ -24,7 +24,7 @@ class MoneroPosPayment(models.Model):
 
     _inherit = "pos.payment"
 
-    wallet_address = fields.Char('Payment Wallet Address')
+    wallet_address = fields.Char("Payment Wallet Address")
 
     def process_transaction(self):
 
@@ -48,7 +48,9 @@ class MoneroPosPayment(models.Model):
                 f"experienced an Error with RPC: {e.__class__.__name__}"
             )
 
-        incoming_payment = wallet.incoming(local_address=self.wallet_address, unconfirmed=True)
+        incoming_payment = wallet.incoming(
+            local_address=self.wallet_address, unconfirmed=True
+        )
 
         if incoming_payment == []:
             job = (
@@ -128,4 +130,3 @@ class MoneroPosPayment(models.Model):
                     f"associated with subaddress: {self.wallet_address}"
                 )
                 # TODO handle situation where the transaction amount is not equal
-

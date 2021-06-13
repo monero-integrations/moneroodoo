@@ -45,6 +45,14 @@ class MoneroController(http.Controller):
 
         wallet_sub_address = SubAddress(kwargs.get("wallet_address"))
 
+        # security check, enforce one time usage of subaddresses
+        payment_tokens = (
+            request.env["payment.token"]
+            .sudo()
+            .search([("name", "=", wallet_sub_address)])
+        )
+        assert len(payment_tokens) < 1
+
         # define payment token
         payment_token = {
             "name": wallet_sub_address.__repr__(),

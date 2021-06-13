@@ -13,7 +13,7 @@
         "base_setup",
         "web",
         "queue_job",
-	"point_of_sale",
+        "point_of_sale",
     ],
     "external_dependencies": {"python": ["monero"]},
     # always loaded

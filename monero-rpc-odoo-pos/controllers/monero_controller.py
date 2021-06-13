@@ -35,8 +35,13 @@ _logger = logging.getLogger(__name__)
 
 
 class MoneroController(http.Controller):
-    @http.route("/pos/monero/get_address", type="json",
-                auth="public", website=True, methods=['POST'])
+    @http.route(
+        "/pos/monero/get_address",
+        type="json",
+        auth="public",
+        website=True,
+        methods=["POST"],
+    )
     def get_address(self, **kwargs):
         """
         Function retrieves a Monero subaddress that will be used on the client side
@@ -47,8 +52,11 @@ class MoneroController(http.Controller):
         :return: wallet_address
         """
 
-        payment_method: MoneroPosPaymentMethod = request.env[
-            "pos.payment.method"].sudo().browse(int(kwargs.get("payment_method_id")))
+        payment_method = (
+            request.env["pos.payment.method"]
+            .sudo()
+            .browse(int(kwargs.get("payment_method_id")))
+        )
 
         if payment_method is not None:
             try:
@@ -90,8 +98,8 @@ class MoneroController(http.Controller):
             }
         else:
             _logger.error(
-                f"USER IMPACT: Monero POS Payment Method"
-                f"experienced an Error with payment method: Not Found"
+                "USER IMPACT: Monero POS Payment Method"
+                "experienced an Error with payment method: Not Found"
             )
             raise ValidationError(
                 "Current technical issues "
@@ -100,4 +108,3 @@ class MoneroController(http.Controller):
             )
 
         return res
-
