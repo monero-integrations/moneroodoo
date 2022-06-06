@@ -12,3 +12,4 @@ Available addons
 |  addon | version  | summary  |
 |---|---|---|
 |  [payment_monero](payment_monero/) |  14.0.1.0.0 |  Accept Monero Payment in E-commerce via a Wallet RPC |
+|  [pos_payment_monero](pos_payment_monero/) |  14.0.1.0.0 |  Accept Monero Payment in Point of Sale via a Wallet RPC |
