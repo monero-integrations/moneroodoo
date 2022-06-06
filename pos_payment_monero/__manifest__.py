@@ -5,6 +5,7 @@
     "website": "https://monerointegrations.com/",
     "category": "Point of Sale",
     "version": "14.0.1.0.0",
+    "development_status": "Alpha",
     "depends": [
         "account",
         "queue_job",
