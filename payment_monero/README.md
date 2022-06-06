@@ -1,11 +1,12 @@
-Monero Odoo
+Payment Monero
 =========================
 
 
 [![Build Status](https://api.travis-ci.com/t-900-a/moneroodoo.svg?branch=main)](https://travis-ci.com/t-900-a/moneroodoo)
 [![codecov](https://codecov.io/gh/t-900-a/moneroodoo/branch/main/graph/badge.svg?token=10S5GGNRHH)](https://codecov.io/gh/t-900-a/moneroodoo)
 
-Allows you to accept Monero as Payment within your Odoo Ecommerce shop
+This module allows you to accept Monero as Payment within your Odoo Ecommerce shop.
+It depends on the base_monero module. Which defines the Monero Currency in Odoo.
 
 Configuration
 =============
@@ -24,17 +25,21 @@ components. https://monero-python.readthedocs.io/en/latest/quickstart.html
   required)
     * queue-job
         * https://github.com/OCA/queue
-    * monero-rpc-odoo
+    * payment_monero
         * https://github.com/monero-integrations/moneroodoo
         * The Monero payment acquirer is configured similar to other payment acquirers
             * https://www.odoo.com/documentation/user/14.0/general/payment_acquirers/payment_acquirers.html#configuration
     * Currency rate
-      * You will need to manually add currency rate for Monero
+      * You can enter the currency rate manually for Monero.
       * https://www.odoo.com/documentation/user/14.0/accounting/others/multicurrencies/how_it_works.html
+      * Or use any of the currency rate update apps of odoo. (See Helping modules)
     * Pricelist
         * A pricelist should be created specifically for Monero
         * https://www.odoo.com/documentation/user/14.0/website/publish/multi_website.html#pricelists
 
+To configure the Monero payment acquirer and make it available to your customers, go to Accounting ‣ Configuration ‣ Payment Acquirers, look for Monero RPC, install the module. 
+Set the RPC protocol, RPC Host, RPC User & Password, RPC Port,
+, and activate it. To do so, open the payment acquirer and change its state from Disabled to Enabled.
 
 
 Usage
@@ -57,6 +62,7 @@ Credits
 Contributors
 
 * T-900 <https://github.com/t-900-a>
+* bosd <https://github.com/bosd>
 
 Maintainers
 
