@@ -1,6 +1,5 @@
-from odoo import api, fields, models, _
+from odoo import fields, models, _
 
-from monero.wallet import Wallet
 from .exceptions import NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse
 from .exceptions import MoneroPaymentMethodRPCUnauthorized
 from .exceptions import MoneroPaymentMethodRPCSSLError
