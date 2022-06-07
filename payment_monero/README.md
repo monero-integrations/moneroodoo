@@ -48,6 +48,16 @@ Usage
 * At Ecommerce checkout your customer's will be presented with the option to pay
   with Monero
 
+
+Helping modules
+=====
+* Automatic update the currency rates between fiat and crypto
+    * currency_rate_update_cmc
+        * https://github.com/OCA/currency/
+* Inverse method for converting currencies
+    * currency_rate_inverted
+        * https://github.com/OCA/currency/
+
 Bug Tracker
 ===========
 
