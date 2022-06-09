@@ -46,7 +46,7 @@ Usage
 
 * Go to accounting/Configuration/Currencies. The Monero currency is added to the list and can be activated/deactivated.
 * On the accounting Dashboard a new journal is created for the Monero Currency.
-  
+
 Helping modules
 =====
 * Automatic update the currency rates between fiat and crypto
