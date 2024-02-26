@@ -35,7 +35,47 @@
             </xpath>
         </template>
 
+<!--        <template id="monero_payment_confirmation"
+                  inherit_id="website_sale.payment_confirmation_status">
+            <xpath expr="//*[@class='card-header']" position="inside">
+                <script type="text/javascript" src="/monero-rpc-odoo/static/src/js/jquery.qrcode.min.js"></script>
+                <p>TEST 42: <t t-raw="payment_tx_id"/>  <t t-raw="payment_tx_id.token_id"/></p>
+                <span>
+                    Test 44
+                </span>
+                <div id="monero_payment">
+                                       tx_id <t t-raw="payment_tx_id"/>
+                </div>
+                <div id="monero_payment_address">
+                                      token_id name <t t-raw="payment_tx_id.token_id.name"/>
+                </div>
+                <div id="is_cryptocurrency">
+                                      crypto <t t-raw="payment_tx_id.acquirer_id.is_cryptocurrency"/>
+                </div>
+                <div id="payment_tx_id.state">
+                                      state <t t-raw="payment_tx_id.state"/>
+                </div>
+                <div id="order">
+                                      order name <t t-raw="order.name"/>
+                </div>
 
+                <div id="company">
+                                      company name <t t-raw="order.company_id.name"/>
+                </div>
+                <button id="copy_address_button" class="copy_btn"
+                                name="copy_address_button"
+                                t-att-data-clipboard-text="payment_tx_id.token_id.name"
+                                style="font-size:20px"
+                                hidden="false"
+                                title="Copy payment address">
+                            <i class="fa fa-clipboard"></i>
+                </button>
+                <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.token_id.name and payment_tx_id.state == 'pending'">
+                    <p>Payment is pending</p>
+                </t>
+            </xpath>
+        </template>
+-->
         <template id="monero_payment_confirmation"
                   inherit_id="website_sale.payment_confirmation_status">
             <xpath expr="//*[@class='card-header']" position="inside">
@@ -62,34 +102,34 @@
                         });
                 </script>
                 <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.state == 'done'">
-                    <!--    PATCH when the payment is done the page refreshes and
+                    PATCH when the payment is done the page refreshes and
                     clipboardjs still expects a button to be there
                         would be better to do clipboard.destroy(); but I don't know
                         where / when / how that would be executed
-                         -->
+
                         <button id="copy_address_button" class="copy_btn"
                                 name="copy_address_button"
-                                t-att-data-clipboard-text="payment_tx_id.payment_token_id.name"
+                                t-att-data-clipboard-text="payment_tx_id.token_id.name"
                                 style="font-size:20px"
                                 hidden="true"
                                 title="Copy payment address">
                             <i class="fa fa-clipboard"></i>
                         </button>
                 </t>
-                <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.payment_token_id.name and payment_tx_id.state == 'pending'">
+                <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.token_id.name and payment_tx_id.state == 'pending'">
                     <p>Payment should be made to the address below:
                         <ul>
                             <b>
                                 <li style="clear: both;">
                                     <button id="copy_address_button" class="copy_btn"
                                             name="copy_address_button"
-                                            t-att-data-clipboard-text="payment_tx_id.payment_token_id.name"
+                                            t-att-data-clipboard-text="payment_tx_id.token_id.name"
                                             style="font-size:20px"
                                             title="Copy payment address">
                                         <i class="fa fa-clipboard"></i>
                                     </button>
                                     <a
-                                            t-att-href="'monero:%s?tx_amount=%s&amp;tx_description=%s' % (payment_tx_id.payment_token_id.name, payment_tx_id.amount, order.name)" target="_blank">
+                                            t-att-href="'monero:%s?tx_amount=%s&amp;tx_description=%s' % (payment_tx_id.token_id.name, payment_tx_id.amount, order.name)" target="_blank">
                                         <button id="open_wallet" class="open_btn"
                                             name="open_wallet"
                                             style="font-size:20px"
@@ -100,11 +140,11 @@
                                     <button id="show_qr" class="show_qr"
                                             name="show_qr" style="font-size:20px"
                                             title="Show QR Code"
-                                            t-attf-onclick="enable_qr('monero:{{payment_tx_id.payment_token_id.name}}?tx_amount={{payment_tx_id.amount}}&amp;tx_description={{order.name}}&amp;recipient_name={{order.company_id.name}}')">
+                                            t-attf-onclick="enable_qr('monero:{{payment_tx_id.token_id.name}}?tx_amount={{payment_tx_id.amount}}&amp;tx_description={{order.name}}&amp;recipient_name={{order.company_id.name}}')">
                                         <i class="fa fa-qrcode"></i>
                                     </button>
                                     <div id="monero_payment_address">
-                                       <t t-raw="payment_tx_id.payment_token_id.name"/>
+                                       <t t-raw="payment_tx_id.token_id.name"/>
                                     </div>
                                 </li>
                             </b>

@@ -132,3 +132,11 @@ class MoneroPaymentAcquirer(models.Model):
         help="Required Number of confirmations "
         "before an order's transactions is set to done",
     )
+
+    def _get_default_payment_method_id(self):
+        self.ensure_one()
+        if self.provider != 'monero-rpc':
+            return super()._get_default_payment_method_id()
+        _logger.warning(self.env)
+        _logger.warning(dir(self.env))
+        return self.env.ref('monero-rpc-odoo.payment_method_monero').id

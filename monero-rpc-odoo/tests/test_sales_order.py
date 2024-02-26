@@ -12,11 +12,11 @@ from monero.transaction import IncomingPayment, Transaction
 
 from ..models.sales_order import MoneroSalesOrder
 
-from odoo.addons.sale.tests.common import TestSaleCommon
+from odoo.addons.website_sale.tests.common import TestWebsiteSaleCommon
 
 
 @tagged("post_install", "-at_install")
-class TestMoneroSalesOrder(TestSaleCommon):
+class TestMoneroSalesOrder(TestWebsiteSaleCommon):
     class MockBackend(object):
         def __init__(self, **kwargs):
             self.transfers = []

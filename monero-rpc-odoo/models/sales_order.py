@@ -13,6 +13,11 @@ class MoneroSalesOrder(models.Model):
     _inherit = "sale.order"
 
     def process_transaction(self, transaction, token, num_confirmation_required):
+        _logger.warning("-------CHECKPOINT PROCESS TRANSACTION")
+
+        _logger.warning("self: {}".format(self))
+        _logger.warning("amount total: {}".format(self.amount_total))
+
         try:
             wallet = transaction.acquirer_id.get_wallet()
         except MoneroPaymentAcquirerRPCUnauthorized:
@@ -34,6 +39,7 @@ class MoneroSalesOrder(models.Model):
             )
 
         incoming_payment = wallet.incoming(local_address=token.name, unconfirmed=True)
+        _logger.warning("Incoming Payments: {}".format(incoming_payment))
 
         if incoming_payment == []:
             job = (
@@ -44,6 +50,7 @@ class MoneroSalesOrder(models.Model):
             _logger.info(job.max_retries)
             _logger.info(job.retry)
             if job.retry == job.max_retries - 1:
+                self.action_cancel()
                 self.write({"state": "cancel", "is_expired": "true"})
                 log_msg = (
                     f"PaymentAcquirer: {transaction.acquirer_id.provider} "
@@ -102,14 +109,18 @@ class MoneroSalesOrder(models.Model):
                 if this_payment.transaction.confirmations < num_confirmation_required:
                     raise NumConfirmationsNotMet(conf_err_msg)
 
-            transaction_amount_rounded = float(
-                round(this_payment.amount, self.currency_id.decimal_places)
-            )
-            if transaction.amount == transaction_amount_rounded:
+            # need to convert, because this_payment.amount is of type decimal.Decimal...
+            if abs(float(this_payment.amount) - transaction.amount) <= 10 ** (- float(transaction.currency_id.decimal_places)):
                 self.write({"state": "sale"})
-                transaction.write({"state": "done", "is_processed": "true"})
+                transaction._set_done()
+                #transaction.write({"state": "done", "is_processed": "true"})
                 _logger.info(
                     f"Monero payment recorded for sale order: {self.id}, "
                     f"associated with subaddress: {token.name}"
                 )
+                _logger.warning("amount: {}".format(self.amount_total))
+                self.with_context(send_email=True).action_confirm()
+                self._send_order_confirmation_mail()
                 # TODO handle situation where the transaction amount is not equal
+            else:
+                _logger.warning("transaction amount was not equal")
