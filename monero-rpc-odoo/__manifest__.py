@@ -6,7 +6,7 @@
     # Categories can be used to filter modules in modules listing
     # for the full list
     "category": "Accounting",
-    "version": "14.0.1.0.2",
+    "version": "15.0",
     # any module necessary for this one to work correctly
     "depends": [
         "website_sale",
