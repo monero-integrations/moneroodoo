@@ -22,10 +22,10 @@
     "external_dependencies": {"python": ["monero"]},
     # always loaded
     "data": [
+        "data/payment_icon_data.xml",
         "views/monero_acquirer_form.xml",
         "views/monero_payment_confirmation.xml",
         "data/monero_xmr_payment_acquirer.xml",
-        "data/payment_icon_data.xml",
         "data/queue.xml",
     ],
     # only loaded in demonstration mode

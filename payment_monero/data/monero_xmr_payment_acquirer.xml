@@ -3,7 +3,7 @@
     <data noupdate="1">
         <template id="xmr_payment_form">
             <input type="hidden" name="data_set" data-create-route="/shop/payment/monero/submit"/>
-            <input type="hidden" id="wallet_address" name="wallet_address" data-is-required="true" t-att-value="request.wallet_address"/>
+            <input type="hidden" id="wallet_address" name="wallet_address" data-is-required="true" t-att-value="wallet_address"/>
             <input type="hidden" name="type" t-att-value="'XMR'"/>
             <input type="hidden" name="acquirer_id" t-att-value="id"/>
             <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
@@ -16,13 +16,9 @@
         <record id="payment_acquirer_monero_rpc" model="payment.acquirer">
             <field name="name">Monero RPC</field>
             <field name="provider">monero-rpc</field>
-            <field name="image" type="base64"
-                   file="monero-rpc-odoo/static/description/icon.png"/>
             <field name="image_128" type="base64"
-                   file="monero-rpc-odoo/static/description/icon.png"/>
-<!--        <field name="payment_icon_ids">payment.payment_icon_monero</field>-->
-<!--         Odoo bug, the payment icon isn't generated yet so there will be an-->
-<!--           error on install, the user has to manually set the payment icon-->
+                   file="payment_monero/static/description/icon.png"/>
+            <field name="payment_icon_ids" eval="[(6, 0, [ref('payment_monero.payment_icon_monero')])]" />
         <field name="description" type="html">
             <p>
                 Accept Monero payments in the webshop with the help of the Monero-RPC.
