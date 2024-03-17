@@ -1,6 +1,6 @@
 import logging
 
-from odoo import http
+from odoo import http, _
 from odoo.addons.payment.controllers.portal import PaymentProcessing
 from odoo.http import request
 from monero.address import SubAddress

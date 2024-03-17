@@ -1,6 +1,6 @@
 import logging
 
-from odoo import http
+from odoo import http, _
 from odoo.addons.website_sale.controllers.main import WebsiteSale
 from odoo.exceptions import ValidationError, UserError
 
@@ -58,36 +58,36 @@ class MoneroWebsiteSale(WebsiteSale):
                         "can't authenticate with RPC "
                         "due to user name or password"
                     )
-                    raise ValidationError(
+                    raise ValidationError(_(
                         "Current technical issues "
                         "prevent Monero from being accepted, "
                         "choose another payment method"
-                    )
+                    ))
                 except MoneroPaymentAcquirerRPCSSLError:
                     _logger.error(
                         "USER IMPACT: Monero Payment Acquirer "
                         "experienced an SSL Error with RPC"
                     )
-                    raise ValidationError(
+                    raise ValidationError(_(
                         "Current technical issues "
                         "prevent Monero from being accepted, "
                         "choose another payment method"
-                    )
+                    ))
                 except (requests.exceptions.ConnectionError, requests.exceptions.Timeout, requests.exceptions.HTTPError) as e:
                     _logger.error('Monero RPC connection issue: %s', e)
                 except (urllib3.exceptions.HTTPError, urllib3.exceptions.NewConnectionError, urllib3.exceptions.MaxRetryError) as e:
                     _logger.error('connection error urllib3: %s', e)
-                    raise UserError('urllib3 connection error.')
+                    raise UserError(_('urllib3 connection error.'))
                 except Exception as e:
                     _logger.error(
                         "USER IMPACT: Monero Payment Acquirer "
                         "experienced an Error with RPC: {e.__class__.__name__} %s", e
                     )
-                    # raise ValidationError(
+                    # raise ValidationError(_(
                     #    "Current technical issues "
                     #    "prevent Monero from being accepted, "
                     #    "choose another payment method"
-                    #)
+                    #))
                     return None
 
         if render_values["errors"]:

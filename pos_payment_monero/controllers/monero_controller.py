@@ -1,7 +1,7 @@
 import logging
 
 from odoo.http import request
-from odoo import http
+from odoo import http, _
 from odoo.exceptions import ValidationError
 
 from monero.backends.jsonrpc import Unauthorized
@@ -65,31 +65,31 @@ class MoneroController(http.Controller):
                     "can't authenticate with RPC "
                     "due to user name or password"
                 )
-                raise ValidationError(
+                raise ValidationError(_(
                     "Current technical issues "
                     "prevent Monero from being accepted, "
                     "choose another payment method"
-                )
+                ))
             except MoneroPaymentMethodRPCSSLError:
                 _logger.error(
                     "USER IMPACT: Monero POS Payment Method "
                     "experienced an SSL Error with RPC"
                 )
-                raise ValidationError(
+                raise ValidationError(_(
                     "Current technical issues "
                     "prevent Monero from being accepted, "
                     "choose another payment method"
-                )
+                ))
             except Exception as e:
                 _logger.error(
                     f"USER IMPACT: Monero POS Payment Method "
                     f"experienced an Error with RPC: {e.__class__.__name__}"
                 )
-                raise ValidationError(
+                raise ValidationError(_(
                     "Current technical issues "
                     "prevent Monero from being accepted, "
                     "choose another payment method"
-                )
+                ))
 
             res = {
                 "wallet_address": wallet.new_address()[0],
@@ -99,10 +99,10 @@ class MoneroController(http.Controller):
                 "USER IMPACT: Monero POS Payment Method"
                 "experienced an Error with payment method: Not Found"
             )
-            raise ValidationError(
+            raise ValidationError(_(
                 "Current technical issues "
                 "prevent Monero from being accepted, "
                 "choose another payment method"
-            )
+            ))
 
         return res
