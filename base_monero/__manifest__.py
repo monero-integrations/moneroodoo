@@ -25,4 +25,5 @@
     "installable": True,
     "application": True,
     "classifiers": ["License :: OSI Approved :: MIT License"],
+    "license": "Other OSI approved licence",  # MIT
 }
