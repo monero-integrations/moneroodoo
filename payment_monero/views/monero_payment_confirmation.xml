@@ -39,7 +39,7 @@
         <template id="monero_payment_confirmation"
                   inherit_id="website_sale.payment_confirmation_status">
             <xpath expr="//*[@class='card-header']" position="inside">
-                <script type="text/javascript" src="/monero-rpc-odoo/static/src/js/jquery.qrcode.min.js"></script>
+                <script type="text/javascript" src="/payment_monero/static/src/js/jquery.qrcode.min.js"></script>
                 <script>
                     var btn = document.getElementById('copy_address_button');
 
