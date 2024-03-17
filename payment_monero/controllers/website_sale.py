@@ -10,7 +10,7 @@ from odoo.http import request
 
 import requests
 
-from urllib3 import exceptions
+import urllib3
 from monero import exceptions
 from monero.backends.jsonrpc import JSONRPCDaemon, RPCError
 
