@@ -5,6 +5,7 @@ from odoo import http, _
 from odoo.exceptions import ValidationError
 
 from monero.backends.jsonrpc import Unauthorized
+from monero.wallet import Wallet
 from requests.exceptions import SSLError
 from odoo.addons.queue_job.exception import RetryableJobError
 

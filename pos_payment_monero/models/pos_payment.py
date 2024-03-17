@@ -3,7 +3,7 @@ from odoo import fields, models, _
 from .exceptions import NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse
 from .exceptions import MoneroPaymentMethodRPCUnauthorized
 from .exceptions import MoneroPaymentMethodRPCSSLError
-
+from monero.wallet import Wallet
 import logging
 
 _logger = logging.getLogger(__name__)
