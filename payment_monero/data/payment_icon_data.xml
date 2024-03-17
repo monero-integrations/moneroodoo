@@ -1,8 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <odoo>
     <record id="payment_icon_monero" model="payment.icon">
         <field name="name">Monero</field>
-        <field name="image" type="base64"
-               file="payment_monero/static/src/img/monero-symbol-480.png"/>
+        <field
+            name="image"
+            type="base64"
+            file="payment_monero/static/src/img/monero-symbol-480.png"
+        />
     </record>
 </odoo>

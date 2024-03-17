@@ -1,41 +1,66 @@
-<?xml version="1.0" encoding="utf-8"?>
-<odoo>
-    <data noupdate="1">
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
         <template id="xmr_payment_form">
-            <input type="hidden" name="data_set" data-create-route="/shop/payment/monero/submit"/>
-            <input type="hidden" id="wallet_address" name="wallet_address" data-is-required="true" t-att-value="wallet_address"/>
-            <input type="hidden" name="type" t-att-value="'XMR'"/>
-            <input type="hidden" name="acquirer_id" t-att-value="id"/>
-            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
-            <input t-if="return_url" type="hidden" name="return_url" t-att-value="return_url"/>
-            <input t-if="partner_id" type="hidden" name="partner_id" t-att-value="partner_id"/>
+            <input
+            type="hidden"
+            name="data_set"
+            data-create-route="/shop/payment/monero/submit"
+        />
+            <input
+            type="hidden"
+            id="wallet_address"
+            name="wallet_address"
+            data-is-required="true"
+            t-att-value="wallet_address"
+        />
+            <input type="hidden" name="type" t-att-value="'XMR'" />
+            <input type="hidden" name="acquirer_id" t-att-value="id" />
+            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()" />
+            <input
+            t-if="return_url"
+            type="hidden"
+            name="return_url"
+            t-att-value="return_url"
+        />
+            <input
+            t-if="partner_id"
+            type="hidden"
+            name="partner_id"
+            t-att-value="partner_id"
+        />
         </template>
 
-        <template id="xmr_acquirer_button"></template>
+        <template id="xmr_acquirer_button" />
 
         <record id="payment_acquirer_monero_rpc" model="payment.acquirer">
             <field name="name">Monero RPC</field>
             <field name="provider">monero-rpc</field>
-            <field name="image_128" type="base64"
-                   file="payment_monero/static/description/icon.png"/>
-            <field name="payment_icon_ids" eval="[(6, 0, [ref('payment_monero.payment_icon_monero')])]" />
+            <field
+            name="image_128"
+            type="base64"
+            file="payment_monero/static/description/icon.png"
+        />
+            <field
+            name="payment_icon_ids"
+            eval="[(6, 0, [ref('payment_monero.payment_icon_monero')])]"
+        />
         <field name="description" type="html">
             <p>
                 Accept Monero payments in the webshop with the help of the Monero-RPC.
             </p>
             <ul class="list-inline">
-                <li><i class="fa fa-check"/>eCommerce</li>
-                <li><i class="fa fa-check"/>Payment status checking</li>
-                <li><i class="fa fa-check"/>Configurable amount of confirmations</li>
-                <li><i class="fa fa-xmark"/>Subscription</li>
-                <li><i class="fa fa-xmark"/>Refunds</li>
-                <li><i class="fa fa-xmark"/>Pay button in emails</li>
+                <li><i class="fa fa-check" />eCommerce</li>
+                <li><i class="fa fa-check" />Payment status checking</li>
+                <li><i class="fa fa-check" />Configurable amount of confirmations</li>
+                <li><i class="fa fa-xmark" />Subscription</li>
+                <li><i class="fa fa-xmark" />Refunds</li>
+                <li><i class="fa fa-xmark" />Pay button in emails</li>
             </ul>
         </field>
 
-            <field name="company_id" ref="base.main_company"/>
-            <field name="view_template_id" ref="xmr_acquirer_button"/>
-            <field name="registration_view_template_id" ref="xmr_payment_form"/>
+            <field name="company_id" ref="base.main_company" />
+            <field name="view_template_id" ref="xmr_acquirer_button" />
+            <field name="registration_view_template_id" ref="xmr_payment_form" />
             <field name="state">test</field>
             <field name="payment_flow">s2s</field>
             <field name="pre_msg">
@@ -59,5 +84,4 @@
             <field name="monero_rpc_config_password">password</field>
             <field name="display_as">Monero</field>
         </record>
-    </data>
 </odoo>

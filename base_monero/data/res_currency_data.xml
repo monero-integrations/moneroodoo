@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<odoo>
-    <data>
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
         <!--XMR Currency Record-->
         <record id="XMR" model="res.currency">
             <field name="name">XMR</field>
@@ -13,5 +12,4 @@
             <field name="decimal_places">12</field>
             <field name="rounding">0.000000000001</field>
         </record>
-    </data>
 </odoo>
