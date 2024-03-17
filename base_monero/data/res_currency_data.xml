@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo noupdate="1">
+        <!--XMR Currency Record-->
+        <record id="XMR" model="res.currency">
+            <field name="name">XMR</field>
+            <field name="currency_unit_label">Monero</field>
+            <field name="currency_subunit_label">Atomic Units</field>
+            <field name="display_name">Monero</field>
+            <field name="symbol">ɱ</field>
+            <field name="position">after</field>
+            <field name="active">True</field>
+            <field name="decimal_places">12</field>
+            <field name="rounding">0.000000000001</field>
+        </record>
+</odoo>

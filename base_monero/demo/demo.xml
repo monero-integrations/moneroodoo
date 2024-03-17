@@ -1,0 +1,13 @@
+<odoo>
+        <record model="product.pricelist" id="list_xmr">
+            <field name="name">Monero Demo</field>
+            <field name="sequence">3</field>
+            <field name="currency_id" ref="base_monero.XMR" />
+        </record>
+        <record id="monero_items" model="product.pricelist.item">
+            <field name="pricelist_id" ref="list_xmr" />
+            <field name="compute_price">formula</field>
+            <field name="base">list_price</field>
+            <field name="price_discount">2</field>
+        </record>
+</odoo>
