@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <record id="acquirer_form_monero" model="ir.ui.view">
-        <field name="name">payment.acquirer.form.inherit.payment.monero</field>
+        <field name="name">payment.payment_acquirer_form_monero</field>
         <field name="model">payment.acquirer</field>
-        <field name="inherit_id" ref="payment.acquirer_form"/>
+        <field name="inherit_id" ref="payment.payment_acquirer_form"/>
         <field name="arch" type="xml">
             <xpath expr='//group[@name="acquirer"]' position='inside'>
                 <group attrs="{'invisible': [('provider', '!=', 'monero-rpc')]}">

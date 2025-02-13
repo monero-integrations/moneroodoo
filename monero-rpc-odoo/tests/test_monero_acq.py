@@ -1,7 +1,7 @@
-from odoo.addons.payment.tests.common import PaymentAcquirerCommon
+from odoo.addons.payment.tests.common import PaymentCommon
 
 
-class MoneroCommon(PaymentAcquirerCommon):
+class MoneroCommon(PaymentCommon):
     def setUp(self):
         super(MoneroCommon, self).setUp()
 

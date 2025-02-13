@@ -31,6 +31,7 @@ class MoneroWebsiteSale(WebsiteSale):
            did go to a payment.acquirer website but closed the tab without
            paying / canceling
         """
+        _logger.info("In Payment")
         order = request.website.sale_get_order()
         redirection = self.checkout_redirection(order)
         if redirection:
@@ -77,7 +78,7 @@ class MoneroWebsiteSale(WebsiteSale):
                     )
 
                 request.wallet_address = wallet.new_address()[0]
-                _logger.debug("new monero payment subaddress generated")
+                _logger.info("new monero payment subaddress generated")
 
         if render_values["errors"]:
             render_values.pop("acquirers", "")
