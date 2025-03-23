@@ -1,32 +1,20 @@
 import logging
-
 from monero.backends.jsonrpc import JSONRPCWallet, Unauthorized
 from monero.wallet import Wallet
 from odoo import api, fields, models
 from requests.exceptions import SSLError
-from .exceptions import (
-    MoneroPaymentMethodRPCUnauthorized,
-    MoneroPaymentMethodRPCSSLError,
-)
+from .exceptions import MoneroPaymentMethodRPCUnauthorized, MoneroPaymentMethodRPCSSLError
 
 _logger = logging.getLogger(__name__)
 
-
 class MoneroPosPaymentMethod(models.Model):
-    """
-    Inherits from pos.payment.method
-    Custom fields added: is_cryptocurrency, environment, type
-    """
-
     _inherit = "pos.payment.method"
 
     def _get_payment_terminal_selection(self):
-        return super(MoneroPosPaymentMethod, self)._get_payment_terminal_selection() + [
-            ("monero-rpc", "Monero RPC")
-        ]
+        return super()._get_payment_terminal_selection() + [("monero-rpc", "Monero RPC")]
 
     def get_wallet(self):
-        rpc_server: JSONRPCWallet = JSONRPCWallet(
+        rpc_server = JSONRPCWallet(
             protocol=self.rpc_protocol,
             host=self.monero_rpc_config_host,
             port=self.monero_rpc_config_port,
@@ -34,7 +22,7 @@ class MoneroPosPaymentMethod(models.Model):
             password=self.monero_rpc_config_password,
         )
         try:
-            wallet: Wallet = Wallet(rpc_server)
+            wallet = Wallet(rpc_server)
         except Unauthorized:
             raise MoneroPaymentMethodRPCUnauthorized
         except SSLError:
@@ -45,13 +33,7 @@ class MoneroPosPaymentMethod(models.Model):
 
         return wallet
 
-    @api.onchange(
-        "rpc_protocol",
-        "monero_rpc_config_host",
-        "monero_rpc_config_port",
-        "monero_rpc_config_user",
-        "monero_rpc_config_password",
-    )
+    @api.onchange("rpc_protocol", "monero_rpc_config_host", "monero_rpc_config_port", "monero_rpc_config_user", "monero_rpc_config_password")
     def check_rpc_server_connection(self):
         _logger.info("Trying new Monero RPC Server configuration")
         wallet = None
@@ -59,15 +41,10 @@ class MoneroPosPaymentMethod(models.Model):
             wallet = self.get_wallet()
         except MoneroPaymentMethodRPCUnauthorized:
             message = "Invalid Monero RPC user name or password"
-            pass
         except MoneroPaymentMethodRPCSSLError:
             message = "Monero RPC TLS Error"
-            pass
         except Exception as e:
-            message = (
-                f"Monero RPC Connection Failed or other error: {e.__class__.__name__}"
-            )
-            pass
+            message = f"Monero RPC Connection Failed or other error: {e.__class__.__name__}"
 
         title = "Monero RPC Connection Test"
         if type(wallet) is Wallet:
@@ -80,55 +57,18 @@ class MoneroPosPaymentMethod(models.Model):
         return {"warning": warning}
 
     is_cryptocurrency = fields.Boolean("Cryptocurrency?", default=False)
-    # not used right now, could be used to update price data?
-    type = fields.Selection(
-        [("xmr", "XMR")],
-        "none",
-        default="xmr",
-        required=True,
-        help="Monero: A Private Digital Currency",
-    )
-
-    rpc_protocol = fields.Selection(
-        [
-            ("http", "HTTP"),
-            ("https", "HTTPS"),
-        ],
-        "RPC Protocol",
-        default="http",
-    )
-    monero_rpc_config_host = fields.Char(
-        string="RPC Host",
-        help="The ip address or host name of the Monero RPC",
-        default="127.0.0.1",
-    )
-    monero_rpc_config_port = fields.Char(
-        string="RPC Port",
-        help="The port the Monero RPC is listening on",
-        default="18082",
-    )
-    monero_rpc_config_user = fields.Char(
-        string="RPC User",
-        help="The user to authenticate with the Monero RPC",
-        default=None,
-    )
-    monero_rpc_config_password = fields.Char(
-        string="RPC Password",
-        help="The password to authenticate with the Monero RPC",
-        default=None,
-    )
-    num_confirmation_required = fields.Selection(
-        [
-            ("0", "Low; 0-conf"),
-            ("1", "Low-Med; 1-conf"),
-            ("3", "Med; 3-conf"),
-            ("6", "Med-High; 6-conf"),
-            ("9", "High; 9-conf"),
-            ("12", "High-Extreme; 12-conf"),
-            ("15", "Extreme; 15-conf"),
-        ],
-        "Security Level (Confirmations)",
-        default="0",
-        help="Required Number of confirmations "
-        "before an order's transactions is set to done",
-    )
+    type = fields.Selection(selection_add=[("xmr", "XMR")], default="xmr", required=True, help="Monero: A Private Digital Currency", ondelete={"xmr": "set default"})
+    rpc_protocol = fields.Selection([("http", "HTTP"), ("https", "HTTPS")], "RPC Protocol", default="http")
+    monero_rpc_config_host = fields.Char(string="RPC Host", help="The ip address or host name of the Monero RPC", default="127.0.0.1")
+    monero_rpc_config_port = fields.Char(string="RPC Port", help="The port the Monero RPC is listening on", default="18082")
+    monero_rpc_config_user = fields.Char(string="RPC User", help="The user to authenticate with the Monero RPC", default=None)
+    monero_rpc_config_password = fields.Char(string="RPC Password", help="The password to authenticate with the Monero RPC", default=None)
+    num_confirmation_required = fields.Selection([
+        ("0", "Low; 0-conf"),
+        ("1", "Low-Med; 1-conf"),
+        ("3", "Med; 3-conf"),
+        ("6", "Med-High; 6-conf"),
+        ("9", "High; 9-conf"),
+        ("12", "High-Extreme; 12-conf"),
+        ("15", "Extreme; 15-conf"),
+    ], "Security Level (Confirmations)", default="0", help="Required Number of confirmations before an order's transactions is set to done")

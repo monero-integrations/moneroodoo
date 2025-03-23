@@ -24,11 +24,11 @@ class MoneroWebsiteSale(WebsiteSale):
         odoo/addons/website_sale/controllers/main.py
         Payment step. This page proposes several
         payment means based on available
-        payment.provider. State at this point :
+        payment.acquirer. State at this point :
          - a draft sales order with lines; otherwise, clean context / session and
            back to the shop
          - no transaction in context / session, or only a draft one, if the customer
-           did go to a payment.provider website but closed the tab without
+           did go to a payment.acquirer website but closed the tab without
            paying / canceling
         """
         order = request.website.sale_get_order()
