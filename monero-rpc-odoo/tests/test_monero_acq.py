@@ -5,7 +5,7 @@ class MoneroCommon(PaymentAcquirerCommon):
     def setUp(self):
         super(MoneroCommon, self).setUp()
 
-        # self.monero = self.env.ref("payment_acquirer_monero_rpc")
+        # self.monero = self.env.ref("payment_provider_monero_rpc")
         # self.monero.write({
         #     'is_cryptocurrency': True,
         #     'type': 'xmr',

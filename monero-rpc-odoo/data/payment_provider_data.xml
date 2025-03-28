@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="payment_provider_monero" model="payment.provider">
+        <field name="name">Monero RPC</field>
+        <field name="state">disabled</field>
+        <field name="is_cryptocurrency">True</field>
+    </record>
+</odoo>

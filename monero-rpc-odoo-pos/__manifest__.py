@@ -6,8 +6,7 @@
     # Categories can be used to filter modules in modules listing
     # for the full list
     "category": "Accounting",
-    "version": "14.0.0.0.1",
-    # any module necessary for this one to work correctly
+    "version": "18.0.0.0.1",
     "depends": [
         "account",
         "base_setup",

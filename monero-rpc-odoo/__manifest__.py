@@ -6,13 +6,13 @@
     # Categories can be used to filter modules in modules listing
     # for the full list
     "category": "Accounting",
-    "version": "14.0.1.0.2",
+    "version": "18.0.0.0.1",
+    "icon": "/monero_rpc_odoo/static/description/icon.png",
     # any module necessary for this one to work correctly
     "depends": [
         "website_sale",
         "website_payment",
         "website",
-        "payment_transfer",
         "payment",
         "base_setup",
         "web",
@@ -21,11 +21,12 @@
     "external_dependencies": {"python": ["monero"]},
     # always loaded
     "data": [
-        "views/monero_acquirer_form.xml",
+        "views/monero_payment_provider_form.xml",
         "views/monero_payment_confirmation.xml",
         "data/currency.xml",
-        "data/monero_xmr_payment_acquirer.xml",
+        "data/monero_xmr_payment_provider.xml",
         "data/payment_icon_data.xml",
+        "data/payment_provider_data.xml",
         "data/queue.xml",
     ],
     # only loaded in demonstration mode

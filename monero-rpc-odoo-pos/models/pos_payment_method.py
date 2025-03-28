@@ -78,17 +78,23 @@ class MoneroPosPaymentMethod(models.Model):
             warning = {"title": title, "message": f"{message}"}
 
         return {"warning": warning}
+    
+    @api.depends('use_payment_terminal')
+    def _compute_type(self):
+        for pm in self:
+            if pm.use_payment_terminal == 'monero-rpc':
+                pm.type = 'xmr'
+            else:
+                super(MoneroPosPaymentMethod, pm)._compute_type()
 
     is_cryptocurrency = fields.Boolean("Cryptocurrency?", default=False)
-    # not used right now, could be used to update price data?
     type = fields.Selection(
-        [("xmr", "XMR")],
-        "none",
+        selection_add=[('xmr', 'XMR')],
+        ondelete={'xmr': 'set default'},
+        compute='_compute_type',
         default="xmr",
-        required=True,
-        help="Monero: A Private Digital Currency",
+        store=True
     )
-
     rpc_protocol = fields.Selection(
         [
             ("http", "HTTP"),

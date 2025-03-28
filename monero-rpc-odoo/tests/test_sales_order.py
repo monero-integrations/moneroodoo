@@ -239,7 +239,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
         )
 
         # define payment acquirer
-        cls.payment_acquirer = cls.env["payment.acquirer"].create(
+        cls.payment_provider = cls.env["payment.provider"].create(
             {"name": "Monero RPC", "journal_id": 1}
         )
 
@@ -264,8 +264,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
             "MfpHeNXoX8MjY8q8prW1PEALgr1En",
             "partner_id": self.sale_order.partner_id.id,
             "active": False,
-            "acquirer_id": self.payment_acquirer.id,
-            "acquirer_ref": "payment.payment_acquirer_monero_rpc",
+            "acquirer_id": self.payment_provider.id,
+            "acquirer_ref": "payment.payment_provider_monero_rpc",
         }
 
         token = self.env["payment.token"].sudo().create(payment_token)
@@ -277,7 +277,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
             "currency_id": self.sale_order.currency_id.id,
             "partner_id": self.partner_a.id,
             "payment_token_id": token.id,  # Associating the Payment Token ID.
-            "acquirer_id": self.payment_acquirer.id,  # Payment Acquirer - Monero
+            "acquirer_id": self.payment_provider.id,  # Payment Acquirer - Monero
             "state": "pending",
         }
 
@@ -302,8 +302,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
             "K3fhq3scsyY88tdB1MqucULcKzWZC",
             "partner_id": self.sale_order.partner_id.id,
             "active": False,
-            "acquirer_id": self.payment_acquirer.id,
-            "acquirer_ref": "payment.payment_acquirer_monero_rpc",
+            "acquirer_id": self.payment_provider.id,
+            "acquirer_ref": "payment.payment_provider_monero_rpc",
         }
 
         token = self.env["payment.token"].sudo().create(payment_token)
@@ -315,7 +315,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
             "currency_id": self.sale_order.currency_id.id,
             "partner_id": self.partner_a.id,
             "payment_token_id": token.id,  # Associating the Payment Token ID.
-            "acquirer_id": self.payment_acquirer.id,  # Payment Acquirer - Monero
+            "acquirer_id": self.payment_provider.id,  # Payment Acquirer - Monero
             "state": "pending",
         }
 
@@ -339,8 +339,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
             "7P6L32RELNzCR6QzNFkmogDjvypyV",
             "partner_id": self.sale_order.partner_id.id,
             "active": False,
-            "acquirer_id": self.payment_acquirer.id,
-            "acquirer_ref": "payment.payment_acquirer_monero_rpc",
+            "acquirer_id": self.payment_provider.id,
+            "acquirer_ref": "payment.payment_provider_monero_rpc",
         }
 
         token = self.env["payment.token"].sudo().create(payment_token)
@@ -351,7 +351,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
             "currency_id": self.sale_order.currency_id.id,
             "partner_id": self.partner_a.id,
             "payment_token_id": token.id,  # Associating the Payment Token ID.
-            "acquirer_id": self.payment_acquirer.id,  # Payment Acquirer - Monero
+            "acquirer_id": self.payment_provider.id,  # Payment Acquirer - Monero
             "state": "pending",
         }
 
@@ -376,8 +376,8 @@ class TestMoneroSalesOrder(TestSaleCommon):
             "aZHWL13xKz7s9LESB4tWWFKsYAkrAd74K38Uw98cfc",
             "partner_id": self.sale_order.partner_id.id,
             "active": False,
-            "acquirer_id": self.payment_acquirer.id,
-            "acquirer_ref": "payment.payment_acquirer_monero_rpc",
+            "acquirer_id": self.payment_provider.id,
+            "acquirer_ref": "payment.payment_provider_monero_rpc",
         }
 
         token = self.env["payment.token"].sudo().create(payment_token)
@@ -388,7 +388,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
             "currency_id": self.sale_order.currency_id.id,
             "partner_id": self.partner_a.id,
             "payment_token_id": token.id,  # Associating the Payment Token ID.
-            "acquirer_id": self.payment_acquirer.id,  # Payment Acquirer - Monero
+            "acquirer_id": self.payment_provider.id,  # Payment Acquirer - Monero
             "state": "pending",
         }
 

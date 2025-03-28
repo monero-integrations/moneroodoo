@@ -6,25 +6,16 @@
         <field name="inherit_id" ref="point_of_sale.pos_payment_method_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='use_payment_terminal']" position="after">
-                <!-- Monero Daemon -->
-                <field name="is_cryptocurrency" readonly="1" groups="base.group_no_one"
-                       attrs="{'invisible': [('use_payment_terminal', '!=', 'monero-rpc')], 'required': [('use_payment_terminal', '=', 'monero-rpc')]}"/>
-                <field name="rpc_protocol"
-                       on_change="update_rpc_server()" attrs="{'invisible': [('use_payment_terminal', '!=', 'monero-rpc')], 'required': [('use_payment_terminal', '=', 'monero-rpc')]}"/>
-                <field name="monero_rpc_config_host" on_change="update_rpc_server()"
-                       attrs="{'invisible': [('use_payment_terminal', '!=', 'monero-rpc')], 'required': [('use_payment_terminal', '=', 'monero-rpc')]}"/>
-                <field name="monero_rpc_config_port" on_change="update_rpc_server()"
-                       attrs="{'invisible': [('use_payment_terminal', '!=', 'monero-rpc')], 'required': [('use_payment_terminal', '=', 'monero-rpc')]}"/>
-                <field name="monero_rpc_config_user" on_change="update_rpc_server()"
-                       attrs="{'invisible': [('use_payment_terminal', '!=', 'monero-rpc')], 'required': [('use_payment_terminal', '=', 'monero-rpc')]}"/>
-                <field name="monero_rpc_config_password"
-                       on_change="update_rpc_server()"
-                       attrs="{'invisible': [('use_payment_terminal', '!=', 'monero-rpc')], 'required': [('use_payment_terminal', '=', 'monero-rpc')]}"/>
-                <field name="type" readonly="1" string="Type"
-                       attrs="{'invisible': [('use_payment_terminal', '!=', 'monero-rpc')], 'required': [('use_payment_terminal', '=', 'monero-rpc')]}"/>
-                <field name="num_confirmation_required"
-                       attrs="{'invisible': [('use_payment_terminal', '!=', 'monero-rpc')], 'required': [('use_payment_terminal', '=', 'monero-rpc')]}"/>
-      </xpath>
+                <field name="is_cryptocurrency" readonly="1" groups="base.group_no_one" condition="use_payment_terminal == 'monero-rpc'"/>
+                <field name="rpc_protocol" on_change="update_rpc_server()" condition="use_payment_terminal == 'monero-rpc'"/>
+                <field name="monero_rpc_config_host" on_change="update_rpc_server()" condition="use_payment_terminal == 'monero-rpc'"/>
+                <field name="monero_rpc_config_port" on_change="update_rpc_server()" condition="use_payment_terminal == 'monero-rpc'"/>
+                <field name="monero_rpc_config_user" on_change="update_rpc_server()" condition="use_payment_terminal == 'monero-rpc'"/>
+                <field name="monero_rpc_config_password" on_change="update_rpc_server()" condition="use_payment_terminal == 'monero-rpc'"/>
+                <field name="type" readonly="1" string="Type" condition="use_payment_terminal == 'monero-rpc'"/>
+                <field name="num_confirmation_required" condition="use_payment_terminal == 'monero-rpc'"/>
+            </xpath>
         </field>
     </record>
 </odoo>
+

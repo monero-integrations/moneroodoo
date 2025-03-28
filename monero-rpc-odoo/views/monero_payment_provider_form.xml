@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="acquirer_form_monero" model="ir.ui.view">
+        <field name="name">payment.provider.form.inherit.payment.monero</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment.payment_provider_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/group" position="inside">
+                <group string="Monero Payment Settings" condition="provider == 'monero-rpc'">
+                    <field name="is_cryptocurrency" readonly="1" groups="base.group_no_one"/>
+                    <field name="rpc_protocol"/>
+                    <field name="monero_rpc_config_host"/>
+                    <field name="monero_rpc_config_port"/>
+                    <field name="monero_rpc_config_user"/>
+                    <field name="monero_rpc_config_password"/>               
+                    <field name="num_confirmation_required"/>                
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
