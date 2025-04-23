@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data noupdate="1">
+      <!-- Default configuration parameters -->
+      <record id="default_monero_rpc_url" model="ir.config_parameter">
+          <field name="key">monero.rpc_url</field>
+          <field name="value">http://localhost:38082/json_rpc</field>
+      </record>
+      
+      <record id="default_monero_confirmations" model="ir.config_parameter">
+          <field name="key">monero.required_confirmations</field>
+          <field name="value">2</field>
+      </record>
+
+      <!-- Currency Definition -->
+      <record id="currency_xmr" model="res.currency">
+          <field name="name">XMR</field>
+          <field name="currency_unit_label">Monero</field>
+          <field name="display_name">Monero</field>
+          <field name="symbol">ɱ</field>
+          <field name="position">after</field>
+          <field name="active">True</field>
+  <!-- Monero has 12 decimal places, but Odoo only allows up to 6            -->
+          <field name="decimal_places">6</field>
+          <field name="rounding">0.000001</field>
+      </record>
+
+      <!-- Payment Method Definition -->
+      <record id="payment_method_monero" model="payment.method">
+          <field name="name">Monero RPC</field>
+          <field name="code">monero_rpc</field>
+          <field name="sequence">10</field>
+          <field name="active">True</field>
+          <field name="image">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</field>
+          <field name="support_tokenization">False</field>
+          <field name="support_express_checkout">True</field>
+          <field name="support_refund">none</field>
+          <field name="supported_currency_ids" eval="[(4, ref('currency_xmr')), (4, ref('base.USD'), (4, ref('base.EUR'), (4, ref('base.CNY'), (4, ref('base.GBP'))]"/>
+      </record>        
+
+      <!-- Payment Provider Data -->
+      <record id="payment_provider_monero_rpc" model="payment.provider">
+          <field name="name">Monero RPC</field>
+          <field name="code">monero_rpc</field>
+          <field name="state">enabled</field>
+          <field name="is_published">True</field>
+          <field name="allow_tokenization">False</field>
+          <field name="allow_express_checkout">True</field>
+          <field name="main_currency_id" ref="currency_xmr"/>
+          <field name="available_currency_ids" eval="[(4, ref('currency_xmr')), (4, ref('base.USD'), (4, ref('base.EUR'), (4, ref('base.CNY'), (4, ref('base.GBP'))]"/>
+          <field name="network_type">stagenet</field>
+          <field name="daemon_rpc_url">http://localhost:38081/json_rpc</field>
+          <field name="rpc_url">http://localhost:38082/json_rpc</field>
+          <field name="rpc_user">rpc_user</field>
+          <field name="rpc_password">rpc_password</field>
+          <field name="rpc_timeout">180</field>
+          <field name="wallet_file">odoo_wallet</field>
+          <field name="wallet_password">odoo_wallet_password</field>
+          <field name="wallet_dir">/home/niyid/monero-x86_64-linux-gnu-v0.18.3.4/wallets</field>
+          <field name="wallet_address"></field>
+          <field name="exchange_rate_api">https://api.coingecko.com/api/v3/simple/price</field>
+          <field name="manual_rates" eval="{'USD': 200, 'EUR': 180}"/>
+          <field name="payment_method_ids" eval="[(4, ref('payment_method_monero'))]"/>
+      </record>
+      
+      <!-- Define Monero RPC payment method -->
+      <record id="monero_rpc_payment_method" model="pos.payment.method">
+          <field name="name">Monero RPC</field>
+          <field name="is_cash_count">False</field>
+          <field name="use_payment_terminal">True</field>
+      </record>
+
+      <!-- Action Window -->
+      <record id="action_monero_payments" model="ir.actions.act_window">
+          <field name="name">Monero Payments</field>
+          <field name="res_model">monero.payment</field>
+          <field name="view_mode">list,form</field>
+          <field name="help" type="html">
+              <p class="o_view_nocontent_smiling_face">
+                  No payments found. You'll see Monero payments here after they're created.
+              </p>
+          </field>
+      </record>
+      
+      <record id="seq_monero_payment" model="ir.sequence">
+          <field name="name">Monero Payment Reference</field>
+          <field name="code">monero.payment</field>
+          <field name="prefix">XMR-</field>
+          <field name="padding">4</field>
+          <field name="company_id" eval="False"/>
+      </record>    
+  </data>
+</odoo>

@@ -1,0 +1,84 @@
+/* /static/src/css/monero.css */
+.monero-status-container {
+    margin: 20px auto;
+    max-width: 500px;
+}
+
+.monero-timer {
+    text-align: center;
+    font-size: 1.5em;
+    margin: 20px 0;
+}
+
+.monero-timer .countdown {
+    font-family: monospace;
+    font-weight: bold;
+    color: #dc3545;
+}
+
+.progress-bar {
+    transition: width 1s ease-in-out;
+}
+
+.copy-btn {
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.copy-btn:hover {
+    color: #007bff;
+}
+
+/* QR code container with subtle border */
+.qr-container {
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 10px;
+    display: inline-block;
+    background: white;
+    width: 200px;
+    height: 200px;
+}
+
+.monero-payment-container {
+    margin: 15px 0;
+    padding: 15px;
+    border: 1px solid #e6e6e6;
+    border-radius: 4px;
+    background: #f9f9f9;
+}
+
+.monero-payment-btn {
+    background-color: #FF6600 !important;
+    border-color: #FF6600 !important;
+    padding: 10px 20px !important;
+    color: white !important;
+}
+
+.monero-payment-btn:hover {
+    background-color: #e05a00 !important;
+    border-color: #e05a00 !important;
+}
+
+.monero-payment-loading {
+    color: #FF6600;
+    font-weight: bold;
+}
+
+.monero-payment-btn-container {
+    margin-top: 15px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 4px;
+}
+
+.js_monero_payment_btn {
+    background-color: #FF6600 !important; /* Monero orange */
+    border-color: #FF6600 !important;
+    padding: 8px 16px !important;
+}
+
+.js_monero_loading {
+    color: #FF6600;
+    margin-top: 10px;
+}

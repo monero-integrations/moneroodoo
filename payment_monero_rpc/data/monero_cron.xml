@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ir_cron_update_payment_provider" model="ir.cron">
+        <field name="name">Update Monero Payment Provider</field>
+        <field name="model_id" ref="model_payment_provider"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_update_payment_provider()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+        <field name="nextcall" eval="(DateTime.now()).strftime('%Y-%m-%d %H:%M:%S')"/>
+    </record>
+
+    <!-- Expired Payments Check (runs hourly) -->
+    <record id="cron_check_expired_payments" model="ir.cron">
+        <field name="name">Monero: Check Expired Payments</field>
+        <field name="model_id" ref="model_monero_payment"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_check_expired_payments()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Payment Status Check (runs every 10 minutes) -->
+    <record id="cron_check_payment_status" model="ir.cron">
+        <field name="name">Monero: Check Payment Status</field>
+        <field name="model_id" ref="model_monero_payment"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_check_payment_status()</field>
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+
+    <!-- Payment Expiration Check (runs every 10 minutes) -->
+    <record id="cron_check_payment_status" model="ir.cron">
+        <field name="name">Monero: Check Payment Expiration</field>
+        <field name="model_id" ref="model_monero_payment"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_check_expired_payments()</field>
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+    
+    <!-- Exchange Rate Update (runs daily) -->
+    <record id="cron_update_xmr_rates" model="ir.cron">
+        <field name="name">Monero: Update Exchange Rates</field>
+        <field name="model_id" ref="model_payment_provider"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_update_xmr_rates()</field>
+        <field name="interval_number">6</field>
+        <field name="interval_type">hours</field>
+        <field name="active">True</field>
+    </record>    
+
+    <record id="ir_cron_verify_monero_payments" model="ir.cron">
+        <field name="name">Verify Monero Payments</field>
+        <field name="model_id" ref="model_monero_payment"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_verify_pending_payments()</field>
+        <field name="interval_number">10</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+    
+    <record id="ir_cron_check_monero_daemons" model="ir.cron">
+        <field name="name">Check Monero Daemons</field>
+        <field name="model_id" ref="model_monero_daemon"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_check_daemon_status()</field>
+        <field name="interval_number">5</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="monero_payment_page" name="Monero Payment Page" t-name="payment_monero_rpc.monero_payment_page">
+        <div id="wrap">
+            <div class="oe_website_sale o_website_sale_checkout container py-2">
+                <div t-att-class="'container mt-4 ' + ('dark-mode' if is_dark else 'light-mode')">
+                    <div class="row justify-content-center">
+                        <div class="col-md-8 text-center">
+                            <!-- Header -->
+                            <h2>Pay with Monero</h2>
+                            
+                            <!-- Payment Summary -->
+                            <div class="alert" t-att-class="'alert-' + payment['status_alert_class']">
+                                <h4>
+                                    <span t-esc="payment['amount_str']"/> XMR
+                                    <t t-if="payment['original_amount_str']">
+                                        <br/>
+                                        <small>
+                                            (≈ <span t-esc="payment['original_currency']"/> 
+                                            <span t-esc="payment['original_amount_str']"/>)
+                                        </small>
+                                    </t>
+                                </h4>
+                                <t t-if="payment['exchange_rate_str']">
+                                    <small>
+                                        Rate: 1 XMR = 
+                                        <span t-esc="payment['exchange_rate_str']"/> 
+                                        <span t-esc="payment['original_currency']"/>
+                                    </small>
+                                </t>
+                            </div>
+
+                            <!-- QR Code -->
+                            <div class="mb-4 border p-3" style="background:white;display:inline-block">
+                                <img t-att-src="'/shop/payment/monero/qr/' + str(payment['id'])" 
+                                     class="img-fluid" 
+                                     style="max-width: 250px"
+                                     alt="Monero Payment QR Code"/>
+                                <p class="mt-2 mb-0">
+                                    <i class="fa fa-qrcode"/> 
+                                    Scan with Monero wallet
+                                </p>
+                            </div>
+
+                            <!-- PDF Download Buttons -->
+                            <div class="mb-3">
+                                <!-- Multiple Invoice Downloads -->
+                                <t t-if="invoice_ids and len(invoice_ids) > 0">
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-primary dropdown-toggle" type="button" id="invoiceDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fa fa-file-pdf"/> Download Invoice
+                                        </button>
+                                        <div class="dropdown-menu" aria-labelledby="invoiceDropdown">
+                                            <t t-foreach="invoice_ids" t-as="invoice_id">
+                                                <a t-att-href="'/my/invoices/' + str(invoice_id) + '?download=1'" 
+                                                   class="dropdown-item">
+                                                    Invoice <span t-esc="invoice_id"/>
+                                                </a>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <a href="#" class="btn btn-outline-primary disabled">
+                                        <i class="fa fa-file-pdf"/> No Invoices Available
+                                    </a>
+                                </t>
+                                
+                                <t t-if="payment['state'] == 'confirmed'">
+                                    <a href="#" class="btn btn-outline-secondary ml-2">
+                                        <i class="fa fa-file-alt"/> Payment Proof
+                                    </a>
+                                </t>
+                            </div>
+
+                            <!-- Payment Details Card -->
+                            <div class="card mb-4 text-left">
+                                <div class="card-body">
+                                    <h5 class="card-title">Payment Details</h5>
+                                    <table class="table table-sm">
+                                        <tr>
+                                            <th>Seller Address:</th>
+                                            <td class="monospace" style="word-break:break-all">
+                                                <small t-esc="payment['address_seller']"/>
+                                            </td>
+                                        </tr>
+                                        <tr t-if="payment['payment_id']">
+                                            <th>Payment ID:</th>
+                                            <td class="monospace"><small t-esc="payment['payment_id']"/></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Order Reference:</th>
+                                            <td t-esc="payment['order_ref'] or 'N/A'"/>
+                                        </tr>
+                                        <tr t-if="payment['expiry_time_str']">
+                                            <th>Expires:</th>
+                                            <td>
+                                                <span t-esc="payment['expiry_time_str']"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Confirmations:</th>
+                                            <td>
+                                                <span t-esc="payment['confirmations']"/>/<span t-esc="payment['required_confirmations']"/>
+                                                <t t-if="payment['confirmations'] &lt; payment['required_confirmations']">
+                                                    <br/>
+                                                    <small class="text-muted">
+                                                        (Waiting for <span t-esc="payment['required_confirmations'] - payment['confirmations']"/> more)
+                                                    </small>
+                                                </t>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Payment Status -->
+                            <div t-att-class="'alert alert-' + payment['status_alert_class']">
+                                <i t-att-class="'fa ' + payment['status_icon']"/> 
+                                <span t-esc="payment['status_message']"/>
+                                
+                                <t t-if="payment['state'] == 'pending'">
+                                    <div class="mt-2">
+                                        <a t-att-href="'/payment/monero/status?payment_id=' + str(payment['id'])" 
+                                           class="btn btn-sm btn-primary">
+                                            Check Payment Status
+                                        </a>
+                                    </div>
+                                </t>
+                            </div>
+
+                            <!-- Payment Instructions -->
+                            <div class="text-left border-top pt-3">
+                                <h5>How to Pay:</h5>
+                                <ol>
+                                    <li>Open your Monero wallet (GUI, CLI, or mobile)</li>
+                                    <li>
+                                        Send <strong t-esc="payment['amount_str']"/> XMR to the address above
+                                        <t t-if="payment['original_amount_str']">
+                                            (≈ <span t-esc="payment['original_currency']"/> 
+                                            <span t-esc="payment['original_amount_str']"/>)
+                                        </t>
+                                    </li>
+                                    <li>Wait for <span t-esc="payment['required_confirmations']"/> network confirmations</li>
+                                </ol>
+                                <t t-if="payment['monero_uri']">
+                                    <p class="mt-2">
+                                        <a t-att-href="payment['monero_uri']" class="btn btn-sm btn-outline-primary">
+                                            <i class="fa fa-external-link-alt"/> Open in Wallet
+                                        </a>
+                                    </p>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+         </div>
+        <!-- Auto-refresh script -->
+        <script t-if="payment['state'] == 'pending'">
+            setTimeout(function(){
+                window.location.reload();
+            }, 30000); // Refresh every 30 seconds
+        </script>
+    </template>
+</odoo>

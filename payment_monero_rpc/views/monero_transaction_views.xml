@@ -1,0 +1,111 @@
+<odoo>
+    <!-- Payment Tree View -->
+    <record id="view_monero_payment_tree" model="ir.ui.view">
+        <field name="name">monero.payment.tree</field>
+        <field name="model">monero.payment</field>
+        <field name="arch" type="xml">
+            <list>      
+                <field name="display_name"/>
+                <field name="order_ref"/>
+                <field name="amount"/>
+                <field name="currency"/>
+                <field name="state" widget="statusbar"/>
+                <field name="amount_received"/>
+                <field name="confirmations"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Payment Form View -->
+    <record id="view_monero_payment_form" model="ir.ui.view">
+        <field name="name">monero.payment.form</field>
+        <field name="model">monero.payment</field>
+        <field name="arch" type="xml">
+            <form string="Monero Payment">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending,paid_unconfirmed,confirmed,expired,failed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="display_name" readonly="1"/>
+                            <field name="order_ref" readonly="1"/>
+                            <field name="amount" readonly="1"/>
+                            <field name="currency" readonly="1"/>
+                            <field name="description" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="payment_id" readonly="1"/>
+                            <field name="address" readonly="1"/>
+                            <div class="oe_inline">
+                                <field name="image_qr" widget="image" class="oe_avatar" width="150" height="150"/>
+                            </div>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Transactions">
+                            <!-- Correct way to reference transactions -->
+                            <field name="transaction_ids" 
+                                   context="{
+                                       'form_view_ref': 'payment_monero_rpc.view_monero_transaction_form',
+                                       'tree_view_ref': 'payment_monero_rpc.view_monero_transaction_tree'
+                                   }"/>
+                        </page>
+                        <page string="Logs">
+                            <field name="message_ids" widget="mail_thread"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
+            </form>
+        </field>
+    </record>
+
+    <!-- Transaction Tree View -->
+    <record id="view_monero_transaction_tree" model="ir.ui.view">
+        <field name="name">monero.transaction.tree</field>
+        <field name="model">monero.transaction</field>
+        <field name="arch" type="xml">
+            <list> 
+		        <field name="txid"/>
+		        <field name="amount"/>
+		        <field name="block_height"/>
+		        <field name="confirmations"/>
+		        <field name="timestamp"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Transaction Form View -->
+    <record id="view_monero_transaction_form" model="ir.ui.view">
+        <field name="name">monero.transaction.form</field>
+        <field name="model">monero.transaction</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="txid" readonly="1"/>
+                        <field name="amount" readonly="1"/>
+                        <field name="block_height" readonly="1"/>
+                        <field name="confirmations" readonly="1"/>
+                        <field name="timestamp" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_monero_payments" model="ir.actions.act_window">
+        <field name="name">Monero Payments</field>
+        <field name="res_model">monero.payment</field>
+        <field name="view_mode">tree,form,kanban,calendar,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create a new Monero payment request</p>
+        </field>
+    </record>
+</odoo>
