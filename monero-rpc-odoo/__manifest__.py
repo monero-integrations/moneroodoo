@@ -1,6 +1,6 @@
 {
     "name": "monero-rpc-odoo",
-    "summary": "Allows you to accept Monero Payments",
+    "summary": "A free and open source payment gateway to accept online Monero payments.",
     "author": "Monero Integrations",
     "website": "https://monerointegrations.com/",
     # Categories can be used to filter modules in modules listing
@@ -36,4 +36,4 @@
     "installable": True,
     "application": True,
     "classifiers": ["License :: OSI Approved :: MIT License"],
-}
+} # type: ignore
