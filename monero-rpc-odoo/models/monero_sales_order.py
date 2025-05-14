@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
+
 import logging
 
-from odoo import models
+from odoo.addons.sale.models import sale_order
 
 from ..models.exceptions import NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse
 from ..models.exceptions import MoneroPaymentAcquirerRPCUnauthorized
@@ -9,7 +11,7 @@ from ..models.exceptions import MoneroPaymentAcquirerRPCSSLError
 _logger = logging.getLogger(__name__)
 
 
-class MoneroSalesOrder(models.Model):
+class MoneroSalesOrder(sale_order.SaleOrder):
     _inherit = "sale.order"
 
     def process_transaction(self, transaction, token, num_confirmation_required):

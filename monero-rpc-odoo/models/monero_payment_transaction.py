@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
+
 import logging
 
-from odoo import models, api, _
+from odoo import api, _
+from odoo.addons.payment.models import payment_transaction
 from odoo.exceptions import ValidationError
 from odoo.http import request
 
@@ -15,7 +18,7 @@ from ..controllers.monero_controller import MoneroController
 _logger = logging.getLogger(__name__)
 
 
-class MoneroPaymentTransaction(models.Model):
+class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
     _inherit = 'payment.transaction'
     _provider_key = 'monero-rpc'
 

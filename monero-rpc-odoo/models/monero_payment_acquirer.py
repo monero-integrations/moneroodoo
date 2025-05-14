@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
+
 import logging
 
 from monero.backends.jsonrpc import JSONRPCWallet, Unauthorized
 from monero.wallet import Wallet
-from odoo import api, fields, models
+from odoo import api, fields
+from odoo.addons.payment.models import payment_acquirer
 from requests.exceptions import SSLError
 from .exceptions import (
     MoneroPaymentAcquirerRPCUnauthorized,
@@ -12,7 +15,7 @@ from .exceptions import (
 _logger = logging.getLogger(__name__)
 
 
-class MoneroPaymentAcquirer(models.Model):
+class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
     """
     Inherits from payment.acquirer
     Custom fields added: is_cryptocurrency, environment, type
