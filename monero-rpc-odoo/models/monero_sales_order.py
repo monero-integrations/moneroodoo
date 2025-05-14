@@ -14,6 +14,12 @@ _logger = logging.getLogger(__name__)
 class MoneroSalesOrder(sale_order.SaleOrder):
     _inherit = "sale.order"
 
+    # region Missing
+
+    id: str
+
+    # endregion
+
     def process_transaction(self, transaction, token, num_confirmation_required):
         _logger.warning("-------CHECKPOINT PROCESS TRANSACTION")
 

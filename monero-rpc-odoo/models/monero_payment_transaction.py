@@ -1,19 +1,25 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+
+from typing_extensions import override
+
 import logging
 
 from odoo import api, _
-from odoo.addons.payment.models import payment_transaction
+from odoo.addons.payment.models import payment_transaction, payment_token
 from odoo.exceptions import ValidationError
 from odoo.http import request
+
+from monero import MoneroSubaddress
 
 from ..models.exceptions import NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse
 from ..models.exceptions import MoneroPaymentAcquirerRPCUnauthorized
 from ..models.exceptions import MoneroPaymentAcquirerRPCSSLError
 
-from monero.address import SubAddress
-
 from ..controllers.monero_controller import MoneroController
+
+from .monero_payment_acquirer import MoneroPaymentAcquirer
 
 _logger = logging.getLogger(__name__)
 
@@ -22,13 +28,26 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
     _inherit = 'payment.transaction'
     _provider_key = 'monero-rpc'
 
+    # override
+    acquirer_id: MoneroPaymentAcquirer
+
+    # missing
+    id: str
+
+    def get_amount(self) -> float:
+        return float(self.amount) # type: ignore
+
+    def get_decimal_places(self) -> float:
+        return float(self.currency_id.decimal_places) # type: ignore
+
     def _cron_check_status(self):
         """
             Cron to send invoice that where not ready to be send directly after posting
         """
         self.env["sale.order"]
 
-    def _get_specific_rendering_values(self, processing_values):
+    @override
+    def _get_specific_rendering_values(self, processing_values: dict) -> dict:
         """ Override of payment to return Transfer-specific rendering values.
 
         Note: self.ensure_one() from `_get_processing_values`
@@ -49,7 +68,8 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
             #             'wallet_address': wallet.new_address()[0],
         }
 
-    def _process_feedback_data(self, data, order_id=None):
+    @override
+    def _process_feedback_data(self, data: dict, order_id=None) -> None:
         """ Override of payment to process the transaction based on transfer data.
 
         Note: self.ensure_one()
@@ -71,11 +91,11 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
         token = self._monero_tokenize_from_feedback_data(data)
         self._set_listener(token=token)
 
-    def _set_listener(self, token=None):
+    def _set_listener(self, token: payment_token.PaymentToken | None = None) -> None:
 
         # set queue channel and max_retries settings
         # for queue depending on num conf settings
-        num_conf_req = int(self.acquirer_id.num_confirmation_required)
+        num_conf_req = self.acquirer_id.get_num_confirmations_required()
         if num_conf_req == 0:
             queue_channel = "monero_zeroconf_processing"
             queue_max_retries = 44
@@ -92,23 +112,23 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
             channel=queue_channel, max_retries=queue_max_retries
         ).process_transaction(self, token, num_conf_req)
 
-    def _monero_tokenize_from_feedback_data(self, data):
+    def _monero_tokenize_from_feedback_data(self, data: dict) -> payment_token.PaymentToken:
         """ Create a token from feedback data.
 
             :param dict data: The feedback data sent by the provider
-            :return: None
+            :return: Token
             """
         _logger.warning("In tokenize")
-        wallet_sub_address = SubAddress(self.acquirer_id.get_wallet().new_address()[0])
+        wallet_sub_address: MoneroSubaddress = self.acquirer_id.create_subaddress()
         _logger.warning("wallet_sub_address: {}".format(wallet_sub_address))
         _logger.warning("acquirer_id: {}".format(self.acquirer_id))
         token_name = wallet_sub_address.__repr__()
-
-        token = self.env['payment.token'].create({
+        partner_id = self.partner_id.id # type: ignore
+        token: payment_token.PaymentToken = self.env['payment.token'].create({
             'acquirer_ref': self.reference,
             'acquirer_id': self.acquirer_id.id,
             'name': token_name,  # Already padded with 'X's
-            'partner_id': self.partner_id.id,
+            'partner_id': partner_id,
             'verified': True,  # The payment is authorized, so the payment method is valid
             'active': False, # The payment shall only be used once
         })
@@ -117,13 +137,14 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
             'tokenize': False,
         })
         _logger.info(
-            "created token with id %s for partner with id %s", token.id, self.partner_id.id
+            "created token with id %s for partner with id %s", token.id, partner_id
         )
 
         return token
 
     @api.model
-    def _get_tx_from_feedback_data(self, provider, data):
+    @override
+    def _get_tx_from_feedback_data(self, provider: str, data: dict) -> MoneroPaymentTransaction:
         """ Override of payment to find the transaction based on transfer data.
 
         :param str provider: The provider of the acquirer that handled the transaction
@@ -139,13 +160,14 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
         reference = data.get('reference')
         tx = self.search([('reference', '=', reference), ('provider', '=', self._provider_key)])
         _logger.warning(tx)
-        if not tx:
+
+        if not isinstance(tx, MoneroPaymentTransaction):
             raise ValidationError(
                 "Monero Transaction: " + _("No transaction found matching reference %s.", reference)
             )
         return tx
 
-    def process_transaction(self, token, num_confirmation_required):
+    def process_transaction(self, token: payment_token.PaymentToken, num_confirmation_required: int) -> str | None:
         _logger.warning("-------CHECKPOINT PROCESS TRANSACTION 2")
 
         try:
@@ -168,7 +190,8 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
                 f"experienced an Error with RPC: {e.__class__.__name__}"
             )
 
-        incoming_payment = wallet.incoming(local_address=token.name, unconfirmed=True)
+        address: str = str(token.name)
+        incoming_payment = self.acquirer_id.get_incoming_unconfirmed_transfers(address)
         # TODO: What do we do if we have multiple orders at the same time?
         _logger.warning("Incoming Payments: {}".format(incoming_payment))
 
@@ -181,7 +204,7 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
             _logger.info(job.max_retries)
             _logger.info(job.retry)
             if job.retry == job.max_retries - 1:
-                self._set_cancelled(state_message="Cancelling due to too many retries")
+                self._set_canceled(state_message="Cancelling due to too many retries")
                 log_msg = (
                     f"PaymentAcquirer: {self.acquirer_id.provider} "
                     f"Subaddress: {token.name} "
@@ -224,7 +247,7 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
                 f"PaymentAcquirer: {self.acquirer_id.provider} "
                 f"Subaddress: {token.name} "
                 "Status: Waiting for more confirmations "
-                f"Confirmations: current {this_payment.transaction.confirmations}, "
+                f"Confirmations: current {this_payment.tx.num_confirmations}, "
                 f"expected {num_confirmation_required} "
                 "Action: none"
             )
@@ -232,15 +255,15 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
             #  found within the transaction pool
             # note that when the NumConfirmationsNotMe is raised any database commits
             # are lost
-            if this_payment.transaction.confirmations is None:
+            if this_payment.tx.num_confirmations is None:
                 if num_confirmation_required > 0:
                     raise NumConfirmationsNotMet(conf_err_msg)
             else:
-                if this_payment.transaction.confirmations < num_confirmation_required:
+                if this_payment.tx.num_confirmations < num_confirmation_required:
                     raise NumConfirmationsNotMet(conf_err_msg)
-
+            transfer_amount = this_payment.amount if this_payment.amount is not None else 0
             # need to convert, because this_payment.amount is of type decimal.Decimal...
-            if abs(float(this_payment.amount) - self.amount) <= 10 ** (- float(self.currency_id.decimal_places)):
+            if abs(float(transfer_amount) - self.get_amount()) <= 10 ** (- self.get_decimal_places()):
                 self._set_done()
                 #transaction.write({"state": "done", "is_processed": "true"})
                 _logger.info(
@@ -253,7 +276,7 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
                 _logger.warning("transaction amount was not equal")
 
 
-def build_token_name(payment_details_short=None, final_length=16):
+def build_token_name(payment_details_short: str | None = None, final_length: int = 16) -> str:
     """ Pad plain payment details with leading X's to build a token name of the desired length.
 
     :param str payment_details_short: The plain part of the payment details (usually last 4 digits)
