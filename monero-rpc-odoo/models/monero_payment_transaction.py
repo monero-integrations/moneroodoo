@@ -129,7 +129,7 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
         _logger.warning("order: {}".format(order))
         order.with_delay(
             channel=queue_channel, max_retries=queue_max_retries
-        ).process_transaction(self, token, num_conf_req)
+        ).process_transaction(transaction=self, token=token, num_confirmation_required=num_conf_req)
 
     def _monero_tokenize_from_feedback_data(self, data: dict) -> payment_token.PaymentToken:
         """ Create a token from feedback data.
@@ -203,6 +203,7 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
         
         return super().create(vals)
 
+    @api.model
     def process_transaction(self, token: payment_token.PaymentToken, num_confirmation_required: int) -> str | None:
         _logger.warning("-------CHECKPOINT PROCESS TRANSACTION 2")
 
