@@ -2,6 +2,7 @@
 
 import logging
 
+from odoo.addons.payment.models import payment_token
 from odoo.addons.sale.models import sale_order
 
 from ..models.exceptions import NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse
@@ -20,7 +21,7 @@ class MoneroSalesOrder(sale_order.SaleOrder):
 
     # endregion
 
-    def process_transaction(self, transaction, token, num_confirmation_required):
+    def process_transaction(self, transaction, token: payment_token.PaymentToken, num_confirmation_required: int):
         _logger.warning("-------CHECKPOINT PROCESS TRANSACTION")
 
         _logger.warning("self: {}".format(self))

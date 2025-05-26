@@ -7,6 +7,7 @@ from typing_extensions import override
 import logging
 
 from odoo import api, _
+from odoo.models import fields
 from odoo.addons.payment.models import payment_transaction, payment_token
 from odoo.exceptions import ValidationError
 from odoo.http import request
@@ -20,6 +21,7 @@ from ..models.exceptions import MoneroPaymentAcquirerRPCSSLError
 from ..controllers.monero_controller import MoneroController
 
 from .monero_payment_acquirer import MoneroPaymentAcquirer
+from ..utils import MoneroKrakenRateConverter
 
 _logger = logging.getLogger(__name__)
 
@@ -31,6 +33,12 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
     # override
     acquirer_id: MoneroPaymentAcquirer
 
+    exchange_rate = fields.Monetary(
+        string="Exchange Rate", currency_field='currency_id', readonly=True, required=True)
+
+    amount_xmr = fields.Monetary(
+        string="Amount XMR", currency_field='currency_id', readonly=True, required=True)
+
     # missing
     id: str
 
@@ -39,6 +47,14 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
 
     def get_decimal_places(self) -> float:
         return float(self.currency_id.decimal_places) # type: ignore
+
+    def get_current_exchange_rate(self) -> float:
+        converter = MoneroKrakenRateConverter()
+        return converter.get_exchange_rate()
+
+    def usd_to_xmr(self, usd: float) -> float:
+        converter = MoneroKrakenRateConverter()
+        return converter.usd_to_xmr(usd)
 
     def _cron_check_status(self):
         """
@@ -104,9 +120,12 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
             queue_max_retries = num_conf_req * 25
 
         # Add payment token and sale order to transaction processing queue
-        # last_order_id = request.session['sale_last_order_id']
-        # order = request.env['sale.order'].sudo().browse(last_order_id).exists()
-        order = request.website.sale_get_order()
+        _logger.warning("_set_listener(): request: {}".format(request))
+        _logger.warning("_set_listener(): session: {}".format(request.session))
+        last_order_id = request.session['sale_last_order_id']
+        _logger.warning(f"_set_listener(): last_order_id: {last_order_id}")
+        order = request.env['sale.order'].sudo().browse(last_order_id).exists()
+        # order = request.website.sale_get_order()
         _logger.warning("order: {}".format(order))
         order.with_delay(
             channel=queue_channel, max_retries=queue_max_retries
@@ -122,7 +141,8 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
         wallet_sub_address: MoneroSubaddress = self.acquirer_id.create_subaddress()
         _logger.warning("wallet_sub_address: {}".format(wallet_sub_address))
         _logger.warning("acquirer_id: {}".format(self.acquirer_id))
-        token_name = wallet_sub_address.__repr__()
+        #token_name = wallet_sub_address.__repr__()
+        token_name = wallet_sub_address.address
         partner_id = self.partner_id.id # type: ignore
         token: payment_token.PaymentToken = self.env['payment.token'].create({
             'acquirer_ref': self.reference,
@@ -166,6 +186,22 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
                 "Monero Transaction: " + _("No transaction found matching reference %s.", reference)
             )
         return tx
+
+    @api.model
+    @override
+    def create(self, vals):
+        if 'exchange_rate' not in vals:
+            try:
+                vals['exchange_rate'] = self.get_current_exchange_rate()
+            except Exception as e:
+                raise ValueError(f"Could not get exchange rate: {e}")
+        if 'amount_xmr' not in vals:
+            try:
+                vals['amount_xmr'] = self.usd_to_xmr(vals['amount'])
+            except Exception as e:
+                raise ValueError(f"Could not convert usd to xmr: {e}")
+        
+        return super().create(vals)
 
     def process_transaction(self, token: payment_token.PaymentToken, num_confirmation_required: int) -> str | None:
         _logger.warning("-------CHECKPOINT PROCESS TRANSACTION 2")

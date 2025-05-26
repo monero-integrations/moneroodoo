@@ -1,11 +1,13 @@
 import logging
 
+from typing import override
+
 from odoo import http
 from odoo.http import request
 from odoo.exceptions import ValidationError
 from odoo.addons.website_sale.controllers.main import WebsiteSale
 
-from monero import MoneroWallet, MoneroSubaddress
+from monero import MoneroSubaddress
 
 from ..models.exceptions import MoneroPaymentAcquirerRPCUnauthorized
 from ..models.exceptions import MoneroPaymentAcquirerRPCSSLError
@@ -20,7 +22,8 @@ class MoneroWebsiteSale(WebsiteSale):
     @http.route(
         ["/shop/payment"], type="http", auth="public", website=True, sitemap=False
     )
-    def payment(self, **post):
+    @override
+    def shop_payment(self, **post):
         """
         OVERRIDING METHOD FROM
         odoo/addons/website_sale/controllers/main.py

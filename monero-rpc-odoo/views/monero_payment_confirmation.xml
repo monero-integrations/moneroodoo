@@ -117,7 +117,7 @@
                         </button>
                 </t>
                 <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.token_id.name and payment_tx_id.state == 'pending'">
-                    <p>Payment should be made to the address below:
+                    <p>Deposit exactly <t t-raw="payment_tx_id.amount_xmr"/> XMR to the address below:
                         <ul>
                             <b>
                                 <li style="clear: both;">
