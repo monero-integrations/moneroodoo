@@ -48,11 +48,13 @@
             <field name="is_cryptocurrency">True</field>
             <field name="type">xmr</field>
             <field name="num_confirmation_required">0</field>
-            <field name="rpc_protocol">http</field>
-            <field name="monero_rpc_config_host">127.0.0.1</field>
-            <field name="monero_rpc_config_port">18082</field>
-            <field name="monero_rpc_config_user">user</field>
-            <field name="monero_rpc_config_password">password</field>
+            <field name="wallet_type">full</field>
+            <field name="account_index">0</field>
+            <field name="wallet_primary_address"></field>
+            <field name="wallet_private_view_key"></field>
+            <field name="rpc_uri">http://127.0.0.1:18081</field>
+            <field name="rpc_username"></field>
+            <field name="rpc_password"></field>
             <field name="display_as">Monero</field>
         </record>
 

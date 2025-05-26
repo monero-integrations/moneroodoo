@@ -1,12 +1,14 @@
 import logging
 
 from odoo import http
-from odoo.addons.website_sale.controllers.main import WebsiteSale
+from odoo.http import request
 from odoo.exceptions import ValidationError
+from odoo.addons.website_sale.controllers.main import WebsiteSale
+
+from monero import MoneroWallet, MoneroSubaddress
 
 from ..models.exceptions import MoneroPaymentAcquirerRPCUnauthorized
 from ..models.exceptions import MoneroPaymentAcquirerRPCSSLError
-from odoo.http import request
 
 _logger = logging.getLogger(__name__)
 
@@ -42,9 +44,9 @@ class MoneroWebsiteSale(WebsiteSale):
 
         for acquirer in render_values["acquirers"]:
             if "monero-rpc" in acquirer.provider:
-                wallet = None
+                subaddress: MoneroSubaddress | None = None
                 try:
-                    wallet = acquirer.get_wallet()
+                    subaddress = acquirer.create_subaddress()
                 except MoneroPaymentAcquirerRPCUnauthorized:
                     _logger.error(
                         "USER IMPACT: Monero Payment Acquirer "
@@ -77,8 +79,13 @@ class MoneroWebsiteSale(WebsiteSale):
                         "choose another payment method"
                     )
 
-                request.wallet_address = wallet.new_address()[0]
-                _logger.info("new monero payment subaddress generated")
+                if subaddress is None:
+                    raise ValidationError(
+                        "Could not get an address to recevei payment order"
+                    )
+
+                request.wallet_address = subaddress.address
+                _logger.info(f"new monero payment subaddress generated {subaddress.address}")
 
         if render_values["errors"]:
             render_values.pop("acquirers", "")

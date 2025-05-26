@@ -4,7 +4,6 @@ from odoo import http
 # Cannot import, need to write it ourselfes...
 # from odoo.addons.payment.controllers.portal import PaymentProcessing
 from odoo.http import request
-from monero.address import SubAddress
 
 _logger = logging.getLogger(__name__)
 
@@ -15,7 +14,7 @@ class MoneroController(http.Controller):
     @http.route(
         "/shop/payment/token", type="http", auth="public", website=True, sitemap=False
     )
-    def payment_token(self, pm_id=None, **kwargs):
+    def payment_token(self, pm_id: int | None = None, **kwargs):
         """OVERRIDING METHOD FROM odoo/addons/website_sale/controllers/main.py
         Method that handles payment using saved tokens
         :param int pm_id: id of the payment.token that we want to use to pay.
@@ -41,7 +40,7 @@ class MoneroController(http.Controller):
 
         try:
             # pm_id is passed, make sure it's a valid int
-            pm_id = int(pm_id)
+            pm_id = int(pm_id) # type: ignore
         except ValueError:
             _logger.error("invalid token id")
             return request.redirect("/shop/?error=invalid_token_id")
