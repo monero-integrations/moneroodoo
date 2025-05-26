@@ -1,5 +1,5 @@
 {
-    "name": "monero-rpc-odoo",
+    "name": "Monero",
     "summary": "A free and open source payment gateway to accept online Monero payments.",
     "author": "Monero Integrations",
     "website": "https://monerointegrations.com/",
