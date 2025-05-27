@@ -1,4 +1,8 @@
+import logging
+
 from monero import MoneroRpcConnection, MoneroWallet, MoneroWalletFull, MoneroWalletRpc, MoneroNetworkType, MoneroWalletConfig, MoneroDaemonRpc, MoneroUtils
+
+_logger = logging.getLogger(__name__)
 
 
 class MoneroWalletManager:
@@ -74,10 +78,15 @@ class MoneroWalletManager:
         if MoneroWalletFull.wallet_exists(cls._FULL_WALLET_PATH):
             wallet = MoneroWalletFull.open_wallet(cls._FULL_WALLET_PATH, cls._FULL_WALLET_PASSWORD, network_type)
             
-            if not wallet.get_primary_address() == primary_address:
+            if wallet.get_primary_address() != primary_address:
                 # devo cancellare in qualche modo il wallet salvato...
                 raise NotImplementedError("Old deletion wallet not implemented")
             
+            connection = cls.load_connection(rpc_uri, rpc_username, rpc_password)
+            cls.check_connection()
+
+            wallet.set_daemon_connection(connection)
+
             return wallet
         
         connection = cls.load_connection(rpc_uri, rpc_username, rpc_password)
@@ -89,10 +98,13 @@ class MoneroWalletManager:
         config.path = cls._FULL_WALLET_PATH
         config.password = cls._FULL_WALLET_PASSWORD
         config.network_type = network_type
-        config.server = connection
+        # config.server = connection
         config.restore_height = cls.get_daemon_height()
 
-        return MoneroWalletFull.create_wallet(config)
+        wallet = MoneroWalletFull.create_wallet(config)
+        
+        wallet.set_daemon_connection(connection)
+        return wallet
 
     @classmethod
     def load_wallet_rpc(
@@ -143,7 +155,9 @@ class MoneroWalletManager:
         else:
             raise Exception("Invalid wallet type provided")
         
+        _logger.warning(f"Starting wallet sync...")
         cls._wallet.start_syncing()
+        _logger.warning(f"Started wallet syncing")
 
         return cls._wallet
     
