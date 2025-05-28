@@ -122,7 +122,7 @@ class MoneroSalesOrder(sale_order.SaleOrder):
             )
             # TODO set transaction state to "authorized" once a monero transaction is
             #  found within the transaction pool
-            # note that when the NumConfirmationsNotMe is raised any database commits
+            # note that when the NumConfirmationsNotMet is raised any database commits
             # are lost
             if this_payment.tx.num_confirmations is None:
                 if num_confirmation_required > 0:
@@ -131,8 +131,13 @@ class MoneroSalesOrder(sale_order.SaleOrder):
                 if this_payment.tx.num_confirmations < num_confirmation_required:
                     raise NumConfirmationsNotMet(conf_err_msg)
             payment_amount = this_payment.amount if this_payment.amount is not None else 0
+            amount_to_pay: int = transaction.get_amount_xmr_atomic_units()
+            payment_suffices: bool = payment_amount >= amount_to_pay
+            
+            _logger.info(f"Payment amount: {payment_amount}, amount to pay: {amount_to_pay}, payment suffices: {payment_suffices}")
+
             # need to convert, because this_payment.amount is of type decimal.Decimal...
-            if abs(float(payment_amount) - transaction.amount) <= 10 ** (- float(transaction.currency_id.decimal_places)):
+            if payment_suffices:
                 self.write({"state": "sale"})
                 transaction._set_done()
                 #transaction.write({"state": "done", "is_processed": "true"})

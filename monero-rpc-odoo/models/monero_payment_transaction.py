@@ -12,7 +12,7 @@ from odoo.addons.payment.models import payment_transaction, payment_token
 from odoo.exceptions import ValidationError
 from odoo.http import request
 
-from monero import MoneroSubaddress
+from monero import MoneroSubaddress, MoneroUtils
 
 from ..models.exceptions import NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse
 from ..models.exceptions import MoneroPaymentAcquirerRPCUnauthorized
@@ -33,17 +33,28 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
     # override
     acquirer_id: MoneroPaymentAcquirer
 
+    currency_monero_id = fields.Many2one(
+        'res.currency', string='Currency', required=True,
+        default=lambda self: self.env['res.currency'].search([('name', '=', 'XMR')], limit=1).id
+    )
+
     exchange_rate = fields.Monetary(
         string="Exchange Rate", currency_field='currency_id', readonly=True, required=True)
 
     amount_xmr = fields.Monetary(
-        string="Amount XMR", currency_field='currency_id', readonly=True, required=True)
+        string="Amount XMR", currency_field='currency_monero_id', readonly=True, required=True)
 
     # missing
     id: str
 
     def get_amount(self) -> float:
         return float(self.amount) # type: ignore
+
+    def get_amount_xmr(self) -> float:
+        return float(self.amount_xmr) # type: ignore
+    
+    def get_amount_xmr_atomic_units(self) -> int:
+        return MoneroUtils.xmr_to_atomic_units(self.get_amount_xmr())
 
     def get_decimal_places(self) -> float:
         return float(self.currency_id.decimal_places) # type: ignore
@@ -298,11 +309,17 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
             else:
                 if this_payment.tx.num_confirmations < num_confirmation_required:
                     raise NumConfirmationsNotMet(conf_err_msg)
+            
+            # transfer amount in atomic units
             transfer_amount = this_payment.amount if this_payment.amount is not None else 0
-            # need to convert, because this_payment.amount is of type decimal.Decimal...
-            if abs(float(transfer_amount) - self.get_amount()) <= 10 ** (- self.get_decimal_places()):
+            # amount to pay in atomic units
+            amount_to_pay = self.get_amount_xmr_atomic_units()
+            payment_suffices = transfer_amount >= amount_to_pay
+
+            _logger.info(f"Transfer amount: {transfer_amount}, amount to pay: {amount_to_pay}, payment suffices: {payment_suffices}")
+
+            if payment_suffices:
                 self._set_done()
-                #transaction.write({"state": "done", "is_processed": "true"})
                 _logger.info(
                     f"Monero payment recorded for sale order: {self.id}, "
                     f"associated with subaddress: {token.name}"
