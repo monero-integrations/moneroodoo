@@ -11,7 +11,6 @@
         <field name="nextcall" eval="(DateTime.now()).strftime('%Y-%m-%d %H:%M:%S')"/>
     </record>
 
-    <!-- Expired Payments Check (runs hourly) -->
     <record id="cron_check_expired_payments" model="ir.cron">
         <field name="name">Monero: Check Expired Payments</field>
         <field name="model_id" ref="model_monero_payment"/>
@@ -22,7 +21,6 @@
         <field name="active">True</field>
     </record>
 
-    <!-- Payment Status Check (runs every 10 minutes) -->
     <record id="cron_check_payment_status" model="ir.cron">
         <field name="name">Monero: Check Payment Status</field>
         <field name="model_id" ref="model_monero_payment"/>
@@ -33,7 +31,6 @@
         <field name="active">True</field>
     </record>
 
-    <!-- Payment Expiration Check (runs every 10 minutes) -->
     <record id="cron_check_payment_status" model="ir.cron">
         <field name="name">Monero: Check Payment Expiration</field>
         <field name="model_id" ref="model_monero_payment"/>
@@ -44,7 +41,6 @@
         <field name="active">True</field>
     </record>
     
-    <!-- Exchange Rate Update (runs daily) -->
     <record id="cron_update_xmr_rates" model="ir.cron">
         <field name="name">Monero: Update Exchange Rates</field>
         <field name="model_id" ref="model_payment_provider"/>

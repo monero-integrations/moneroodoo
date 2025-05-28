@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Payment Views -->
 q    <record id="view_monero_payment_tree" model="ir.ui.view">
         <field name="name">monero.payment.tree</field>
         <field name="model">monero.payment</field>
@@ -22,7 +21,6 @@ q    <record id="view_monero_payment_tree" model="ir.ui.view">
         <field name="arch" type="xml">
             <form>
                 <sheet>
-                    <!-- Two-column layout using col="2" -->
                     <group col="2">
                         <group string="Payment Details">
                             <field name="display_name" readonly="1"/>
@@ -41,7 +39,6 @@ q    <record id="view_monero_payment_tree" model="ir.ui.view">
                         </group>
                     </group>
 
-                    <!-- Notebook below both groups -->
                     <notebook>
                         <page string="Transactions">
                             <field name="transaction_ids" context="{'form_view_ref': 'payment_monero_rpc.view_monero_transaction_form'}"/>
@@ -55,7 +52,6 @@ q    <record id="view_monero_payment_tree" model="ir.ui.view">
         </field>
     </record>
 
-    <!-- Transaction Views -->
     <record id="view_monero_transaction_tree" model="ir.ui.view">
         <field name="name">monero.transaction.tree</field>
         <field name="model">monero.transaction</field>
@@ -92,7 +88,6 @@ q    <record id="view_monero_payment_tree" model="ir.ui.view">
         </field>
     </record>
 
-    <!-- Payment Method Views -->
     <record id="view_monero_payment_method_tree" model="ir.ui.view">
         <field name="name">monero.payment.method.tree</field>
         <field name="model">payment.method</field>
@@ -104,7 +99,6 @@ q    <record id="view_monero_payment_tree" model="ir.ui.view">
         </field>
     </record>
 
-    <!-- Provider Configuration View -->
     <record id="view_payment_provider_form_inherit" model="ir.ui.view">
         <field name="name">payment.provider.form.inherit.monero</field>
         <field name="model">payment.provider</field>
@@ -118,14 +112,12 @@ q    <record id="view_monero_payment_tree" model="ir.ui.view">
                 <field name="rpc_password" password="True"/>
             </xpath>
 
-            <!-- Add wallet fields to credentials page -->
             <xpath expr="//page[@name='credentials']/group[@name='provider_credentials']" position="inside">
                 <field name="wallet_file"/>
                 <field name="wallet_dir"/>
                 <field name="wallet_password" password="True"/>
             </xpath>
 
-            <!-- Add account details to configuration page -->
             <xpath expr="//page[@name='configuration']/group[@name='provider_config']" position="inside">
                 <group string="Account Details" name="monero_account_details">
                     <field name="wallet_address_value" readonly="1" string="Current Address"/>
@@ -137,7 +129,6 @@ q    <record id="view_monero_payment_tree" model="ir.ui.view">
                 </group>
             </xpath>
 
-            <!-- Add new notebook pages -->
             <xpath expr="//notebook" position="inside">
                 <page string="Advanced">
                     <group>
@@ -161,7 +152,6 @@ q    <record id="view_monero_payment_tree" model="ir.ui.view">
         </field>
     </record>
 
-    <!-- Window Actions -->
     <record id="action_monero_payments" model="ir.actions.act_window">
         <field name="name">Monero Payments</field>
         <field name="res_model">monero.payment</field>

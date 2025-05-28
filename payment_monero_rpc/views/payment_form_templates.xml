@@ -2,7 +2,6 @@
 <odoo>
     <template id="MoneroPaymentFormTemplate">
         <div id="o_payment_form" class="payment-form">
-            <!-- Example: Payment options loop -->
             <t t-foreach="props.paymentOptions" t-as="option">
                 <label class="payment-option">
                     <input 
@@ -14,7 +13,6 @@
                     />
                     <span t-esc="option.name"/>
                 </label>
-                <!-- Inline form (conditionally shown) -->
                 <div t-if="option.id === state.selectedOption?.id" class="inline-form">
                     <!-- Tokenization checkbox -->
                     <div t-if="state.showInputs" class="tokenize-container">
@@ -23,7 +21,6 @@
                     </div>
                 </div>
             </t>
-            <!-- Submit button -->
             <button 
                 t-on-click="submitForm" 
                 t-att-disabled="!state.selectedOption || state.isProcessing"

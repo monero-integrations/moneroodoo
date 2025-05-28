@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
   <data noupdate="1">
-      <!-- Default configuration parameters -->
       <record id="default_monero_rpc_url" model="ir.config_parameter">
           <field name="key">monero.rpc_url</field>
           <field name="value">http://localhost:38082/json_rpc</field>
@@ -12,7 +11,6 @@
           <field name="value">2</field>
       </record>
 
-      <!-- Currency Definition -->
       <record id="currency_xmr" model="res.currency">
           <field name="name">XMR</field>
           <field name="currency_unit_label">Monero</field>
@@ -25,7 +23,6 @@
           <field name="rounding">0.000001</field>
       </record>
 
-      <!-- Payment Method Definition -->
       <record id="payment_method_monero" model="payment.method">
           <field name="name">Monero RPC</field>
           <field name="code">monero_rpc</field>
@@ -38,7 +35,6 @@
           <field name="supported_currency_ids" eval="[(4, ref('currency_xmr')), (4, ref('base.USD'), (4, ref('base.EUR'), (4, ref('base.CNY'), (4, ref('base.GBP'))]"/>
       </record>        
 
-      <!-- Payment Provider Data -->
       <record id="payment_provider_monero_rpc" model="payment.provider">
           <field name="name">Monero RPC</field>
           <field name="code">monero_rpc</field>
@@ -63,14 +59,12 @@
           <field name="payment_method_ids" eval="[(4, ref('payment_method_monero'))]"/>
       </record>
       
-      <!-- Define Monero RPC payment method -->
       <record id="monero_rpc_payment_method" model="pos.payment.method">
           <field name="name">Monero RPC</field>
           <field name="is_cash_count">False</field>
           <field name="use_payment_terminal">True</field>
       </record>
 
-      <!-- Action Window -->
       <record id="action_monero_payments" model="ir.actions.act_window">
           <field name="name">Monero Payments</field>
           <field name="res_model">monero.payment</field>

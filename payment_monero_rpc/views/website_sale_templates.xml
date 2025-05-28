@@ -1,5 +1,4 @@
 <template id="monero_style_overrides" inherit_id="website_sale.payment">
-    <!-- Just add Monero-specific styling -->
     <xpath expr="//button[@type='submit']" position="attributes">
         <attribute name="t-att-class">
             provider.code == 'monero_rpc' ? 

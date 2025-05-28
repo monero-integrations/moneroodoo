@@ -1,8 +1,6 @@
 <odoo>
-    <!-- Main Menu -->
     <menuitem id="menu_monero_root" name="Monero Payments" sequence="10"/>
     
-    <!-- Child Menus -->
     <menuitem id="menu_monero_payments" 
               name="Payments" 
               parent="menu_monero_root" 

@@ -6,10 +6,8 @@
                 <div t-att-class="'container mt-4 ' + ('dark-mode' if is_dark else 'light-mode')">
                     <div class="row justify-content-center">
                         <div class="col-md-8 text-center">
-                            <!-- Header -->
                             <h2>Pay with Monero</h2>
                             
-                            <!-- Payment Summary -->
                             <div class="alert" t-att-class="'alert-' + payment['status_alert_class']">
                                 <h4>
                                     <span t-esc="payment['amount_str']"/> XMR
@@ -30,7 +28,6 @@
                                 </t>
                             </div>
 
-                            <!-- QR Code -->
                             <div class="mb-4 border p-3" style="background:white;display:inline-block">
                                 <img t-att-src="'/shop/payment/monero/qr/' + str(payment['id'])" 
                                      class="img-fluid" 
@@ -42,9 +39,7 @@
                                 </p>
                             </div>
 
-                            <!-- PDF Download Buttons -->
                             <div class="mb-3">
-                                <!-- Multiple Invoice Downloads -->
                                 <t t-if="invoice_ids and len(invoice_ids) > 0">
                                     <div class="dropdown">
                                         <button class="btn btn-outline-primary dropdown-toggle" type="button" id="invoiceDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -73,7 +68,6 @@
                                 </t>
                             </div>
 
-                            <!-- Payment Details Card -->
                             <div class="card mb-4 text-left">
                                 <div class="card-body">
                                     <h5 class="card-title">Payment Details</h5>
@@ -114,7 +108,6 @@
                                 </div>
                             </div>
 
-                            <!-- Payment Status -->
                             <div t-att-class="'alert alert-' + payment['status_alert_class']">
                                 <i t-att-class="'fa ' + payment['status_icon']"/> 
                                 <span t-esc="payment['status_message']"/>
@@ -129,7 +122,6 @@
                                 </t>
                             </div>
 
-                            <!-- Payment Instructions -->
                             <div class="text-left border-top pt-3">
                                 <h5>How to Pay:</h5>
                                 <ol>
