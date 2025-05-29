@@ -78,6 +78,7 @@ class MoneroWalletManager:
         cls, 
         primary_address: str,
         private_view_key: str,
+        account_lookahead: int,
         network_type: MoneroNetworkType,
         rpc_uri: str, 
         rpc_username: str, 
@@ -107,6 +108,8 @@ class MoneroWalletManager:
         config.path = cls.get_wallet_path(network_type)
         config.password = cls._FULL_WALLET_PASSWORD
         config.network_type = network_type
+        config.account_lookahead = account_lookahead
+        config.subaddress_lookahead = 10
         # config.server = connection
         config.restore_height = cls.get_daemon_height()
 
@@ -120,6 +123,7 @@ class MoneroWalletManager:
         cls,
         primary_address: str,
         private_view_key: str,
+        account_lookahead: int,
         network_type: MoneroNetworkType,
         rpc_uri: str,
         rpc_username: str,
@@ -133,6 +137,8 @@ class MoneroWalletManager:
         config.private_view_key = private_view_key
         config.path = cls.get_wallet_path(network_type)
         config.network_type = network_type
+        config.account_lookahead = account_lookahead
+        config.subaddress_lookahead = 10
 
         return wallet.open_wallet(config)
 
@@ -149,7 +155,8 @@ class MoneroWalletManager:
         cls, 
         wallet_type: str,
         primary_address: str,
-        private_view_key: str, 
+        private_view_key: str,
+        account_lookahead: int,
         network_type: MoneroNetworkType,
         rpc_uri: str, 
         rpc_username: str, 
@@ -158,9 +165,9 @@ class MoneroWalletManager:
         cls.check_load_wallet_params(primary_address, private_view_key, network_type, rpc_uri, rpc_username, rpc_password)
         cls.close_wallet()
         if wallet_type.lower() == "full":
-            cls._wallet = cls.load_wallet_full(primary_address, private_view_key, network_type, rpc_uri, rpc_username, rpc_password)
+            cls._wallet = cls.load_wallet_full(primary_address, private_view_key, account_lookahead, network_type, rpc_uri, rpc_username, rpc_password)
         elif wallet_type.lower() == "rpc":
-            cls._wallet = cls.load_wallet_rpc(primary_address, private_view_key, network_type, rpc_uri, rpc_username, rpc_password)
+            cls._wallet = cls.load_wallet_rpc(primary_address, private_view_key, account_lookahead, network_type, rpc_uri, rpc_username, rpc_password)
         else:
             raise Exception("Invalid wallet type provided")
         

@@ -190,6 +190,7 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
             self.get_wallet_type(),
             self.get_primary_address(),
             self.get_private_view_key(),
+            self.get_account_index(),
             self.get_network_type(),
             self.get_rpc_uri(),
             self.get_rpc_username(),
