@@ -7,6 +7,7 @@
     # for the full list
     "category": "Accounting",
     "version": "15.0",
+    "license": "AGPL-3.0",
     # any module necessary for this one to work correctly
     "depends": [
         "website_sale",
