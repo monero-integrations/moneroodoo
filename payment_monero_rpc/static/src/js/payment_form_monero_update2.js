@@ -1,5 +1,7 @@
 /** @odoo-module **/
 
+//TODO this is the future OWL-3 incarnation still in progress
+
 import { _t } from "@web/core/l10n/translation";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { loadJS } from "@web/core/assets";

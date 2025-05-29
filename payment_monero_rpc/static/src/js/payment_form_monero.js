@@ -9,6 +9,8 @@ import { rpc } from "@web/core/network/rpc";
 
 const DEBUG_TAG = "[MoneroPayment]";
 
+//TODO This is not a OWL-3 solution. MONERO_PAYMENT_TEMPLATE will be removed in the OWL-3 solution and replaced with a call to the
+//     actual QWEB template.
 const MONERO_PAYMENT_TEMPLATE = `
 <div id="wrap">
     <div class="oe_website_sale o_website_sale_checkout container py-2">
@@ -80,11 +82,11 @@ const MONERO_PAYMENT_TEMPLATE = `
                                     <tr>
                                         <th>Confirmations:</th>
                                         <td>
-                                            <span id="confirmations">0</span> remaining <span id="required_confirmations">10</span>
+                                            <span id="confirmations">0</span> remaining <span id="required_confirmations">2</span>
                                             <div id="confirmations_waiting" style="display:none">
                                                 <br/>
                                                 <small class="text-muted">
-                                                    (Waiting for <span id="confirmations_needed">10</span> more)
+                                                    (Waiting for <span id="confirmations_needed">2</span> more)
                                                 </small>
                                             </div>
                                         </td>
@@ -115,7 +117,7 @@ const MONERO_PAYMENT_TEMPLATE = `
                                     <span id="instructions_original_amount_value"></span>)
                                 </div>
                             </li>
-                            <li>Wait for <span id="instructions_required_confirmations">10</span> network confirmations</li>
+                            <li>Wait for <span id="instructions_required_confirmations">2</span> network confirmations</li>
                         </ol>
                         <p class="mt-2" id="wallet_uri_container" style="display:none">
                             <a href="#" class="btn btn-sm btn-outline-primary" id="wallet_uri_btn">
@@ -338,8 +340,8 @@ publicWidget.registry.PaymentForm = publicWidget.Widget.extend({
         document.getElementById('instructions_amount_str').textContent = payment.amount_str || '';
         document.getElementById('seller_address').textContent = payment.address_seller || '';
         document.getElementById('order_reference').textContent = payment.order_ref || 'N/A';
-        document.getElementById('required_confirmations').textContent = payment.required_confirmations || '10';
-        document.getElementById('instructions_required_confirmations').textContent = payment?.required_confirmations || '10';
+        document.getElementById('required_confirmations').textContent = payment.required_confirmations || '2';
+        document.getElementById('instructions_required_confirmations').textContent = payment?.required_confirmations || '2';
         document.getElementById('confirmations').textContent = payment.confirmations || '0';
         
         if (payment.id) {
@@ -371,7 +373,7 @@ publicWidget.registry.PaymentForm = publicWidget.Widget.extend({
             document.getElementById('expiry_time_row').style.display = '';
         }
 
-        if (payment.confirmations + payment.required_confirmations < 10) {
+        if (payment.confirmations + payment.required_confirmations < 2) {
             document.getElementById('confirmations_waiting').style.display = '';
             document.getElementById('confirmations_needed').textContent = 
                 payment.required_confirmations;
@@ -503,7 +505,7 @@ publicWidget.registry.PaymentForm = publicWidget.Widget.extend({
             console.debug(`${DEBUG_TAG} Status check response:`, status);
             
             // Force status to 'confirmed' in case it is not in sync with confirmations count
-            if (status.status === 'confirmed' || status.confirmations >= 10) {
+            if (status.status === 'confirmed' || status.confirmations >= 2) {
                 console.debug(`${DEBUG_TAG} Payment confirmed, clearing cart and redirecting`);
                 this._updateStatusDisplay({
                     status: 'confirmed',

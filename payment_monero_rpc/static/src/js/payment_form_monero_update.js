@@ -1,5 +1,7 @@
 /** @odoo-module **/
 
+//TODO this is the future OWL-3 incarnation still in progress.
+
 import { Component, onMounted, onWillUnmount, useState } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
@@ -396,7 +398,8 @@ export class MoneroPaymentForm extends Component {
                 this.stopStatusChecking();
 
                 try {
-                    // Clear the cart
+                    // Clear the cart. Better though should select actual concerned cart item and remove
+                    //TODO Remove actual cart item
                     await this.rpc("/shop/cart/clear", {}, {
                         shadow: true,
                         timeout: 10000
