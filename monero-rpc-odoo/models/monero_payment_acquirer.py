@@ -140,7 +140,8 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
         return str(self.rpc_password)
     
     def get_network_type(self) -> MoneroNetworkType:
-        return MoneroNetworkType.TESTNET
+        state = str(self.state)
+        return MoneroNetworkType.TESTNET if state == "test" else MoneroNetworkType.MAINNET
 
     def get_primary_address(self) -> str:
         return str(self.wallet_primary_address)

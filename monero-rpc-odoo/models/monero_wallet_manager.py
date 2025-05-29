@@ -16,6 +16,15 @@ class MoneroWalletManager:
         raise NotImplementedError("MoneroWalletManager is an abstract class")
 
     @classmethod
+    def get_wallet_path(cls, nettype: MoneroNetworkType) -> str:
+        if nettype == MoneroNetworkType.MAINNET:
+            return f"{cls._FULL_WALLET_PATH}_mainnet"
+        elif nettype == MoneroNetworkType.TESTNET:
+            return f"{cls._FULL_WALLET_PATH}_testnet"
+        else:
+            return f"{cls._FULL_WALLET_PATH}_stagenet"
+
+    @classmethod
     def get_daemon_rpc(cls) -> MoneroDaemonRpc:
         if cls._connection is None:
             raise Exception(f"Connection not set")
@@ -74,9 +83,9 @@ class MoneroWalletManager:
         rpc_username: str, 
         rpc_password: str
     ) -> MoneroWalletFull:
-        
-        if MoneroWalletFull.wallet_exists(cls._FULL_WALLET_PATH):
-            wallet = MoneroWalletFull.open_wallet(cls._FULL_WALLET_PATH, cls._FULL_WALLET_PASSWORD, network_type)
+        wallet_path = cls.get_wallet_path(network_type)
+        if MoneroWalletFull.wallet_exists(wallet_path):
+            wallet = MoneroWalletFull.open_wallet(wallet_path, cls._FULL_WALLET_PASSWORD, network_type)
             
             if wallet.get_primary_address() != primary_address:
                 # devo cancellare in qualche modo il wallet salvato...
@@ -95,7 +104,7 @@ class MoneroWalletManager:
         config = MoneroWalletConfig()
         config.primary_address = primary_address
         config.private_view_key = private_view_key
-        config.path = cls._FULL_WALLET_PATH
+        config.path = cls.get_wallet_path(network_type)
         config.password = cls._FULL_WALLET_PASSWORD
         config.network_type = network_type
         # config.server = connection
@@ -122,7 +131,7 @@ class MoneroWalletManager:
         config = MoneroWalletConfig()
         config.primary_address = primary_address
         config.private_view_key = private_view_key
-        config.path = cls._FULL_WALLET_PATH
+        config.path = cls.get_wallet_path(network_type)
         config.network_type = network_type
 
         return wallet.open_wallet(config)
