@@ -11,6 +11,12 @@
             <field name="channel_id" ref="channel_monero_zeroconf_processing"/>
             <field name="retry_pattern" eval="{1: 15,16: 60 * 1,30: 60 * 3}"/>
         </record>
+        <record id="job_function_sale_order_monero_update_zeroconf" model="queue.job.function">
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="method">update_transaction</field>
+            <field name="channel_id" ref="channel_monero_zeroconf_processing"/>
+            <field name="retry_pattern" eval="{1: 60, 5: 120, 10: 300}"/>
+        </record>
         <record id="channel_monero_secure_processing" model="queue.job.channel">
             <field name="name">monero_secure_processing</field>
             <field name="parent_id" ref="queue_job.channel_root"/>
@@ -20,6 +26,12 @@
             <field name="method">process_transaction</field>
             <field name="channel_id" ref="channel_monero_secure_processing"/>
             <field name="retry_pattern" eval="{1: 60 * 2, 20: 60 * 4}"/>
+        </record>
+        <record id="job_function_sale_order_monero_update_secure" model="queue.job.function">
+            <field name="model_id" ref="sale.model_sale_order"/>
+            <field name="method">update_transaction</field>
+            <field name="channel_id" ref="channel_monero_zeroconf_processing"/>
+            <field name="retry_pattern" eval="{1: 60, 5: 120, 10: 300}"/>
         </record>
     </data>
 </odoo>

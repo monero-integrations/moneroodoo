@@ -1,6 +1,6 @@
 import logging
 
-from monero import MoneroRpcConnection, MoneroWallet, MoneroWalletFull, MoneroWalletRpc, MoneroNetworkType, MoneroWalletConfig, MoneroDaemonRpc, MoneroUtils
+from monero import MoneroRpcConnection, MoneroWallet, MoneroWalletFull, MoneroWalletRpc, MoneroNetworkType, MoneroWalletConfig, MoneroDaemonRpc, MoneroUtils, MoneroWalletListener
 
 _logger = logging.getLogger(__name__)
 

@@ -6,16 +6,49 @@ from odoo import api
 from odoo.addons.payment.models import payment_token
 from odoo.addons.sale.models import sale_order
 
-from monero import MoneroIncomingTransfer
+from monero import MoneroIncomingTransfer, MoneroUtils
 
-from ..models.exceptions import NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse
+from ..models.exceptions import NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse, MoneroTransactionUpdateJobError
 from ..models.exceptions import MoneroPaymentAcquirerRPCUnauthorized
 from ..models.exceptions import MoneroPaymentAcquirerRPCSSLError
 
 _logger = logging.getLogger(__name__)
 
 
+class MoneroWalletIncomingTransfers:
+    amount: int
+    num_confirmations: int
+    transfers: list[MoneroIncomingTransfer]
+
+    def __init__(self, transfers: list[MoneroIncomingTransfer]) -> None:
+        self.transfers = transfers
+        self.amount = 0
+        self.num_confirmations = 0
+
+        num_confirmations: int | None = None
+
+        for transfer in transfers:
+            if transfer.amount is None:
+                continue
+            
+            fee = transfer.tx.fee if transfer.tx.fee is not None else 0
+            self.amount += transfer.amount - fee
+
+            if num_confirmations is None:
+                num_confirmations = transfer.tx.num_confirmations
+            elif transfer.tx.num_confirmations is not None and transfer.tx.num_confirmations < num_confirmations:
+                num_confirmations = transfer.tx.num_confirmations
+
+        if num_confirmations is not None:
+            self.num_confirmations = num_confirmations
+
+        _logger.warning(f"NUM CONFIRMATIONS {self.num_confirmations}")
+        if len(transfers) > 0:
+            transfer = transfers[0]
+            _logger.warning(f"TX CONFS: {transfer.tx.num_confirmations}")
+
 class MoneroSalesOrder(sale_order.SaleOrder):
+
     _inherit = "sale.order"
 
     # region Missing
@@ -24,24 +57,12 @@ class MoneroSalesOrder(sale_order.SaleOrder):
 
     # endregion
 
-    @api.model
-    def process_transaction(self, transaction, token: payment_token.PaymentToken, num_confirmation_required: int):
-        _logger.warning("-------CHECKPOINT PROCESS TRANSACTION")
-        _logger.warning("self: {}".format(self))
-        _logger.warning("amount total: {}".format(self.amount_total))
-
-        transfers: list[MoneroIncomingTransfer] = []
-        total_amount: int = 0
-        address = ""
-
+    @classmethod
+    def _get_address_transfers(cls, transaction, address: str) -> MoneroWalletIncomingTransfers:
         try:
-            address = str(token.name)
             transfers = transaction.acquirer_id.get_incoming_unconfirmed_transfers(address)
 
-            for transfer in transfers:
-                if transfer.amount is None:
-                    continue
-                total_amount += transfer.amount
+            return MoneroWalletIncomingTransfers(transfers)
 
         except MoneroPaymentAcquirerRPCUnauthorized:
             raise MoneroPaymentAcquirerRPCUnauthorized(
@@ -61,7 +82,48 @@ class MoneroSalesOrder(sale_order.SaleOrder):
                 f"experienced an Error with RPC: {e}"
             )
 
-        _logger.warning("Incoming Payments: {}".format(transfers))
+    @api.model
+    def update_transaction(self, transaction, token: payment_token.PaymentToken, num_confirmation_required: int) -> None:
+        _logger.warning("------- CHECKPOINT UPDATE TRANSACTION")
+
+        # update deposit amount
+        incoming_transfers = self._get_address_transfers(transaction, str(token.name))
+        transaction.amount_paid_xmr = MoneroUtils.atomic_units_to_xmr(incoming_transfers.amount)
+        amount_paid = transaction.get_amount_paid_xmr()
+        amount = transaction.get_amount_xmr()
+        remaining_xmr = (amount - amount_paid) if amount_paid <= amount else 0
+        transaction.amount_remaining_xmr = remaining_xmr
+        transaction.fully_paid = remaining_xmr == 0
+
+        # update num of confirmations required
+        if num_confirmation_required <= incoming_transfers.num_confirmations:
+            transaction.confirmations_required = 0
+        else:
+            transaction.confirmations_required = num_confirmation_required - incoming_transfers.num_confirmations
+        
+        _logger.warning("------- TOTAL USD: {}".format(self.amount_total))
+        _logger.warning("------- TOTAL XMR: {}".format(transaction.amount_xmr))
+        _logger.warning("------- TOTAL LEFT TO PAY XMR: {}".format(transaction.amount_remaining_xmr))
+        _logger.warning("------- CONFIRMATIONS REQUIRED: {}".format(transaction.confirmations_required))
+        self.env.cr.commit()
+
+        if not transaction.is_fully_paid():
+            _logger.warning("-------- CONTINUE UPDATE TRANSACTION")
+            raise MoneroTransactionUpdateJobError("Continue updating...")
+        
+        _logger.warning("-------- FINISHED UPDATE TRANSACTION")
+
+    @api.model
+    def process_transaction(self, transaction, token: payment_token.PaymentToken, num_confirmation_required: int):
+        _logger.warning("------- CHECKPOINT PROCESS TRANSACTION ORDER")
+        _logger.warning("------- TOTAL USD: {}".format(self.amount_total))
+        _logger.warning("------- TOTAL XMR: {}".format(transaction.amount_xmr))
+        _logger.warning("------- TOTAL LEFT TO PAY XMR: {}".format(transaction.amount_remaining_xmr))
+
+        incoming_transfers = self._get_address_transfers(transaction, str(token.name))
+        transfers = incoming_transfers.transfers
+
+        _logger.warning("Incoming Payments: {}".format(len(transfers)))
 
         if len(transfers) == 0:
             job = (
@@ -124,6 +186,7 @@ class MoneroSalesOrder(sale_order.SaleOrder):
             #  found within the transaction pool
             # note that when the NumConfirmationsNotMet is raised any database commits
             # are lost
+            _logger.warning(f"Number of confirmations required: {num_confirmation_required}, tx confirmations: {this_payment.tx.num_confirmations}, transaction confs: {transaction.confirmations_required}")
             if this_payment.tx.num_confirmations is None:
                 if num_confirmation_required > 0:
                     raise NumConfirmationsNotMet(conf_err_msg)

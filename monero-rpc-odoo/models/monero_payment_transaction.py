@@ -30,8 +30,18 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
     _inherit = 'payment.transaction'
     _provider_key = 'monero-rpc'
 
+    # missing
+    id: str
+
     # override
     acquirer_id: MoneroPaymentAcquirer
+
+    #region Odoo Fields
+
+    fully_paid = fields.Boolean(
+        string="Fully Paid", help="Indicates if transaction is fully paid",
+        default=False
+    )
 
     currency_monero_id = fields.Many2one(
         'res.currency', string='Currency', required=True,
@@ -44,34 +54,21 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
     amount_xmr = fields.Monetary(
         string="Amount XMR", currency_field='currency_monero_id', readonly=True, required=True)
 
-    # missing
-    id: str
+    amount_remaining_xmr = fields.Monetary(
+        string="Amount remaining to be paid XMR", currency_field='currency_monero_id', readonly=True, required=True)
 
-    def get_amount(self) -> float:
-        return float(self.amount) # type: ignore
+    amount_paid_xmr = fields.Monetary(
+        string="Amount paid XMR", currency_field='currency_monero_id', readonly=False, required=False,
+        default=0
+    )
 
-    def get_amount_xmr(self) -> float:
-        return float(self.amount_xmr) # type: ignore
-    
-    def get_amount_xmr_atomic_units(self) -> int:
-        return MoneroUtils.xmr_to_atomic_units(self.get_amount_xmr())
+    confirmations_required = fields.Integer(
+        string="Number of network confirmations required", default = 0
+    )
 
-    def get_decimal_places(self) -> float:
-        return float(self.currency_id.decimal_places) # type: ignore
+    #endregion
 
-    def get_current_exchange_rate(self) -> float:
-        converter = MoneroKrakenRateConverter()
-        return converter.get_exchange_rate()
-
-    def usd_to_xmr(self, usd: float) -> float:
-        converter = MoneroKrakenRateConverter()
-        return converter.usd_to_xmr(usd)
-
-    def _cron_check_status(self):
-        """
-            Cron to send invoice that where not ready to be send directly after posting
-        """
-        self.env["sale.order"]
+    #region Override Methods
 
     @override
     def _get_specific_rendering_values(self, processing_values: dict) -> dict:
@@ -118,61 +115,6 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
         token = self._monero_tokenize_from_feedback_data(data)
         self._set_listener(token=token)
 
-    def _set_listener(self, token: payment_token.PaymentToken | None = None) -> None:
-
-        # set queue channel and max_retries settings
-        # for queue depending on num conf settings
-        num_conf_req = self.acquirer_id.get_num_confirmations_required()
-        if num_conf_req == 0:
-            queue_channel = "monero_zeroconf_processing"
-            queue_max_retries = 44
-        else:
-            queue_channel = "monero_secure_processing"
-            queue_max_retries = num_conf_req * 25
-
-        # Add payment token and sale order to transaction processing queue
-        _logger.warning("_set_listener(): request: {}".format(request))
-        _logger.warning("_set_listener(): session: {}".format(request.session))
-        last_order_id = request.session['sale_last_order_id']
-        _logger.warning(f"_set_listener(): last_order_id: {last_order_id}")
-        order = request.env['sale.order'].sudo().browse(last_order_id).exists()
-        # order = request.website.sale_get_order()
-        _logger.warning("order: {}".format(order))
-        order.with_delay(
-            channel=queue_channel, max_retries=queue_max_retries
-        ).process_transaction(transaction=self, token=token, num_confirmation_required=num_conf_req)
-
-    def _monero_tokenize_from_feedback_data(self, data: dict) -> payment_token.PaymentToken:
-        """ Create a token from feedback data.
-
-            :param dict data: The feedback data sent by the provider
-            :return: Token
-            """
-        _logger.warning("In tokenize")
-        wallet_sub_address: MoneroSubaddress = self.acquirer_id.create_subaddress()
-        _logger.warning("wallet_sub_address: {}".format(wallet_sub_address))
-        _logger.warning("acquirer_id: {}".format(self.acquirer_id))
-        #token_name = wallet_sub_address.__repr__()
-        token_name = wallet_sub_address.address
-        partner_id = self.partner_id.id # type: ignore
-        token: payment_token.PaymentToken = self.env['payment.token'].create({
-            'acquirer_ref': self.reference,
-            'acquirer_id': self.acquirer_id.id,
-            'name': token_name,  # Already padded with 'X's
-            'partner_id': partner_id,
-            'verified': True,  # The payment is authorized, so the payment method is valid
-            'active': False, # The payment shall only be used once
-        })
-        self.write({
-            'token_id': token.id,
-            'tokenize': False,
-        })
-        _logger.info(
-            "created token with id %s for partner with id %s", token.id, partner_id
-        )
-
-        return token
-
     @api.model
     @override
     def _get_tx_from_feedback_data(self, provider: str, data: dict) -> MoneroPaymentTransaction:
@@ -212,7 +154,129 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
             except Exception as e:
                 raise ValueError(f"Could not convert usd to xmr: {e}")
         
+        if 'amount_paid_xmr' not in vals:
+            vals['amount_paid_xmr'] = 0
+
+        if 'amount_remaining_xmr' not in vals:
+            vals['amount_remaining_xmr'] = vals['amount_xmr']
+
         return super().create(vals)
+
+    #endregion
+
+    #region Convenience Methods
+
+    def get_amount(self) -> float:
+        return float(self.amount) # type: ignore
+
+    def get_amount_xmr(self) -> float:
+        return float(self.amount_xmr) # type: ignore
+    
+    def get_amount_paid_xmr(self) -> float:
+        return float(self.amount_paid_xmr) # type: ignore
+
+    def get_amount_remaining_xmr(self) -> float:
+        return float(self.amount_remaining_xmr) # type: ignore
+
+    def get_amount_xmr_atomic_units(self) -> int:
+        return MoneroUtils.xmr_to_atomic_units(self.get_amount_xmr())
+
+    def get_amount_paid_xmr_atomic_units(self) -> int:
+        return MoneroUtils.xmr_to_atomic_units(self.get_amount_paid_xmr())
+    
+    def get_amount_remaining_xmr_atomic_units(self) -> int:
+        return MoneroUtils.xmr_to_atomic_units(self.get_amount_remaining_xmr())
+
+    def get_confirmations_required(self) -> int:
+        return int(self.confirmations_required) # type: ignore
+
+    def is_fully_paid(self) -> bool:
+        return bool(self.fully_paid)
+
+    def get_decimal_places(self) -> float:
+        return float(self.currency_id.decimal_places) # type: ignore
+
+    def get_current_exchange_rate(self) -> float:
+        converter = MoneroKrakenRateConverter()
+        return converter.get_exchange_rate()
+
+    def usd_to_xmr(self, usd: float) -> float:
+        converter = MoneroKrakenRateConverter()
+        return converter.usd_to_xmr(usd)
+
+    #endregion
+
+    #region Private Methods
+
+    def _cron_check_status(self):
+        """
+            Cron to send invoice that where not ready to be send directly after posting
+        """
+        self.env["sale.order"]
+
+    def _set_listener(self, token: payment_token.PaymentToken | None = None) -> None:
+
+        # set queue channel and max_retries settings
+        # for queue depending on num conf settings
+        num_conf_req = self.acquirer_id.get_num_confirmations_required()
+        if num_conf_req == 0:
+            queue_channel = "monero_zeroconf_processing"
+            queue_max_retries = 44
+        else:
+            queue_channel = "monero_secure_processing"
+            queue_max_retries = num_conf_req * 25
+
+        # Add payment token and sale order to transaction processing queue
+        _logger.warning("_set_listener(): request: {}".format(request))
+        _logger.warning("_set_listener(): session: {}".format(request.session))
+        last_order_id = request.session['sale_last_order_id']
+        _logger.warning(f"_set_listener(): last_order_id: {last_order_id}")
+        order = request.env['sale.order'].sudo().browse(last_order_id).exists()
+        # order = request.website.sale_get_order()
+        _logger.warning("order: {}".format(order))
+
+        order.with_delay(
+            channel=queue_channel, max_retries=queue_max_retries
+        ).update_transaction(transaction=self, token=token, num_confirmation_required=num_conf_req)
+
+        order.with_delay(
+            channel=queue_channel, max_retries=queue_max_retries
+        ).process_transaction(transaction=self, token=token, num_confirmation_required=num_conf_req)
+
+    def _monero_tokenize_from_feedback_data(self, data: dict) -> payment_token.PaymentToken:
+        """ Create a token from feedback data.
+
+            :param dict data: The feedback data sent by the provider
+            :return: Token
+            """
+        _logger.warning("In tokenize")
+        wallet_sub_address: MoneroSubaddress = self.acquirer_id.create_subaddress()
+        _logger.warning("wallet_sub_address: {}".format(wallet_sub_address))
+        _logger.warning("acquirer_id: {}".format(self.acquirer_id))
+        #token_name = wallet_sub_address.__repr__()
+        token_name = wallet_sub_address.address
+        partner_id = self.partner_id.id # type: ignore
+        token: payment_token.PaymentToken = self.env['payment.token'].create({
+            'acquirer_ref': self.reference,
+            'acquirer_id': self.acquirer_id.id,
+            'name': token_name,  # Already padded with 'X's
+            'partner_id': partner_id,
+            'verified': True,  # The payment is authorized, so the payment method is valid
+            'active': False, # The payment shall only be used once
+        })
+        self.write({
+            'token_id': token.id,
+            'tokenize': False,
+        })
+        _logger.info(
+            "created token with id %s for partner with id %s", token.id, partner_id
+        )
+
+        return token
+
+    #endregion
+
+    #region Public Methods
 
     @api.model
     def process_transaction(self, token: payment_token.PaymentToken, num_confirmation_required: int) -> str | None:
@@ -328,6 +392,8 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
                 # TODO handle situation where the transaction amount is not equal
             else:
                 _logger.warning("transaction amount was not equal")
+
+    #endregion
 
 
 def build_token_name(payment_details_short: str | None = None, final_length: int = 16) -> str:

@@ -10,6 +10,9 @@ class MoneroPaymentAcquirerRPCSSLError(SSLError):
     pass
 
 
+class MoneroTransactionUpdateJobError(RetryableJobError):
+    pass
+
 class NoTXFound(RetryableJobError):
     pass
 
