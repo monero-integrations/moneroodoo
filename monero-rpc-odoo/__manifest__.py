@@ -1,5 +1,5 @@
 {
-    "name": "Monero",
+    "name": "Monero RPC",
     "summary": "A free and open source payment gateway to accept online Monero payments.",
     "author": "Monero Integrations",
     "website": "https://monerointegrations.com/",
@@ -24,7 +24,7 @@
         "views/monero_acquirer_form.xml",
         "views/monero_payment_confirmation.xml",
         "data/currency.xml",
-        "data/monero_xmr_payment_acquirer.xml",
+        "data/monero_payment_acquirer.xml",
         "data/payment_icon_data.xml",
         "data/queue.xml",
     ],

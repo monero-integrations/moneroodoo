@@ -21,19 +21,10 @@
         <record id="payment_acquirer_monero_rpc" model="payment.acquirer">
             <field name="name">Monero RPC</field>
             <field name="provider">monero-rpc</field>
-            <field name="image_128" type="base64"
-                   file="monero-rpc-odoo/static/description/icon.png"/>
-
-<!--        <field name="payment_icon_ids">payment.payment_icon_monero</field>-->
-<!--         Odoo bug, the payment icon isn't generated yet so there will be an-->
-<!--           error on install, the user has to manually set the payment icon-->
+            <field name="image_128" type="base64" file="monero-rpc-odoo/static/description/icon.png"/>
             <field name="company_id" ref="base.main_company"/>
-<!--            <field name="view_template_id" ref="xmr_acquirer_button"/> -->
-<!--   The whole wallet subaddress was actually done before the user checked Monero...will not do that anymore...
-            <field name="inline_form_view_id" ref="xmr_payment_form"/>  -->
             <field name="redirect_form_view_id" ref="redirect_form"/>
             <field name="state">test</field>
-<!--            <field name="payment_flow">s2s</field>  -->
             <field name="pre_msg">
             <![CDATA[<p>You will be redirected to the Payment information and processing page after clicking on the payment button.</p>]]>
             </field>
@@ -44,6 +35,15 @@
             <![CDATA[<p><b>
             Thanks for using Monero for payment.
             </b></p><br><p>Please note your order number for future reference.</p>]]>
+            </field>
+            <field name="description">
+            <![CDATA[<p>
+            An open source payment gateway to accept Monero online payments.
+            </p>
+            <ul class="list-inline">
+                <li class="list-inline-item"><i class="fa fa-check"></i>Online Payment</li>
+                <li class="list-inline-item"><i class="fa fa-check"></i>Payment Status Tracking</li>
+            </ul>]]>
             </field>
             <field name="is_cryptocurrency">True</field>
             <field name="type">xmr</field>
