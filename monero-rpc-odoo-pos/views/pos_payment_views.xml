@@ -9,7 +9,13 @@
                 <field name="payment_date"/>
                 <field name="payment_method_id" />
                 <field name="pos_order_id" />
+                <field name="exchange_rate" />
+                <field name="fully_paid" />
                 <field name="amount" />
+                <field name="amount_xmr" />
+                <field name="amount_remaining_xmr" />
+                <field name="amount_paid_xmr" />
+                <field name="confirmations_required" />
                 <field name="payment_status" />
                 <field name="wallet_address" />
             </tree>

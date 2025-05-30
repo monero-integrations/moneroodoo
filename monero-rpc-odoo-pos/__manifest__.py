@@ -6,7 +6,8 @@
     # Categories can be used to filter modules in modules listing
     # for the full list
     "category": "Accounting",
-    "version": "14.0.0.0.1",
+    "version": "15.0",
+    "license": "AGPL-3",
     # any module necessary for this one to work correctly
     "depends": [
         "account",
@@ -33,4 +34,4 @@
     "installable": True,
     "application": True,
     "classifiers": ["License :: OSI Approved :: MIT License"],
-}
+} # type: ignore
