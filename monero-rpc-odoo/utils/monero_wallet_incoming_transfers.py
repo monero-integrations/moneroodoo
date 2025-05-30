@@ -6,6 +6,36 @@ class MoneroWalletIncomingTransfers:
     num_confirmations: int
     transfers: list[MoneroIncomingTransfer]
 
+    @property
+    def size(self) -> int:
+        return len(self.transfers)
+
+    @property
+    def empty(self) -> bool:
+        return self.size == 0
+    
+    @property
+    def moreThanOne(self) -> bool:
+        return self.size > 1
+    
+    @property
+    def onlyOne(self) -> bool:
+        return self.size == 1
+
+    @property
+    def first(self) -> MoneroIncomingTransfer | None:
+        if self.empty:
+            return None
+        
+        return self.transfers[0]
+
+    @property
+    def last(self) -> MoneroIncomingTransfer | None:
+        if self.empty:
+            return None
+        
+        return self.transfers[self.size - 1]
+
     def __init__(self, transfers: list[MoneroIncomingTransfer]) -> None:
         self.transfers = transfers
         self.amount = 0

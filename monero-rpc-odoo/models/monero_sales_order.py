@@ -96,7 +96,7 @@ class MoneroSalesOrder(sale_order.SaleOrder):
 
         _logger.warning("Incoming Payments: {}".format(len(transfers)))
 
-        if len(transfers) == 0:
+        if incoming_transfers.empty:
             job = (
                 self.env["queue.job"]
                 .sudo()
@@ -128,28 +128,12 @@ class MoneroSalesOrder(sale_order.SaleOrder):
                 )
                 raise NoTXFound(exception_msg)
 
-        if len(transfers) > 1:
-            # TODO custom logic if the end user sends
-            #  multiple transactions for one order
-            # this would involve creating another "payment.transaction"
-            # and notifying both the buyer and seller
-            raise MoneroAddressReuse(
-                f"PaymentAcquirer: {transaction.acquirer_id.provider} "
-                f"Subaddress: {token.name} "
-                "Status: Address reuse found. "
-                "The end user most likely sent "
-                "multiple transactions for a single order. "
-                "Action: Reconcile transactions manually"
-            )
-
-        if len(transfers) == 1:
-            this_payment = transfers.pop()
-
+        else:
             conf_err_msg = (
                 f"PaymentAcquirer: {transaction.acquirer_id.provider} "
                 f"Subaddress: {token.name} "
                 "Status: Waiting for more confirmations "
-                f"Confirmations: current {this_payment.tx.num_confirmations}, "
+                f"Confirmations: current {incoming_transfers.num_confirmations}, "
                 f"expected {num_confirmation_required} "
                 "Action: none"
             )
@@ -157,14 +141,11 @@ class MoneroSalesOrder(sale_order.SaleOrder):
             #  found within the transaction pool
             # note that when the NumConfirmationsNotMet is raised any database commits
             # are lost
-            _logger.warning(f"Number of confirmations required: {num_confirmation_required}, tx confirmations: {this_payment.tx.num_confirmations}, transaction confs: {transaction.confirmations_required}")
-            if this_payment.tx.num_confirmations is None:
-                if num_confirmation_required > 0:
+            _logger.warning(f"Number of confirmations required: {num_confirmation_required}, tx confirmations: {incoming_transfers.num_confirmations}, transaction confs: {transaction.confirmations_required}")
+            if incoming_transfers.num_confirmations < num_confirmation_required:
                     raise NumConfirmationsNotMet(conf_err_msg)
-            else:
-                if this_payment.tx.num_confirmations < num_confirmation_required:
-                    raise NumConfirmationsNotMet(conf_err_msg)
-            payment_amount = this_payment.amount if this_payment.amount is not None else 0
+            
+            payment_amount = incoming_transfers.amount if incoming_transfers.amount is not None else 0
             amount_to_pay: int = transaction.get_amount_xmr_atomic_units()
             payment_suffices: bool = payment_amount >= amount_to_pay
             
