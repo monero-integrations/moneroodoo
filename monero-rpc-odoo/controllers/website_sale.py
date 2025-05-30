@@ -9,9 +9,6 @@ from odoo.addons.website_sale.controllers.main import WebsiteSale
 
 from monero import MoneroSubaddress
 
-from ..models.exceptions import MoneroPaymentAcquirerRPCUnauthorized
-from ..models.exceptions import MoneroPaymentAcquirerRPCSSLError
-
 _logger = logging.getLogger(__name__)
 
 
@@ -50,27 +47,6 @@ class MoneroWebsiteSale(WebsiteSale):
                 subaddress: MoneroSubaddress | None = None
                 try:
                     subaddress = acquirer.create_subaddress()
-                except MoneroPaymentAcquirerRPCUnauthorized:
-                    _logger.error(
-                        "USER IMPACT: Monero Payment Acquirer "
-                        "can't authenticate with RPC "
-                        "due to user name or password"
-                    )
-                    raise ValidationError(
-                        "Current technical issues "
-                        "prevent Monero from being accepted, "
-                        "choose another payment method"
-                    )
-                except MoneroPaymentAcquirerRPCSSLError:
-                    _logger.error(
-                        "USER IMPACT: Monero Payment Acquirer "
-                        "experienced an SSL Error with RPC"
-                    )
-                    raise ValidationError(
-                        "Current technical issues "
-                        "prevent Monero from being accepted, "
-                        "choose another payment method"
-                    )
                 except Exception as e:
                     _logger.error(
                         f"USER IMPACT: Monero Payment Acquirer "

@@ -9,9 +9,8 @@ from odoo.addons.sale.models import sale_order
 from monero import MoneroUtils
 
 from .exceptions import ( 
-    NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse, 
-    MoneroTransactionUpdateJobError, MoneroPaymentAcquirerRPCUnauthorized,
-    MoneroPaymentAcquirerRPCSSLError 
+    MoneroNoTransactionFoundError, MoneroNumConfirmationsNotMetError, 
+    MoneroTransactionUpdateJobError 
 )
 
 from ..utils import MoneroWalletIncomingTransfers
@@ -35,18 +34,6 @@ class MoneroSalesOrder(sale_order.SaleOrder):
 
             return MoneroWalletIncomingTransfers(transfers)
 
-        except MoneroPaymentAcquirerRPCUnauthorized:
-            raise MoneroPaymentAcquirerRPCUnauthorized(
-                "Monero Processing Queue: "
-                "Monero Payment Acquirer "
-                "can't authenticate with RPC "
-                "due to user name or password"
-            )
-        except MoneroPaymentAcquirerRPCSSLError:
-            raise MoneroPaymentAcquirerRPCSSLError(
-                "Monero Processing Queue: Monero Payment Acquirer "
-                "experienced an SSL Error with RPC"
-            )
         except Exception as e:
             raise Exception(
                 f"Monero Processing Queue: Monero Payment Acquirer "
@@ -126,7 +113,7 @@ class MoneroSalesOrder(sale_order.SaleOrder):
                     "This is fine. "
                     f"Another job will execute. Action: Nothing"
                 )
-                raise NoTXFound(exception_msg)
+                raise MoneroNoTransactionFoundError(exception_msg)
 
         else:
             conf_err_msg = (
@@ -139,11 +126,11 @@ class MoneroSalesOrder(sale_order.SaleOrder):
             )
             # TODO set transaction state to "authorized" once a monero transaction is
             #  found within the transaction pool
-            # note that when the NumConfirmationsNotMet is raised any database commits
+            # note that when the MoneroNumConfirmationsNotMetError is raised any database commits
             # are lost
             _logger.warning(f"Number of confirmations required: {num_confirmation_required}, tx confirmations: {incoming_transfers.num_confirmations}, transaction confs: {transaction.confirmations_required}")
             if incoming_transfers.num_confirmations < num_confirmation_required:
-                    raise NumConfirmationsNotMet(conf_err_msg)
+                    raise MoneroNumConfirmationsNotMetError(conf_err_msg)
             
             payment_amount = incoming_transfers.amount if incoming_transfers.amount is not None else 0
             amount_to_pay: int = transaction.get_amount_xmr_atomic_units()
