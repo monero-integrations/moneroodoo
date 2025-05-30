@@ -63,8 +63,6 @@
                 <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.state == 'done'">
                     Amount paid <t t-raw="payment_tx_id.amount_paid_xmr"/> XMR
 
-                    Please note your order number for future reference.
-
                     <!--PATCH when the payment is done the page refreshes and
                     clipboardjs still expects a button to be there
                         would be better to do clipboard.destroy(); but I don't know

@@ -29,7 +29,7 @@
             <![CDATA[<p>You will be redirected to the Payment information and processing page after clicking on the payment button.</p>]]>
             </field>
             <field name="pending_msg">
-            <![CDATA[<p>Please pay the amount due to complete your order. </p>]]>
+            <![CDATA[<p>Waiting for Monero payment. </p>]]>
             </field>
             <field name="done_msg">
             <![CDATA[<p><b>
