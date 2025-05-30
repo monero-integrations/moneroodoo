@@ -31,8 +31,7 @@ class MoneroWalletIncomingTransfers:
             if transfer.amount is None:
                 continue
             
-            fee = transfer.tx.fee if transfer.tx.fee is not None else 0
-            self.amount += transfer.amount - fee
+            self.amount += transfer.amount
 
             if num_confirmations is None:
                 num_confirmations = transfer.tx.num_confirmations
@@ -107,7 +106,7 @@ class MoneroSalesOrder(sale_order.SaleOrder):
         _logger.warning("------- CONFIRMATIONS REQUIRED: {}".format(transaction.confirmations_required))
         self.env.cr.commit()
 
-        if not transaction.is_fully_paid():
+        if not transaction.is_fully_paid() or int(transaction.confirmations_required) > 0:
             _logger.warning("-------- CONTINUE UPDATE TRANSACTION")
             raise MoneroTransactionUpdateJobError("Continue updating...")
         
