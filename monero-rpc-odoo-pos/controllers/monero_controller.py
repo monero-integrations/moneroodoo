@@ -6,30 +6,6 @@ from odoo.exceptions import ValidationError
 
 from monero import MoneroSubaddress
 
-from requests.exceptions import SSLError
-from odoo.addons.queue_job.exception import RetryableJobError
-
-
-class MoneroPaymentMethodRPCUnauthorized(Exception):
-    pass
-
-
-class MoneroPaymentMethodRPCSSLError(SSLError):
-    pass
-
-
-class NoTXFound(RetryableJobError):
-    pass
-
-
-class NumConfirmationsNotMet(RetryableJobError):
-    pass
-
-
-class MoneroAddressReuse(Exception):
-    pass
-
-
 _logger = logging.getLogger(__name__)
 
 
@@ -56,27 +32,6 @@ class MoneroController(http.Controller):
         if payment_method is not None:
             try:
                 subaddress: MoneroSubaddress = payment_method.create_subaddress()
-            except MoneroPaymentMethodRPCUnauthorized:
-                _logger.error(
-                    "USER IMPACT: Monero POS Payment Method "
-                    "can't authenticate with RPC "
-                    "due to user name or password"
-                )
-                raise ValidationError(
-                    "Current technical issues "
-                    "prevent Monero from being accepted, "
-                    "choose another payment method"
-                )
-            except MoneroPaymentMethodRPCSSLError:
-                _logger.error(
-                    "USER IMPACT: Monero POS Payment Method "
-                    "experienced an SSL Error with RPC"
-                )
-                raise ValidationError(
-                    "Current technical issues "
-                    "prevent Monero from being accepted, "
-                    "choose another payment method"
-                )
             except Exception as e:
                 _logger.error(
                     f"USER IMPACT: Monero POS Payment Method "

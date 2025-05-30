@@ -1,20 +1,21 @@
-from odoo import api, fields, models, _
+import logging
+
+from typing import override
+
+from odoo import api, fields, _
 from odoo.addons.point_of_sale.models import pos_payment
 
 from monero import MoneroUtils
 
-from ..utils import MoneroWalletIncomingTransfers
+from ..utils import MoneroWalletIncomingTransfers, MoneroKrakenRateConverter, MoneroExchangeRateConverter
 
 from .pos_payment_method import MoneroPosPaymentMethod
 from .pos_order import MoneroPosOrder
 
 from .exceptions import ( 
-    NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse, 
+    MoneroNoTransactionFoundError, MoneroNumConfirmationsNotMetError, 
     MoneroTransactionUpdateJobError 
 )
-
-
-import logging
 
 _logger = logging.getLogger(__name__)
 
@@ -32,6 +33,14 @@ class MoneroPosPayment(pos_payment.PosPayment):
     """
 
     _inherit = "pos.payment"
+
+    _rate_converter: MoneroExchangeRateConverter = MoneroKrakenRateConverter()
+
+    # override
+    payment_method_id: MoneroPosPaymentMethod
+    pos_order_id: MoneroPosOrder
+
+    # region Odoo Fields
 
     wallet_address = fields.Char("Payment Wallet Address")
 
@@ -59,10 +68,9 @@ class MoneroPosPayment(pos_payment.PosPayment):
     confirmations_required = fields.Integer(
         string="Number of network confirmations required", default = 0)
     
-    # override
-    payment_method_id: MoneroPosPaymentMethod
-    pos_order_id: MoneroPosOrder
+    #endregion
 
+    # region Public Methods
 
     def get_amount(self) -> float:
         return float(self.amount) # type: ignore
@@ -105,6 +113,36 @@ class MoneroPosPayment(pos_payment.PosPayment):
                 f"Monero Processing Queue: Monero Payment Acquirer "
                 f"experienced an Error with RPC: {e}"
             )
+    
+    def get_current_exchange_rate(self) -> float:
+        return self._rate_converter.get_exchange_rate()
+
+    def usd_to_xmr(self, usd: float) -> float:
+        return self._rate_converter.usd_to_xmr(usd)
+
+    # endregion
+
+    @api.model
+    @override
+    def create(self, vals):
+        if 'exchange_rate' not in vals:
+            try:
+                vals['exchange_rate'] = self.get_current_exchange_rate()
+            except Exception as e:
+                raise ValueError(f"Could not get exchange rate: {e}")
+        if 'amount_xmr' not in vals:
+            try:
+                vals['amount_xmr'] = self.usd_to_xmr(vals['amount'])
+            except Exception as e:
+                raise ValueError(f"Could not convert usd to xmr: {e}")
+        
+        if 'amount_paid_xmr' not in vals:
+            vals['amount_paid_xmr'] = 0
+
+        if 'amount_remaining_xmr' not in vals:
+            vals['amount_remaining_xmr'] = vals['amount_xmr']
+
+        return super().create(vals)
 
     @api.model
     def update_transaction(self) -> None:
@@ -172,33 +210,15 @@ class MoneroPosPayment(pos_payment.PosPayment):
                     "This is fine. "
                     f"Another job will execute. Action: Nothing"
                 )
-                raise NoTXFound(exception_msg)
+                raise MoneroNoTransactionFoundError(exception_msg)
 
-        if transfers.moreThanOne:
-            # TODO custom logic if the end user sends
-            #  multiple transactions for one order
-            # this would involve creating another "payment.transaction"
-            # and notifying both the buyer and seller
-            raise MoneroAddressReuse(
-                f"PaymentMethod: {self.payment_method_id.name} "
-                f"Subaddress: {self.wallet_address} "
-                "Status: Address reuse found. "
-                "The end user most likely sent "
-                "multiple transactions for a single order. "
-                "Action: Reconcile transactions manually"
-            )
-
-        if transfers.onlyOne:
-            this_payment = transfers.first
-            if this_payment is None:
-                raise NoTXFound("")
-            
+        else:
             num_confirmation_required = self.payment_method_id.get_num_confirmations_required()
             conf_err_msg = (
                 f"PaymentMethod: {self.payment_method_id.name} "
                 f"Subaddress: {self.wallet_address} "
                 "Status: Waiting for more confirmations "
-                f"Confirmations: current {this_payment.tx.num_confirmations}, "
+                f"Confirmations: current {transfers.num_confirmations}, "
                 f"expected {num_confirmation_required} "
                 "Action: none"
             )
@@ -206,14 +226,11 @@ class MoneroPosPayment(pos_payment.PosPayment):
             #  found within the transaction pool
             # note that when the NumConfirmationsNotMe is raised any database commits
             # are lost
-            if this_payment.tx.num_confirmations is None:
-                if num_confirmation_required > 0:
-                    raise NumConfirmationsNotMet(conf_err_msg)
-            else:
-                if this_payment.tx.num_confirmations < num_confirmation_required:
-                    raise NumConfirmationsNotMet(conf_err_msg)
 
-            payment_amount = this_payment.amount if this_payment.amount is not None else 0
+            if transfers.num_confirmations < num_confirmation_required:
+                raise MoneroNumConfirmationsNotMetError(conf_err_msg)
+
+            payment_amount = transfers.amount
             amount_to_pay: int = self.get_amount_xmr_atomic_units()
             payment_suffices: bool = payment_amount >= amount_to_pay
 

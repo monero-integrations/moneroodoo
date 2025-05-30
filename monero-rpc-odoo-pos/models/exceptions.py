@@ -1,4 +1,3 @@
-from requests.exceptions import SSLError
 from odoo.addons.queue_job.exception import RetryableJobError
 
 
@@ -6,21 +5,9 @@ class MoneroTransactionUpdateJobError(RetryableJobError):
     pass
 
 
-class MoneroPaymentMethodRPCUnauthorized(Exception):
+class MoneroNoTransactionFoundError(RetryableJobError):
     pass
 
 
-class MoneroPaymentMethodRPCSSLError(SSLError):
-    pass
-
-
-class NoTXFound(RetryableJobError):
-    pass
-
-
-class NumConfirmationsNotMet(RetryableJobError):
-    pass
-
-
-class MoneroAddressReuse(Exception):
+class MoneroNumConfirmationsNotMetError(RetryableJobError):
     pass
