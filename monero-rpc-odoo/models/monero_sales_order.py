@@ -6,45 +6,17 @@ from odoo import api
 from odoo.addons.payment.models import payment_token
 from odoo.addons.sale.models import sale_order
 
-from monero import MoneroIncomingTransfer, MoneroUtils
+from monero import MoneroUtils
 
-from ..models.exceptions import NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse, MoneroTransactionUpdateJobError
-from ..models.exceptions import MoneroPaymentAcquirerRPCUnauthorized
-from ..models.exceptions import MoneroPaymentAcquirerRPCSSLError
+from .exceptions import ( 
+    NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse, 
+    MoneroTransactionUpdateJobError, MoneroPaymentAcquirerRPCUnauthorized,
+    MoneroPaymentAcquirerRPCSSLError 
+)
+
+from ..utils import MoneroWalletIncomingTransfers
 
 _logger = logging.getLogger(__name__)
-
-
-class MoneroWalletIncomingTransfers:
-    amount: int
-    num_confirmations: int
-    transfers: list[MoneroIncomingTransfer]
-
-    def __init__(self, transfers: list[MoneroIncomingTransfer]) -> None:
-        self.transfers = transfers
-        self.amount = 0
-        self.num_confirmations = 0
-
-        num_confirmations: int | None = None
-
-        for transfer in transfers:
-            if transfer.amount is None:
-                continue
-            
-            self.amount += transfer.amount
-
-            if num_confirmations is None:
-                num_confirmations = transfer.tx.num_confirmations
-            elif transfer.tx.num_confirmations is not None and transfer.tx.num_confirmations < num_confirmations:
-                num_confirmations = transfer.tx.num_confirmations
-
-        if num_confirmations is not None:
-            self.num_confirmations = num_confirmations
-
-        _logger.warning(f"NUM CONFIRMATIONS {self.num_confirmations}")
-        if len(transfers) > 0:
-            transfer = transfers[0]
-            _logger.warning(f"TX CONFS: {transfer.tx.num_confirmations}")
 
 class MoneroSalesOrder(sale_order.SaleOrder):
 

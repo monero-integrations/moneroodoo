@@ -15,9 +15,9 @@ from odoo.http import request
 from monero import MoneroSubaddress, MoneroUtils
 
 from ..controllers.monero_controller import MoneroController
+from ..utils import MoneroKrakenRateConverter
 
 from .monero_payment_acquirer import MoneroPaymentAcquirer
-from ..utils import MoneroKrakenRateConverter
 
 _logger = logging.getLogger(__name__)
 

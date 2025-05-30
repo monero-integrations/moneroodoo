@@ -14,7 +14,7 @@ from monero import (
     MoneroRpcConnection
 )
 
-from .monero_wallet_manager import MoneroWalletManager
+from ..utils import MoneroWalletManager
 
 _logger = logging.getLogger(__name__)
 

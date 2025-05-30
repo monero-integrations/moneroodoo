@@ -1,2 +1,5 @@
 from .monero_exchange_rate_converter import MoneroExchangeRateConverter
 from .monero_kraken_rate_converter import MoneroKrakenRateConverter
+from .monero_wallet_incoming_transfers import MoneroWalletIncomingTransfers
+from .monero_wallet_manager import MoneroWalletManager
+
