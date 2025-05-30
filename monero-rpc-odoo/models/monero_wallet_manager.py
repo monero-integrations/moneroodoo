@@ -1,12 +1,30 @@
 import logging
 
-from monero import MoneroRpcConnection, MoneroWallet, MoneroWalletFull, MoneroWalletRpc, MoneroNetworkType, MoneroWalletConfig, MoneroDaemonRpc, MoneroUtils, MoneroWalletListener
+from typing import override
+from monero import (
+    MoneroRpcConnection, MoneroWallet, MoneroWalletFull, MoneroWalletRpc, 
+    MoneroNetworkType, MoneroWalletConfig, MoneroDaemonRpc, MoneroUtils, 
+    MoneroWalletListener, MoneroWalletKeys, MoneroOutputWallet
+)
 
 _logger = logging.getLogger(__name__)
 
+class MoneroWalletManagerListener(MoneroWalletListener):
+
+    def __init__(self) -> None:
+        MoneroWalletListener.__init__(self)
+    
+    @override
+    def on_sync_progress(self, height: int, start_height: int, end_height: int, percent_done: float, message: str) -> None:
+        _logger.info(f"Monero wallet sync progess {percent_done}% (height: {height}, start_height: {start_height}, end_height: {end_height})")
+
+    @override
+    def on_output_received(self, output: MoneroOutputWallet) -> None:
+        _logger.info(f"Received output {output.stealth_public_key}, amount {output.amount}, account {output.account_index}, subaddress {output.subaddress_index}")
 
 class MoneroWalletManager:
 
+    _listener: MoneroWalletManagerListener = MoneroWalletManagerListener()
     _wallet: MoneroWallet | None = None
     _FULL_WALLET_PATH: str = "monero_odoo_wallet"
     _FULL_WALLET_PASSWORD: str = ""
@@ -14,6 +32,25 @@ class MoneroWalletManager:
 
     def __init__(self) -> None:
         raise NotImplementedError("MoneroWalletManager is an abstract class")
+
+    @classmethod
+    def validate_wallet_keys(cls, primary_address: str, view_key: str, nettype: MoneroNetworkType) -> None:
+        try:
+            config = MoneroWalletConfig()
+            config.primary_address = primary_address
+            config.private_view_key = view_key
+            config.network_type = nettype
+            MoneroWalletKeys.create_wallet_from_keys(config)
+        except:
+            raise Exception(f"The private view key doesn't belong to address {primary_address}")
+
+    @classmethod
+    def is_valid_wallet_keys(cls, primary_address: str, view_key: str, nettype: MoneroNetworkType) -> bool:
+        try:
+            cls.validate_wallet_keys(primary_address, view_key, nettype)
+            return True
+        except:
+            return False
 
     @classmethod
     def get_wallet_path(cls, nettype: MoneroNetworkType) -> str:

@@ -12,6 +12,7 @@
                     <field name="account_index" />
                     <field name="wallet_primary_address" on_change="validate_wallet_primary_address()"/>
                     <field name="wallet_private_view_key" on_change="validate_wallet_private_view_key()"/>
+                    <field name="network_type" on_change="validate_wallet()"/>
                     <field name="rpc_uri" on_change="update_rpc_server()"/>
                     <field name="rpc_username" on_change="update_rpc_server()"/>
                     <field name="rpc_password" on_change="update_rpc_server()"/>

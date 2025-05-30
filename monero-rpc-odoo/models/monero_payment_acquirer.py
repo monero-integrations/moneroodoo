@@ -34,7 +34,7 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
 
     # endregion
 
-    # region Fields
+    # region Odoo Fields
 
     provider = fields.Selection(
         selection_add=[("monero-rpc", "Monero")], ondelete={"monero-rpc": "set default"}
@@ -63,6 +63,15 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
     wallet_private_view_key = fields.Char(
         string="Private View Key",
         help="Wallet private view key"
+    )
+    network_type = fields.Selection(
+        [
+            ("mainnet", "MAINNET"),
+            ("testnet", "TESTNET"),
+            ("stagenet", "STAGENET")
+        ],
+        "Network Type",
+        default="mainnet",
     )
     account_index = fields.Integer(
         string="Account Index",
@@ -140,8 +149,13 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
         return str(self.rpc_password)
     
     def get_network_type(self) -> MoneroNetworkType:
-        state = str(self.state)
-        return MoneroNetworkType.TESTNET if state == "test" else MoneroNetworkType.MAINNET
+        nettype = str(self.network_type)
+        if nettype == "mainnet":
+            return MoneroNetworkType.MAINNET
+        elif nettype == "stagenet":
+            return MoneroNetworkType.STAGENET
+        else:
+            return MoneroNetworkType.TESTNET
 
     def get_primary_address(self) -> str:
         return str(self.wallet_primary_address)
@@ -215,26 +229,60 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
     @api.onchange(
         "wallet_primary_address"
     )
-    def validate_wallet_primary_address(self):
+    def validate_wallet_primary_address(self) -> dict:
         address = self.get_primary_address()
         _logger.info(f"Validating Monero standard address {address}")
         try:
-            MoneroUtils.validate_address(address, self.get_network_type())
+            view_key = self.get_private_view_key()
+            nettype = self.get_network_type()
+            if view_key is None or view_key == "":
+                MoneroUtils.validate_address(address, nettype)
+            elif not MoneroWalletManager.is_valid_wallet_keys(address, view_key, nettype):
+                return { "warning": { "title": "Wallet Validation", "message": f"The private view key provided doesn't belong to address {address}" } }
+
             return { "warning": { "title": "Primary Address Validation", "message": "Primary address successfully set" } }
         except Exception as e:
             _logger.critical(f"{e}")
-            return { "warning": { "title": "Error", "message": "Invalid Monero primary address" } }
+            return { "warning": { "title": "Error", "message": "Invalid Monero primary address provided" } }
 
     @api.onchange(
         "wallet_private_view_key"
     )
-    def validate_wallet_private_view_key(self):
+    def validate_wallet_private_view_key(self) -> dict:
+        address = self.get_primary_address()
         view_key = self.get_private_view_key()
-        _logger.info(f"Validating Monero view key {view_key}")
-        if not MoneroUtils.is_valid_private_view_key(view_key):
-            return { "warning": "Invalid private view key" }
+        nettype = self.get_network_type()
+
+        _logger.info(f"Validating Monero view key {view_key}...")
+    
+        if address is None or address == "":
+            if not MoneroUtils.is_valid_private_view_key(view_key):
+                return { "warning": { "title": "Error", "message": "Invalid Monero private view key provided" } }
+        elif not MoneroWalletManager.is_valid_wallet_keys(address, view_key, nettype):
+            return { "warning": { "title": "Wallet Validation", "message": f"The private view key provided doesn't belong to primary address" } }
         
         return { "warning": { "title": "Private View Key Validation", "message": "Private view key successfully set" } }
+
+    @api.onchange(
+        "network_type"
+    )
+    def validate_wallet(self) -> dict:
+        address = self.get_primary_address()
+        view_key = self.get_private_view_key()
+        empty_addr = (address is None or address == "")
+        empty_key = (view_key is None or view_key == "")
+
+        if empty_addr and empty_key:
+            # nothing to check
+            return { "warning": "" }
+        
+        if not empty_addr:
+            result = self.validate_wallet_primary_address()
+
+            if result["warning"]["message"] != "Primary address successfully set":
+                return { "warning": { "title": "Error", "message": f"Invalid network type {str(self.network_type)} for primary address" } }
+
+        return { "warning": "" }
 
     @api.onchange(
         "rpc_uri",
@@ -249,15 +297,16 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
             connection = MoneroWalletManager.load_connection(self.get_rpc_uri(), self.get_rpc_username(), self.get_rpc_password())
             MoneroWalletManager.check_connection()
         except Exception as e:
-            message = (
-                f"Monero RPC Connection Failed: {str(e)}"
-            )
+            if connection is not None:
+                message = f"Connection to Monero RPC {connection.uri} failed: {str(e)}"
+            else:
+                message = f"Connection to Monero RPC failed: {str(e)}"
             pass
 
         title = "Monero RPC Connection Test"
         if connection is not None and connection.is_connected():
-            _logger.info("Connection to Monero RPC successful")
-            warning = {"title": title, "message": "Connection is successful"}
+            _logger.info(f"Connection to Monero RPC {connection.uri} successful")
+            warning = {"title": title, "message": f"Connection to Monero RPC {connection.uri} successful"}
         else:
             _logger.info(message)
             warning = {"title": title, "message": f"{message}"}

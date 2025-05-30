@@ -52,6 +52,7 @@
             <field name="account_index">0</field>
             <field name="wallet_primary_address"></field>
             <field name="wallet_private_view_key"></field>
+            <field name="network_type">mainnet</field>
             <field name="rpc_uri">http://127.0.0.1:18081</field>
             <field name="rpc_username"></field>
             <field name="rpc_password"></field>
