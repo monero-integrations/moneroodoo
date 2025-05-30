@@ -15,7 +15,7 @@ from odoo.http import request
 from monero import MoneroSubaddress, MoneroUtils
 
 from ..controllers.monero_controller import MoneroController
-from ..utils import MoneroKrakenRateConverter
+from ..utils import MoneroExchangeRateConverter, MoneroKrakenRateConverter
 
 from .monero_payment_acquirer import MoneroPaymentAcquirer
 
@@ -25,6 +25,7 @@ _logger = logging.getLogger(__name__)
 class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
     _inherit = 'payment.transaction'
     _provider_key = 'monero-rpc'
+    _rate_converter: MoneroExchangeRateConverter = MoneroKrakenRateConverter()
 
     # missing
     id: str
@@ -263,11 +264,9 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
         return float(self.currency_id.decimal_places) # type: ignore
 
     def get_current_exchange_rate(self) -> float:
-        converter = MoneroKrakenRateConverter()
-        return converter.get_exchange_rate()
+        return self._rate_converter.get_exchange_rate()
 
     def usd_to_xmr(self, usd: float) -> float:
-        converter = MoneroKrakenRateConverter()
-        return converter.usd_to_xmr(usd)
+        return self._rate_converter.usd_to_xmr(usd)
 
     #endregion
