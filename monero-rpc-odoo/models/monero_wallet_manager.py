@@ -145,8 +145,9 @@ class MoneroWalletManager:
         config.path = cls.get_wallet_path(network_type)
         config.password = cls._FULL_WALLET_PASSWORD
         config.network_type = network_type
-        config.account_lookahead = account_lookahead
-        config.subaddress_lookahead = 10
+        if account_lookahead > 0:
+            config.account_lookahead = account_lookahead
+            config.subaddress_lookahead = 10
         # config.server = connection
         config.restore_height = cls.get_daemon_height()
 
@@ -174,8 +175,9 @@ class MoneroWalletManager:
         config.private_view_key = private_view_key
         config.path = cls.get_wallet_path(network_type)
         config.network_type = network_type
-        config.account_lookahead = account_lookahead
-        config.subaddress_lookahead = 10
+        if account_lookahead > 0:
+            config.account_lookahead = account_lookahead
+            config.subaddress_lookahead = 10
 
         return wallet.open_wallet(config)
 
