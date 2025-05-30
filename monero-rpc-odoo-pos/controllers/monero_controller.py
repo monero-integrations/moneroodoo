@@ -4,14 +4,13 @@ from odoo.http import request
 from odoo import http
 from odoo.exceptions import ValidationError
 
-from monero.wallet import Wallet
+from monero import MoneroSubaddress
 
-from monero.backends.jsonrpc import Unauthorized
 from requests.exceptions import SSLError
 from odoo.addons.queue_job.exception import RetryableJobError
 
 
-class MoneroPaymentMethodRPCUnauthorized(Unauthorized):
+class MoneroPaymentMethodRPCUnauthorized(Exception):
     pass
 
 
@@ -36,11 +35,7 @@ _logger = logging.getLogger(__name__)
 
 class MoneroController(http.Controller):
     @http.route(
-        "/pos/monero/get_address",
-        type="json",
-        auth="public",
-        website=True,
-        methods=["POST"],
+        "/pos/monero/get_address", type="json", auth="public", website=True, methods=["POST"]
     )
     def get_address(self, **kwargs):
         """
@@ -55,12 +50,12 @@ class MoneroController(http.Controller):
         payment_method = (
             request.env["pos.payment.method"]
             .sudo()
-            .browse(int(kwargs.get("payment_method_id")))
+            .browse(int(kwargs.get("payment_method_id"))) # type: ignore
         )
 
         if payment_method is not None:
             try:
-                wallet: Wallet = payment_method.get_wallet()
+                subaddress: MoneroSubaddress = payment_method.create_subaddress()
             except MoneroPaymentMethodRPCUnauthorized:
                 _logger.error(
                     "USER IMPACT: Monero POS Payment Method "
@@ -94,7 +89,7 @@ class MoneroController(http.Controller):
                 )
 
             res = {
-                "wallet_address": wallet.new_address()[0],
+                "wallet_address": subaddress.address
             }
         else:
             _logger.error(

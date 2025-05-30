@@ -1,18 +1,19 @@
 import logging
 
-from monero.backends.jsonrpc import JSONRPCWallet, Unauthorized
-from monero.wallet import Wallet
-from odoo import api, fields, models
-from requests.exceptions import SSLError
-from .exceptions import (
-    MoneroPaymentMethodRPCUnauthorized,
-    MoneroPaymentMethodRPCSSLError,
+from odoo import api, fields
+from odoo.addons.point_of_sale.models import pos_payment_method
+
+from monero import (
+    MoneroWallet, MoneroIncomingTransfer, MoneroNetworkType, MoneroSubaddress,
+    MoneroError, MoneroTransferQuery, MoneroTxQuery, MoneroTransfer,
+    MoneroRpcConnection
 )
+
+from ..utils import MoneroWalletManager
 
 _logger = logging.getLogger(__name__)
 
-
-class MoneroPosPaymentMethod(models.Model):
+class MoneroPosPaymentMethod(pos_payment_method.PosPaymentMethod):
     """
     Inherits from pos.payment.method
     Custom fields added: is_cryptocurrency, environment, type
@@ -20,64 +21,138 @@ class MoneroPosPaymentMethod(models.Model):
 
     _inherit = "pos.payment.method"
 
+    # region Private Methods
+
     def _get_payment_terminal_selection(self):
         return super(MoneroPosPaymentMethod, self)._get_payment_terminal_selection() + [
             ("monero-rpc", "Monero RPC")
         ]
 
-    def get_wallet(self):
-        rpc_server: JSONRPCWallet = JSONRPCWallet(
-            protocol=self.rpc_protocol,
-            host=self.monero_rpc_config_host,
-            port=self.monero_rpc_config_port,
-            user=self.monero_rpc_config_user,
-            password=self.monero_rpc_config_password,
-        )
-        try:
-            wallet: Wallet = Wallet(rpc_server)
-        except Unauthorized:
-            raise MoneroPaymentMethodRPCUnauthorized
-        except SSLError:
-            raise MoneroPaymentMethodRPCSSLError
-        except Exception as e:
-            _logger.critical("Monero RPC Error", exc_info=True)
-            raise e
+    # endregion
 
-        return wallet
+    # region Methods
+
+    def get_wallet(self) -> MoneroWallet:
+        try: 
+            return MoneroWalletManager.get_wallet()
+        except:
+            self.load_wallet()
+            return MoneroWalletManager.get_wallet()
+
+    def get_account_index(self) -> int:
+        return int(self.account_index) # type: ignore
+
+    def get_wallet_type(self) -> str:
+        return str(self.wallet_type)
+    
+    def get_rpc_uri(self) -> str:
+        return str(self.rpc_uri)
+
+    def get_rpc_username(self) -> str:
+        return str(self.rpc_username)
+    
+    def get_rpc_password(self) -> str:
+        return str(self.rpc_password)
+    
+    def get_network_type(self) -> MoneroNetworkType:
+        nettype = str(self.network_type)
+        if nettype == "mainnet":
+            return MoneroNetworkType.MAINNET
+        elif nettype == "stagenet":
+            return MoneroNetworkType.STAGENET
+        else:
+            return MoneroNetworkType.TESTNET
+
+    def get_primary_address(self) -> str:
+        return str(self.wallet_primary_address)
+
+    def get_private_view_key(self) -> str:
+        return str(self.wallet_private_view_key)
+
+    def create_subaddress(self, tag: str = '') -> MoneroSubaddress:
+        wallet = self.get_wallet()
+        account_index = self.get_account_index()
+        return wallet.create_subaddress(account_index, tag)
+
+    def get_num_confirmations_required(self) -> int:
+        return int(self.num_confirmation_required) # type: ignore
+
+    def get_incoming_unconfirmed_transfers(self, address: str) -> list[MoneroIncomingTransfer]:
+        result: list[MoneroIncomingTransfer] = []
+        wallet = self.get_wallet()
+        index = wallet.get_address_index(address)
+        if index.index is None:
+            raise MoneroError("Could not get address index")
+        
+        query = MoneroTransferQuery()
+        query.account_index = index.account_index
+        query.subaddress_indices = [index.index]
+        
+        query.tx_query = MoneroTxQuery()
+        query.tx_query.is_incoming = True
+
+        transfers: list[MoneroTransfer] = wallet.get_transfers(query)
+
+        for transfer in transfers:
+            if isinstance(transfer, MoneroIncomingTransfer):
+                result.append(transfer)
+
+        return result
+
+    def load_wallet(self) -> MoneroWallet:
+        MoneroWalletManager.load_connection(self.get_rpc_uri(), self.get_rpc_username(), self.get_rpc_password())
+        MoneroWalletManager.check_connection()
+
+        if not MoneroWalletManager.wallet_needs_reload(self.get_wallet_type()):
+            return MoneroWalletManager.get_wallet()
+        
+        return MoneroWalletManager.load_wallet(
+            self.get_wallet_type(),
+            self.get_primary_address(),
+            self.get_private_view_key(),
+            self.get_account_index(),
+            self.get_network_type(),
+            self.get_rpc_uri(),
+            self.get_rpc_username(),
+            self.get_rpc_password()
+        )
+
+    # endregion
+
+    # region API
 
     @api.onchange(
-        "rpc_protocol",
-        "monero_rpc_config_host",
-        "monero_rpc_config_port",
-        "monero_rpc_config_user",
-        "monero_rpc_config_password",
+        "rpc_uri",
+        "rpc_username",
+        "rpc_password",
     )
     def check_rpc_server_connection(self):
         _logger.info("Trying new Monero RPC Server configuration")
-        wallet = None
+        connection: MoneroRpcConnection | None = None
+        message: str = ""
         try:
-            wallet = self.get_wallet()
-        except MoneroPaymentMethodRPCUnauthorized:
-            message = "Invalid Monero RPC user name or password"
-            pass
-        except MoneroPaymentMethodRPCSSLError:
-            message = "Monero RPC TLS Error"
-            pass
+            connection = MoneroWalletManager.load_connection(self.get_rpc_uri(), self.get_rpc_username(), self.get_rpc_password())
+            MoneroWalletManager.check_connection()
         except Exception as e:
-            message = (
-                f"Monero RPC Connection Failed or other error: {e.__class__.__name__}"
-            )
+            if connection is not None:
+                message = f"Connection to Monero RPC {connection.uri} failed: {str(e)}"
+            else:
+                message = f"Connection to Monero RPC failed: {str(e)}"
             pass
 
         title = "Monero RPC Connection Test"
-        if type(wallet) is Wallet:
-            _logger.info("Connection to Monero RPC successful")
-            warning = {"title": title, "message": "Connection is successful"}
+        if connection is not None and connection.is_connected():
+            _logger.info(f"Connection to Monero RPC {connection.uri} successful")
+            warning = {"title": title, "message": f"Connection to Monero RPC {connection.uri} successful"}
         else:
             _logger.info(message)
             warning = {"title": title, "message": f"{message}"}
 
-        return {"warning": warning}
+        return { "warning": warning }
+
+    # endregion
+
+    # region Odoo Fields
 
     is_cryptocurrency = fields.Boolean("Cryptocurrency?", default=False)
     # not used right now, could be used to update price data?
@@ -89,46 +164,65 @@ class MoneroPosPaymentMethod(models.Model):
         help="Monero: A Private Digital Currency",
     )
 
-    rpc_protocol = fields.Selection(
+    wallet_type = fields.Selection(
         [
-            ("http", "HTTP"),
-            ("https", "HTTPS"),
+            ("full", "Full"),
+            ("rpc", "RPC"),
         ],
-        "RPC Protocol",
-        default="http",
+        "Wallet Type",
+        default="full",
     )
-    monero_rpc_config_host = fields.Char(
-        string="RPC Host",
-        help="The ip address or host name of the Monero RPC",
-        default="127.0.0.1",
+    wallet_primary_address = fields.Char(
+        string="Primary Address",
+        help="Wallet primary address, also known as standard address"       
     )
-    monero_rpc_config_port = fields.Char(
-        string="RPC Port",
-        help="The port the Monero RPC is listening on",
-        default="18082",
+    wallet_private_view_key = fields.Char(
+        string="Private View Key",
+        help="Wallet private view key"
     )
-    monero_rpc_config_user = fields.Char(
-        string="RPC User",
+    network_type = fields.Selection(
+        [
+            ("mainnet", "MAINNET"),
+            ("testnet", "TESTNET"),
+            ("stagenet", "STAGENET")
+        ],
+        "Network Type",
+        default="mainnet",
+    )
+    account_index = fields.Integer(
+        string="Account Index",
+        help="The wallet's account index to use",
+        default=0
+    )
+    rpc_uri = fields.Char(
+        string="RPC Uri",
+        help="The uri of the Monero RPC",
+        default="http://127.0.0.1:18081/",
+    )
+    rpc_username = fields.Char(
+        string="RPC Username",
         help="The user to authenticate with the Monero RPC",
         default=None,
     )
-    monero_rpc_config_password = fields.Char(
+    rpc_password = fields.Char(
         string="RPC Password",
         help="The password to authenticate with the Monero RPC",
         default=None,
     )
     num_confirmation_required = fields.Selection(
         [
-            ("0", "Low; 0-conf"),
-            ("1", "Low-Med; 1-conf"),
-            ("3", "Med; 3-conf"),
-            ("6", "Med-High; 6-conf"),
-            ("9", "High; 9-conf"),
-            ("12", "High-Extreme; 12-conf"),
-            ("15", "Extreme; 15-conf"),
+            ("0", "0-conf"),
+            ("1", "1-conf"),
+            ("3", "3-conf"),
+            ("6", "6-conf"),
+            ("9", "9-conf"),
+            ("12", "12-conf"),
+            ("15", "15-conf"),
         ],
-        "Security Level (Confirmations)",
+        "Required Confirmations",
         default="0",
         help="Required Number of confirmations "
         "before an order's transactions is set to done",
     )
+
+    #endregion
