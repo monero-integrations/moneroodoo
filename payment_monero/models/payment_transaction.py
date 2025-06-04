@@ -15,7 +15,7 @@ from odoo.http import request
 from monero import MoneroSubaddress, MoneroUtils
 
 from ..const import ACCEPT_URL
-from ..utils import MoneroExchangeRateConverter, MoneroKrakenRateConverter
+from ..utils import MoneroExchangeRateConverter, MoneroExchangeRateConverterFactory
 
 from .payment_acquirer import MoneroPaymentAcquirer
 
@@ -25,7 +25,7 @@ _logger = logging.getLogger(__name__)
 class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
     _inherit = 'payment.transaction'
     _provider_key = 'monero'
-    _rate_converter: MoneroExchangeRateConverter = MoneroKrakenRateConverter()
+    _rate_converter: MoneroExchangeRateConverter | None = None
 
     # missing
     id: str
@@ -39,15 +39,12 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
         string="Fully Paid", help="Indicates if transaction is fully paid",
         default=False
     )
-
     currency_monero_id = fields.Many2one(
         'res.currency', string='Currency', required=True,
         default=lambda self: self.env['res.currency'].search([('name', '=', 'XMR')], limit=1).id
     )
-
     exchange_rate = fields.Monetary(
         string="Exchange Rate", currency_field='currency_id', readonly=True, required=True)
-
     amount_xmr = fields.Monetary(
         string="Amount XMR", currency_field='currency_monero_id', readonly=True, required=True)
 
@@ -58,7 +55,6 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
         string="Amount paid XMR", currency_field='currency_monero_id', readonly=False, required=False,
         default=0
     )
-
     confirmations_required = fields.Integer(
         string="Number of network confirmations required", default = 0
     )
@@ -74,7 +70,6 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
         self.env["sale.order"]
 
     def _set_listener(self, token: payment_token.PaymentToken | None = None) -> None:
-
         # set queue channel and max_retries settings
         # for queue depending on num conf settings
         num_conf_req = self.acquirer_id.get_num_confirmations_required()
@@ -132,6 +127,16 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
         )
 
         return token
+
+    def _get_rate_converter(self) -> MoneroExchangeRateConverter:
+        api_type = self.acquirer_id.get_exchange_rate_api()
+
+        if self._rate_converter is not None and self._rate_converter.type == api_type:
+            return self._rate_converter
+        
+        self._rate_converter = MoneroExchangeRateConverterFactory.create(api_type)
+
+        return self._rate_converter
 
     #endregion
 
@@ -264,9 +269,9 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
         return float(self.currency_id.decimal_places) # type: ignore
 
     def get_current_exchange_rate(self) -> float:
-        return self._rate_converter.get_exchange_rate()
+        return self._get_rate_converter().get_exchange_rate()
 
     def usd_to_xmr(self, usd: float) -> float:
-        return self._rate_converter.usd_to_xmr(usd)
+        return self._get_rate_converter().usd_to_xmr(usd)
 
     #endregion

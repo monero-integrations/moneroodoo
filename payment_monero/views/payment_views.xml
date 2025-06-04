@@ -18,6 +18,7 @@
                     <field name="rpc_password" on_change="update_rpc_server()"/>
                     <field name="type" readonly="1" string="Type" groups="base.group_no_one"/>
                     <field name="num_confirmation_required"/>
+                    <field name="exchange_rate_api"/>
                 </group>
             </xpath>
         </field>

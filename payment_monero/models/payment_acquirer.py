@@ -108,6 +108,15 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
         help="Required Number of confirmations "
         "before an order's transactions is set to done",
     )
+    exchange_rate_api = fields.Selection(
+        [
+            ("kraken", "Kraken"),
+            ("coingecko", "CoinGecko"),
+        ],
+        "Exchage Rate API",
+        default="kraken",
+        help="Exchange rate API to retrieve monero price",
+    )
 
     # endregion
 
@@ -170,6 +179,9 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
 
     def get_num_confirmations_required(self) -> int:
         return int(self.num_confirmation_required) # type: ignore
+    
+    def get_exchange_rate_api(self) -> str:
+        return str(self.exchange_rate_api)
 
     def get_incoming_unconfirmed_transfers(self, address: str) -> list[MoneroIncomingTransfer]:
         result: list[MoneroIncomingTransfer] = []
