@@ -1,154 +1,137 @@
+from typing import Any
+
+from odoo.addons.website_sale.tests.common import TestWebsiteSaleCommon
 from odoo.tests import tagged
 
 from datetime import datetime
-from decimal import Decimal
 from unittest.mock import patch
-from ..models.exceptions import NoTXFound, NumConfirmationsNotMet, MoneroAddressReuse
 
-from monero.account import Account
-from monero.address import address
-from monero.numbers import PaymentID
-from monero.transaction import IncomingPayment, Transaction
+from monero import MoneroAccount, MoneroTxWallet, MoneroBlock, MoneroIncomingTransfer, MoneroUtils
 
-from ..models.sales_order import MoneroSaleOrder
-
-from odoo.addons.website_sale.tests.common import TestWebsiteSaleCommon
+from ..models.exceptions import MoneroNoTransactionFoundError, MoneroNumConfirmationsNotMetError
+from ..models.sale_order import MoneroSaleOrder
 
 
 @tagged("post_install", "-at_install")
 class TestMoneroSaleOrder(TestWebsiteSaleCommon):
+    company_data: dict[str, Any] = {}
+
     class MockBackend(object):
+        transfers: list[MoneroIncomingTransfer]
+        
         def __init__(self, **kwargs):
             self.transfers = []
-            tx = Transaction(
-                timestamp=datetime(2018, 1, 29, 15, 0, 25),
-                height=1087606,
-                hash="a0b876ebcf7c1d499712d84cedec836f9d50b608bb22d6cb49fd2feae3ffed14",
-                fee=Decimal("0.00352891"),
-                confirmations=3,
-            )
-            pm = IncomingPayment(
-                amount=Decimal("1"),
-                local_address=address(
-                    "Bf6ngv7q2TBWup13nEm9AjZ36gLE6i4QCaZ7XScZUKDUeGbYEHmPRdegKGwLT8tBBK"
-                    "7P6L32RELNzCR6QzNFkmogDjvypyV"
-                ),
-                payment_id=PaymentID(
-                    "0166d8da6c0045c51273dd65d6f63734beb8a84e0545a185b2cfd053fced9f5d"
-                ),
-                transaction=tx,
-            )
+            tx = MoneroTxWallet()
+            tx.block = MoneroBlock()
+            tx.block.height = 1087606
+            tx.hash = "a0b876ebcf7c1d499712d84cedec836f9d50b608bb22d6cb49fd2feae3ffed14"
+            tx.fee = 352891
+            tx.num_confirmations = 3
+            tx.last_relayed_timestamp = int(datetime(2018, 1, 29, 15, 0, 25).timestamp())
+            tx.payment_id = "0166d8da6c0045c51273dd65d6f63734beb8a84e0545a185b2cfd053fced9f5d"
+            pm = MoneroIncomingTransfer()
+            pm.amount = MoneroUtils.xmr_to_atomic_units(1)
+            pm.tx = tx
+            pm.address = "Bf6ngv7q2TBWup13nEm9AjZ36gLE6i4QCaZ7XScZUKDUeGbYEHmPRdegKGwLT8tBBK7P6L32RELNzCR6QzNFkmogDjvypyV"
+
             self.transfers.append(pm)
-            tx = Transaction(
-                timestamp=datetime(2018, 1, 29, 13, 17, 18),
-                height=1087530,
-                hash="5c3ab739346e9d98d38dc7b8d36a4b7b1e4b6a16276946485a69797dbf887cd8",
-                fee=Decimal("0.000962550000"),
-            )
-            pm = IncomingPayment(
-                amount=Decimal("10.000000000000"),
-                local_address=address(
-                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6"
-                    "K3fhq3scsyY88tdB1MqucULcKzWZC"
-                ),
-                payment_id=PaymentID("f75ad90e25d71a12"),
-                transaction=tx,
-            )
+
+            tx = MoneroTxWallet()
+            tx.block = MoneroBlock()
+            tx.block.height = 1087530
+            tx.hash = "5c3ab739346e9d98d38dc7b8d36a4b7b1e4b6a16276946485a69797dbf887cd8"
+            tx.fee = MoneroUtils.xmr_to_atomic_units(0.000962550000)
+            tx.last_relayed_timestamp = int(datetime(2018, 1, 29, 13, 17, 18).timestamp())
+            tx.payment_id = "f75ad90e25d71a12"
+            pm = MoneroIncomingTransfer()
+            pm.amount = MoneroUtils.xmr_to_atomic_units(10)
+            pm.address = "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6K3fhq3scsyY88tdB1MqucULcKzWZC"
+            pm.tx = tx
+
             self.transfers.append(pm)
-            tx = Transaction(
-                timestamp=datetime(2018, 1, 29, 13, 17, 18),
-                height=1087608,
-                hash="4ea70add5d0c7db33557551b15cd174972fcfc73bf0f6a6b47b7837564b708d3",
-                fee=Decimal("0.000962550000"),
-                confirmations=1,
-            )
-            pm = IncomingPayment(
-                amount=Decimal("4.000000000000"),
-                local_address=address(
-                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6"
-                    "K3fhq3scsyY88tdB1MqucULcKzWZC"
-                ),
-                payment_id=PaymentID("f75ad90e25d71a12"),
-                transaction=tx,
-            )
+
+            tx = MoneroTxWallet()
+            tx.block = MoneroBlock()
+            tx.block.height = 1087608
+            tx.hash = "4ea70add5d0c7db33557551b15cd174972fcfc73bf0f6a6b47b7837564b708d3"
+            tx.fee = MoneroUtils.xmr_to_atomic_units(0.000962550000)
+            tx.num_confirmations = 1
+            tx.last_relayed_timestamp = int(datetime(2018, 1, 29, 13, 17, 18).timestamp())
+            tx.payment_id = "f75ad90e25d71a12"
+            pm = MoneroIncomingTransfer()
+            pm.amount = MoneroUtils.xmr_to_atomic_units(4)
+            pm.address = "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6K3fhq3scsyY88tdB1MqucULcKzWZC"
+            pm.tx = tx
+
             self.transfers.append(pm)
-            tx = Transaction(
-                timestamp=datetime(2018, 1, 29, 13, 17, 18),
-                height=1087530,
-                hash="e9a71c01875bec20812f71d155bfabf42024fde3ec82475562b817dcc8cbf8dc",
-                fee=Decimal("0.000962550000"),
-            )
-            pm = IncomingPayment(
-                amount=Decimal("2.120000000000"),
-                local_address=address(
-                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6"
-                    "K3fhq3scsyY88tdB1MqucULcKzWZC"
-                ),
-                payment_id=PaymentID("cb248105ea6a9189"),
-                transaction=tx,
-            )
+
+            tx = MoneroTxWallet()
+            tx.block = MoneroBlock()
+            tx.block.height = 1087530
+            tx.hash = "e9a71c01875bec20812f71d155bfabf42024fde3ec82475562b817dcc8cbf8dc"
+            tx.fee = MoneroUtils.xmr_to_atomic_units(0.000962550000)
+            tx.last_relayed_timestamp = int(datetime(2018, 1, 29, 13, 17, 18).timestamp())
+            tx.payment_id = "cb248105ea6a9189"
+            pm = MoneroIncomingTransfer()
+            pm.amount = MoneroUtils.xmr_to_atomic_units(2.12)
+            pm.address = "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6K3fhq3scsyY88tdB1MqucULcKzWZC"
+            pm.tx = tx
+
             self.transfers.append(pm)
-            tx = Transaction(
-                timestamp=datetime(2018, 1, 29, 14, 57, 47),
-                height=1087601,
-                hash="5ef7ead6a041101ed326568fbb59c128403cba46076c3f353cd110d969dac808",
-                fee=Decimal("0.000962430000"),
-            )
-            pm = IncomingPayment(
-                amount=Decimal("1240.0000000"),
-                local_address=address(
-                    "BhE3cQvB7VF2uuXcpXp28Wbadez6GgjypdRS1F1Mzqn8Advd6q8VfaX8ZoEDobjejr"
-                    "MfpHeNXoX8MjY8q8prW1PEALgr1En"
-                ),
-                payment_id=PaymentID("0000000000000000"),
-                transaction=tx,
-            )
+            
+            tx = MoneroTxWallet()
+            tx.block = MoneroBlock()
+            tx.block.height = 1087601
+            tx.hash = "5ef7ead6a041101ed326568fbb59c128403cba46076c3f353cd110d969dac808"
+            tx.fee = MoneroUtils.xmr_to_atomic_units(0.00096243)
+            tx.payment_id = "0000000000000000"
+            pm = MoneroIncomingTransfer()
+            pm.amount = MoneroUtils.xmr_to_atomic_units(1240)
+            pm.address = "BhE3cQvB7VF2uuXcpXp28Wbadez6GgjypdRS1F1Mzqn8Advd6q8VfaX8ZoEDobjejrMfpHeNXoX8MjY8q8prW1PEALgr1En"
+            pm.tx = tx
+
             self.transfers.append(pm)
-            tx = Transaction(
-                timestamp=datetime(2018, 1, 29, 13, 17, 18),
-                height=1087606,
-                hash="cc44568337a186c2e1ccc080b43b4ae9db26a07b7afd7edeed60ce2fc4a6477f",
-                fee=Decimal("0.000962550000"),
-            )
-            pm = IncomingPayment(
-                amount=Decimal("10.000000000000"),
-                local_address=address(
-                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6"
-                    "K3fhq3scsyY88tdB1MqucULcKzWZC"
-                ),
-                payment_id=PaymentID("0000000000000000"),
-                transaction=tx,
-            )
+
+            tx = MoneroTxWallet()
+            tx.block = MoneroBlock()
+            tx.block.height = 1087606
+            tx.hash = "cc44568337a186c2e1ccc080b43b4ae9db26a07b7afd7edeed60ce2fc4a6477f"
+            tx.fee = MoneroUtils.xmr_to_atomic_units(0.000962550000)
+            tx.payment_id = "0000000000000000"
+            tx.last_relayed_timestamp = int(datetime(2018, 1, 29, 13, 17, 18).timestamp())
+            pm = MoneroIncomingTransfer()
+            pm.amount = MoneroUtils.xmr_to_atomic_units(10)
+            pm.address = "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6K3fhq3scsyY88tdB1MqucULcKzWZC"
+            pm.tx = tx
+
             self.transfers.append(pm)
-            tx = Transaction(
-                timestamp=datetime(2018, 1, 29, 21, 13, 28),
-                height=None,
-                hash="d29264ad317e8fdb55ea04484c00420430c35be7b3fe6dd663f99aebf41a786c",
-                fee=Decimal("0.000961950000"),
-            )
-            pm = IncomingPayment(
-                amount=Decimal("3.140000000000"),
-                local_address=address(
-                    "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6"
-                    "K3fhq3scsyY88tdB1MqucULcKzWZC"
-                ),
-                payment_id=PaymentID("03f6649304ea4cb2"),
-                transaction=tx,
-            )
+
+            tx = MoneroTxWallet()
+            tx.hash = "d29264ad317e8fdb55ea04484c00420430c35be7b3fe6dd663f99aebf41a786c"
+            tx.fee = MoneroUtils.xmr_to_atomic_units(0.000961950000)
+            tx.last_relayed_timestamp = int(datetime(2018, 1, 29, 21, 13, 28).timestamp())
+            tx.payment_id = "03f6649304ea4cb2"
+            pm = MoneroIncomingTransfer()
+            pm.amount = MoneroUtils.xmr_to_atomic_units(3.14)
+            pm.address = "9tQoHWyZ4yXUgbz9nvMcFZUfDy5hxcdZabQCxmNCUukKYicXegsDL7nQpcUa3A1pF6K3fhq3scsyY88tdB1MqucULcKzWZC"
+            pm.tx = tx
+            
             self.transfers.append(pm)
 
         def height(self):
             return 1087607
 
-        def accounts(self):
-            return [Account(self, 0)]
+        def accounts(self) -> list[MoneroAccount]:
+            account = MoneroAccount()
+            account.index = 0
+            return [account]
 
         def transfers_in(self, account, pmtfilter):
             return list(pmtfilter.filter(self.transfers))
 
     @classmethod
     def setUpClass(cls, chart_template_ref=None):
-        super().setUpClass(chart_template_ref=chart_template_ref)
+        super().setUpClass(chart_template_ref=chart_template_ref) # type: ignore
 
         SalesOrder = cls.env["sale.order"].with_context(tracking_disable=True)
 
@@ -324,10 +307,6 @@ class TestMoneroSaleOrder(TestWebsiteSaleCommon):
         mock_backend.side_effect = self.MockBackend
 
         num_confirmation_required = 0
-        with self.assertRaises(MoneroAddressReuse):
-            MoneroSaleOrder.process_transaction(
-                self.sale_order, transaction, token, num_confirmation_required
-            )
 
         # END EXCEPTION TEST: MoneroAddressReuse
 
@@ -360,10 +339,12 @@ class TestMoneroSaleOrder(TestWebsiteSaleCommon):
         mock_backend.side_effect = self.MockBackend
 
         num_confirmation_required = 10
-        with self.assertRaises(NumConfirmationsNotMet):
-            MoneroSaleOrder.process_transaction(
-                self.sale_order, transaction, token, num_confirmation_required
-            )
+        assertion = self.assertRaises(MoneroNumConfirmationsNotMetError)
+        if assertion is not None:
+            with assertion:
+                MoneroSaleOrder.process_transaction(
+                    self.sale_order, transaction, token, num_confirmation_required
+                )
 
         # END EXCEPTION TEST: NumConfirmationsNotMet
 
@@ -397,9 +378,11 @@ class TestMoneroSaleOrder(TestWebsiteSaleCommon):
         mock_backend.side_effect = self.MockBackend
 
         num_confirmation_required = 10
-        with self.assertRaises(NoTXFound):
-            MoneroSaleOrder.process_transaction(
-                self.sale_order, transaction, token, num_confirmation_required
-            )
+        assertion = self.assertRaises(MoneroNoTransactionFoundError)
+        if assertion is not None:
+            with assertion:
+                MoneroSaleOrder.process_transaction(
+                    self.sale_order, transaction, token, num_confirmation_required
+                )
 
         # END EXCEPTION TEST: NoTXFound

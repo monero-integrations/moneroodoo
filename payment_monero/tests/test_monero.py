@@ -4,9 +4,7 @@ from odoo.tests import tagged
 from odoo.addons.website.tools import MockRequest
 
 
-
 from .common import MoneroCommon
-from ..controllers.main import MoneroController
 
 _logger = logging.getLogger(__name__)
 
@@ -32,7 +30,7 @@ class MoneroForm(MoneroCommon):
             self.env['payment.transaction']._handle_feedback_data('monero', {"reference": "Test Transaction"})
 
     def test_sale_order_status(self):
-        from ..models import sales_order
+        from ..models import sale_order
 
         #sale_order = self.env['sale.order'].create({
         #    'amount_total': 123.41,

@@ -3,13 +3,16 @@ import traceback
 
 from odoo.addons.payment.tests.common import PaymentCommon
 from odoo.tests.common import HttpCase
+
 from ..controllers.website_sale import MoneroWebsiteSale
+
 _logger = logging.getLogger(__name__)
+
 
 class MoneroCommon(PaymentCommon):
 
     @classmethod
-    def setUpClass(cls, chart_template_ref="l10n_de_skr03.l10n_de_chart_template"):
+    def setUpClass(cls, chart_template_ref: str | None = "l10n_de_skr03.l10n_de_chart_template"): # type: ignore
         _logger.info("In MomeroCommon setUpClass")
         _logger.info(cls.env)
         try:
@@ -18,7 +21,7 @@ class MoneroCommon(PaymentCommon):
             _logger.info(e)
             _logger.warning(traceback.format_exc())
         _logger.info(cls.env)
-        _logger.info(cls.env.registry)
+        _logger.info(cls.env.registry) # type: ignore
 
         values = {
             'is_cryptocurrency': True,
@@ -32,7 +35,7 @@ class MoneroCommon(PaymentCommon):
         cls.sale_order = cls.env['sale.order'].create({
             'partner_id': cls.env['res.partner'].create({'name': 'Test Partner'}).id,
             'note': 'Invoice after delivery',
-            'payment_term_id': cls.env.ref('account.account_payment_term_end_following_month').id,
+            'payment_term_id': cls.env.ref('account.account_payment_term_end_following_month').id, # type: ignore
             'currency_id': cls.currency_xmr.id,
         })
         cls.website = cls.env['website'].browse(1)
@@ -51,4 +54,4 @@ class TestWebsiteSaleCommon(HttpCase):
         cls.public_user = cls.env.ref('base.public_user')
         website = cls.env['website'].get_current_website()
         pricelist = website.get_current_pricelist()
-        pricelist.write({'currency_id': cls.env.company.currency_id.id})
+        pricelist.write({'currency_id': cls.env.company.currency_id.id}) # type: ignore

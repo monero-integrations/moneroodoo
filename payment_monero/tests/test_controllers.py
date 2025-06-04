@@ -1,5 +1,4 @@
 import odoo.tests.common as common
-import odoo
 
 
 class MoneroControllerTest(common.TransactionCase):
