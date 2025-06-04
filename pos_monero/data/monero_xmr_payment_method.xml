@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="pos_payment_method_monero_rpc" model="pos.payment.method">
+            <field name="name">Monero POS</field>
+            <field name="use_payment_terminal">monero</field>
+            <field name="active">True</field>
+            <field name="is_cryptocurrency">True</field>
+            <field name="type">xmr</field>
+            <field name="num_confirmation_required">0</field>
+            <field name="wallet_type">full</field>
+            <field name="account_index">0</field>
+            <field name="wallet_primary_address"></field>
+            <field name="wallet_private_view_key"></field>
+            <field name="network_type">mainnet</field>
+            <field name="rpc_uri">http://127.0.0.1:18081</field>
+            <field name="rpc_username"></field>
+            <field name="rpc_password"></field>
+        </record>
+    </data>
+</odoo>

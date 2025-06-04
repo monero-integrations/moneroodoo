@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="payment_acquirer_monero_rpc" model="payment.acquirer">
+            <field name="name">Monero</field>
+            <field name="provider">monero</field>
+            <field name="image_128" type="base64" file="payment_monero/static/description/icon.png"/>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="redirect_form_view_id" ref="redirect_form"/>
+            <field name="state">test</field>
+            <field name="pre_msg">
+            <![CDATA[<p>You will be redirected to the Payment information and processing page after clicking on the payment button.</p>]]>
+            </field>
+            <field name="pending_msg">
+            <![CDATA[<p>Waiting for Monero payment. </p>]]>
+            </field>
+            <field name="done_msg">
+            <![CDATA[<p><b>
+            Thanks for using Monero for payment.
+            </b></p><br><p>Please note your order number for future reference.</p>]]>
+            </field>
+            <field name="description">
+            <![CDATA[<p>
+            An open source payment gateway to accept Monero online payments.
+            </p>
+            <ul class="list-inline">
+                <li class="list-inline-item"><i class="fa fa-check"></i>Online Payment</li>
+                <li class="list-inline-item"><i class="fa fa-check"></i>Payment Status Tracking</li>
+            </ul>]]>
+            </field>
+            <field name="is_cryptocurrency">True</field>
+            <field name="type">xmr</field>
+            <field name="num_confirmation_required">0</field>
+            <field name="wallet_type">full</field>
+            <field name="account_index">0</field>
+            <field name="wallet_primary_address"></field>
+            <field name="wallet_private_view_key"></field>
+            <field name="network_type">mainnet</field>
+            <field name="rpc_uri">http://127.0.0.1:18081</field>
+            <field name="rpc_username"></field>
+            <field name="rpc_password"></field>
+            <field name="display_as">Monero</field>
+        </record>
+
+        <record id="payment_method_monero" model="account.payment.method">
+            <field name="name">Monero</field>
+            <field name="code">monero</field>
+            <field name="payment_type">inbound</field>
+        </record>
+    </data>
+</odoo>
