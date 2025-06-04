@@ -18,7 +18,24 @@
                     <field name="rpc_password" on_change="update_rpc_server()"/>
                     <field name="type" readonly="1" string="Type" groups="base.group_no_one"/>
                     <field name="num_confirmation_required"/>
+                    <field name="payment_expiration"/>
                     <field name="exchange_rate_api"/>
+                    <br/>
+                    <a href="https://www.getmonero.org/downloads/"
+                       target="_blank"
+                       colspan="2">
+                        How to create a Monero Wallet?
+                    </a>
+                    <a href="https://docs.getmonero.org/interacting/monero-wallet-rpc-reference/"
+                       target="_blank"
+                       colspan="2">
+                        How to configure a Monero Wallet RPC?
+                    </a>
+                    <a href="https://docs.getmonero.org/interacting/monerod-reference/"
+                       target="_blank"
+                       colspan="2">
+                        How to configure a Monero Daemon RPC?
+                    </a>
                 </group>
             </xpath>
         </field>

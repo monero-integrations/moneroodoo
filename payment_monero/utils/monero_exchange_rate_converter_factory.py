@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from abc import ABC
 
 from .monero_exchange_rate_converter import MoneroExchangeRateConverter
@@ -14,5 +16,5 @@ class MoneroExchangeRateConverterFactory(ABC):
         elif api == "coingecko":
             return MoneroCoinGeckoConverter()
         
-        raise Exception(f"Unkown exchange rate type '{str(type)}'")
+        raise Exception(f"Unkown exchange rate type '{str(api)}'")
     

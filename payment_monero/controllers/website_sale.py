@@ -9,7 +9,7 @@ from odoo.http import request
 from odoo.exceptions import ValidationError
 from odoo.addons.website_sale.controllers.main import WebsiteSale
 
-from monero import MoneroSubaddress
+from monero import MoneroWallet
 
 _logger = logging.getLogger(__name__)
 
@@ -46,13 +46,17 @@ class MoneroWebsiteSale(WebsiteSale):
 
         for acquirer in render_values["acquirers"]:
             if "monero" in acquirer.provider:
-                subaddress: MoneroSubaddress | None = None
+                if acquirer.is_wallet_loaded():
+                    # wallet already loaded
+                    break
+
+                wallet: MoneroWallet | None = None
                 try:
-                    subaddress = acquirer.create_subaddress()
+                    wallet = acquirer.get_wallet()
                 except Exception as e:
                     _logger.error(
                         f"USER IMPACT: Monero Payment Acquirer "
-                        f"experienced an Error with RPC: {e.__class__.__name__}"
+                        f"experienced an Error with wallet: {str(e)}"
                     )
                     raise ValidationError(
                         "Current technical issues "
@@ -60,13 +64,12 @@ class MoneroWebsiteSale(WebsiteSale):
                         "choose another payment method"
                     )
 
-                if subaddress is None:
+                if wallet is None:
                     raise ValidationError(
-                        "Could not get an address to receive payment order"
+                        "Could not get a monero wallet to receive payment order"
                     )
 
-                request.wallet_address = subaddress.address
-                _logger.info(f"new monero payment subaddress generated {subaddress.address}")
+                _logger.info(f"Monero wallet loaded, restore height {wallet.get_restore_height()}")
 
         if render_values["errors"]:
             render_values.pop("acquirers", "")

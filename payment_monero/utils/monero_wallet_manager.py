@@ -11,6 +11,7 @@ from monero import (
 
 _logger = logging.getLogger(__name__)
 
+
 class MoneroWalletManagerListener(MoneroWalletListener):
 
     def __init__(self) -> None:
@@ -23,6 +24,7 @@ class MoneroWalletManagerListener(MoneroWalletListener):
     @override
     def on_output_received(self, output: MoneroOutputWallet) -> None:
         _logger.info(f"Received output {output.stealth_public_key}, amount {output.amount}, account {output.account_index}, subaddress {output.subaddress_index}")
+
 
 class MoneroWalletManager:
 
@@ -89,6 +91,14 @@ class MoneroWalletManager:
         cls._wallet = None
 
     @classmethod
+    def is_wallet_loaded(cls) -> bool:
+        try:
+            cls.get_wallet()
+            return True
+        except Exception as e:
+            return False
+
+    @classmethod
     def get_wallet(cls) -> MoneroWallet:
         if cls._wallet is None or cls._wallet.is_closed():
             raise Exception("Wallet not loaded")
@@ -151,7 +161,7 @@ class MoneroWalletManager:
             config.account_lookahead = account_lookahead
             config.subaddress_lookahead = 10
         # config.server = connection
-        config.restore_height = cls.get_daemon_height()
+        config.restore_height = cls.get_daemon_height() - 10
 
         wallet = MoneroWalletFull.create_wallet(config)
         
@@ -213,6 +223,7 @@ class MoneroWalletManager:
             raise Exception("Invalid wallet type provided")
         
         _logger.warning(f"Starting wallet sync...")
+        # cls._wallet.add_listener(cls._listener)
         cls._wallet.start_syncing()
         _logger.warning(f"Started wallet syncing")
 

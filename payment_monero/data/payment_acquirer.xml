@@ -19,6 +19,11 @@
             Thanks for using Monero for payment.
             </b></p><br><p>Please note your order number for future reference.</p>]]>
             </field>
+            <field name="cancel_msg">
+            <![CDATA[<p>
+            Your payment has been cancelled as the invoice was not paid in the expected time.
+            </p>]]>
+            </field>
             <field name="description">
             <![CDATA[<p>
             An open source payment gateway to accept Monero online payments.
@@ -31,6 +36,8 @@
             <field name="is_cryptocurrency">True</field>
             <field name="type">xmr</field>
             <field name="num_confirmation_required">0</field>
+            <field name="exchange_rate_api">kraken</field>
+            <field name="payment_expiration">15</field>
             <field name="wallet_type">full</field>
             <field name="account_index">0</field>
             <field name="wallet_primary_address"></field>

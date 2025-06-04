@@ -1,21 +1,28 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+
 import logging
 
-from odoo import api
+from datetime import datetime
+
+from odoo import api, fields
 from odoo.addons.payment.models import payment_token
 from odoo.addons.sale.models import sale_order
 
 from monero import MoneroUtils
+
+from ..utils import MoneroWalletIncomingTransfers
 
 from .exceptions import ( 
     MoneroNoTransactionFoundError, MoneroNumConfirmationsNotMetError, 
     MoneroTransactionUpdateJobError 
 )
 
-from ..utils import MoneroWalletIncomingTransfers
+from .payment_transaction import MoneroPaymentTransaction
 
 _logger = logging.getLogger(__name__)
+
 
 class MoneroSaleOrder(sale_order.SaleOrder):
 
@@ -27,8 +34,28 @@ class MoneroSaleOrder(sale_order.SaleOrder):
 
     # endregion
 
+    def cancel(self, transaction: MoneroPaymentTransaction) -> None:
+        current_state = self.get_state()
+        _logger.warning(f"--------- CANCELING ORDER, state: {current_state}")
+        if current_state == "cancel":
+            _logger.warning(f"-------------- ORDER ALREADY CANCELLED")
+            return
+        
+        transaction._set_canceled('Order payment expired')
+        self.action_cancel()
+        self.write({"state": "cancel", "is_expired": "true"})
+        _logger.warning(f"--------- CANCELED ORDER, state: {self.get_state()}")
+
+    def get_state(self) -> str:
+        return str(self.state)
+
+    def get_date_order(self) -> datetime | None:
+        if not isinstance(self.date_order, fields.Datetime):
+            return None
+        return self.date_order # type: ignore
+
     @classmethod
-    def _get_address_transfers(cls, transaction, address: str) -> MoneroWalletIncomingTransfers:
+    def _get_address_transfers(cls, transaction: MoneroPaymentTransaction, address: str) -> MoneroWalletIncomingTransfers:
         try:
             transfers = transaction.acquirer_id.get_incoming_unconfirmed_transfers(address)
 
@@ -41,7 +68,7 @@ class MoneroSaleOrder(sale_order.SaleOrder):
             )
 
     @api.model
-    def update_transaction(self, transaction, token: payment_token.PaymentToken, num_confirmation_required: int) -> None:
+    def update_transaction(self, transaction: MoneroPaymentTransaction, token: payment_token.PaymentToken, num_confirmation_required: int) -> None:
         _logger.warning("------- CHECKPOINT UPDATE TRANSACTION")
 
         # update deposit amount
@@ -65,14 +92,18 @@ class MoneroSaleOrder(sale_order.SaleOrder):
         _logger.warning("------- CONFIRMATIONS REQUIRED: {}".format(transaction.confirmations_required))
         self.env.cr.commit()
 
-        if not transaction.is_fully_paid() or int(transaction.confirmations_required) > 0:
+        if not transaction.is_fully_paid() and transaction.is_expired():
+            self.cancel(transaction)
+            _logger.warning("-------- TRANSACTION EXPIRED")
+
+        elif not transaction.is_fully_paid() or int(transaction.confirmations_required) > 0:
             _logger.warning("-------- CONTINUE UPDATE TRANSACTION")
             raise MoneroTransactionUpdateJobError("Continue updating...")
-        
-        _logger.warning("-------- FINISHED UPDATE TRANSACTION")
+        else:
+            _logger.warning("-------- FINISHED UPDATE TRANSACTION")
 
     @api.model
-    def process_transaction(self, transaction, token: payment_token.PaymentToken, num_confirmation_required: int):
+    def process_transaction(self, transaction: MoneroPaymentTransaction, token: payment_token.PaymentToken, num_confirmation_required: int):
         _logger.warning("------- CHECKPOINT PROCESS TRANSACTION ORDER")
         _logger.warning("------- TOTAL USD: {}".format(self.amount_total))
         _logger.warning("------- TOTAL XMR: {}".format(transaction.amount_xmr))
@@ -84,16 +115,8 @@ class MoneroSaleOrder(sale_order.SaleOrder):
         _logger.warning("Incoming Payments: {}".format(len(transfers)))
 
         if incoming_transfers.empty:
-            job = (
-                self.env["queue.job"]
-                .sudo()
-                .search([("uuid", "=", self.env.context.get("job_uuid"))])
-            )
-            _logger.info(job.max_retries)
-            _logger.info(job.retry)
-            if job.retry == job.max_retries - 1:
-                self.action_cancel()
-                self.write({"state": "cancel", "is_expired": "true"})
+            if not transaction.is_fully_paid() and transaction.is_expired():
+                self.cancel(transaction)
                 log_msg = (
                     f"PaymentAcquirer: {transaction.acquirer_id.provider} "
                     f"Subaddress: {token.name} "

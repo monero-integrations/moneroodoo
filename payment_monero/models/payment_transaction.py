@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing_extensions import override
 
+from datetime import timedelta
 import logging
 
 from odoo import api, _
@@ -25,7 +26,6 @@ _logger = logging.getLogger(__name__)
 class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
     _inherit = 'payment.transaction'
     _provider_key = 'monero'
-    _rate_converter: MoneroExchangeRateConverter | None = None
 
     # missing
     id: str
@@ -34,7 +34,8 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
     acquirer_id: MoneroPaymentAcquirer
 
     #region Odoo Fields
-
+    created_at = fields.Datetime(
+        string="Created At", readonly=True, default=fields.Datetime.now)
     fully_paid = fields.Boolean(
         string="Fully Paid", help="Indicates if transaction is fully paid",
         default=False
@@ -58,6 +59,7 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
     confirmations_required = fields.Integer(
         string="Number of network confirmations required", default = 0
     )
+    expiration = fields.Datetime(string='Order Expiration Date', required=True, readonly=True, index=True, states={'draft': [('readonly', False)], 'sent': [('readonly', False)]}, copy=False, default=fields.Datetime.now, help="Expiration date of the order.")
 
     #endregion
 
@@ -105,7 +107,7 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
             """
         _logger.warning("In tokenize")
         wallet_sub_address: MoneroSubaddress = self.acquirer_id.create_subaddress()
-        _logger.warning("wallet_sub_address: {}".format(wallet_sub_address))
+        _logger.warning("wallet_sub_address: {}".format(wallet_sub_address.address))
         _logger.warning("acquirer_id: {}".format(self.acquirer_id))
         #token_name = wallet_sub_address.__repr__()
         token_name = wallet_sub_address.address
@@ -128,16 +130,12 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
 
         return token
 
-    def _get_rate_converter(self) -> MoneroExchangeRateConverter:
-        api_type = self.acquirer_id.get_exchange_rate_api()
-
-        if self._rate_converter is not None and self._rate_converter.type == api_type:
-            return self._rate_converter
+    def _get_rate_converter(self, acquirer=None) -> MoneroExchangeRateConverter:
+        api_type = self.acquirer_id.get_exchange_rate_api() if acquirer is None else acquirer.get_exchange_rate_api()
+        _logger.warning(f"--------- API TYPE {api_type}")
         
-        self._rate_converter = MoneroExchangeRateConverterFactory.create(api_type)
-
-        return self._rate_converter
-
+        return MoneroExchangeRateConverterFactory.create(api_type)
+    
     #endregion
 
     #region Override Methods
@@ -161,7 +159,6 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
         return {
             'api_url': ACCEPT_URL,
             'reference': self.reference,
-            #             'wallet_address': wallet.new_address()[0],
         }
 
     @override
@@ -215,14 +212,16 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
     @api.model
     @override
     def create(self, vals):
+        acquirer = self.env['payment.acquirer'].browse(vals['acquirer_id'])
+
         if 'exchange_rate' not in vals:
             try:
-                vals['exchange_rate'] = self.get_current_exchange_rate()
+                vals['exchange_rate'] = self.get_current_exchange_rate(acquirer)
             except Exception as e:
                 raise ValueError(f"Could not get exchange rate: {e}")
         if 'amount_xmr' not in vals:
             try:
-                vals['amount_xmr'] = self.usd_to_xmr(vals['amount'])
+                vals['amount_xmr'] = self.usd_to_xmr(vals['amount'], acquirer)
             except Exception as e:
                 raise ValueError(f"Could not convert usd to xmr: {e}")
         
@@ -231,6 +230,13 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
 
         if 'amount_remaining_xmr' not in vals:
             vals['amount_remaining_xmr'] = vals['amount_xmr']
+
+        if 'created_at' not in vals:
+            vals['created_at'] = fields.Datetime.now()
+
+        if 'expiration' not in vals:
+            minutes = acquirer.get_payment_expiration()
+            vals['expiration'] = vals['created_at'] + timedelta(minutes=minutes)
 
         return super().create(vals)
 
@@ -268,10 +274,20 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
     def get_decimal_places(self) -> float:
         return float(self.currency_id.decimal_places) # type: ignore
 
-    def get_current_exchange_rate(self) -> float:
-        return self._get_rate_converter().get_exchange_rate()
+    def get_current_exchange_rate(self, acquirer=None) -> float:
+        return self._get_rate_converter(acquirer).get_exchange_rate()
 
-    def usd_to_xmr(self, usd: float) -> float:
-        return self._get_rate_converter().usd_to_xmr(usd)
+    def usd_to_xmr(self, usd: float, acquirer=None) -> float:
+        return self._get_rate_converter(acquirer).usd_to_xmr(usd)
+    
+    def is_expired(self) -> bool:
+        date_order = self.created_at
+                
+        minutes = self.acquirer_id.get_payment_expiration()
+        now = fields.Datetime.now()
+        res = now - date_order > timedelta(minutes=minutes) # type: ignore
+        _logger.warning(f"is_expired(): now: {str(now)}, date order, {str(date_order)}, minutes: {minutes}, expired: {res}")
+
+        return now - date_order > timedelta(minutes=minutes) # type: ignore
 
     #endregion

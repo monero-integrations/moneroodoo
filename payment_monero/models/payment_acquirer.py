@@ -55,6 +55,8 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
         ],
         "Wallet Type",
         default="full",
+        required=True,
+        help="Use a local Full Wallet or setup a remote RPC Wallet"
     )
     wallet_primary_address = fields.Char(
         string="Primary Address",
@@ -72,25 +74,28 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
         ],
         "Network Type",
         default="mainnet",
+        required=True,
+        help="Wallet network type."
     )
     account_index = fields.Integer(
         string="Account Index",
         help="The wallet's account index to use",
+        required=True,
         default=0
     )
     rpc_uri = fields.Char(
         string="RPC Uri",
-        help="The uri of the Monero RPC",
+        help="The uri of the Monero Daemon RPC or Wallet RPC",
         default="http://127.0.0.1:18081/",
     )
     rpc_username = fields.Char(
         string="RPC Username",
-        help="The user to authenticate with the Monero RPC",
+        help="The user to authenticate with the Monero Daemon or Wallet RPC",
         default=None,
     )
     rpc_password = fields.Char(
         string="RPC Password",
-        help="The password to authenticate with the Monero RPC",
+        help="The password to authenticate with the Monero Daemon or Wallet RPC",
         default=None,
     )
     num_confirmation_required = fields.Selection(
@@ -104,6 +109,7 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
             ("15", "15-conf"),
         ],
         "Required Confirmations",
+        required=True,
         default="0",
         help="Required Number of confirmations "
         "before an order's transactions is set to done",
@@ -115,7 +121,27 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
         ],
         "Exchage Rate API",
         default="kraken",
+        required=True,
         help="Exchange rate API to retrieve monero price",
+    )
+    payment_expiration = fields.Selection(
+        [
+            ("5", "5 minutes"),
+            ("10", "10 minutes"),
+            ("15", "15 minutes"),
+            ("30", "30 minutes"),
+            ("45", "45 minutes"),
+            ("60", "1 hour"),
+            ("120", "2 hours"),
+            ("180", "3 hours"),
+            ("360", "6 hours"),
+            ("640", "12 hours"),
+            ("1280", "1 day"),
+        ],
+        "Payment Expiration",
+        default="15",
+        required=True,
+        help="Payment deadline for an order after its creation"
     )
 
     # endregion
@@ -133,7 +159,10 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
 
     # endregion
 
-    # region Methods
+    # region Public Methods
+
+    def is_wallet_loaded(self) -> bool:
+        return MoneroWalletManager.is_wallet_loaded()
 
     def get_wallet(self) -> MoneroWallet:
         try: 
@@ -182,6 +211,9 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
     
     def get_exchange_rate_api(self) -> str:
         return str(self.exchange_rate_api)
+    
+    def get_payment_expiration(self) -> int:
+        return int(self.payment_expiration) # type: ignore
 
     def get_incoming_unconfirmed_transfers(self, address: str) -> list[MoneroIncomingTransfer]:
         result: list[MoneroIncomingTransfer] = []
@@ -192,7 +224,7 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
         
         query = MoneroTransferQuery()
         query.account_index = index.account_index
-        query.subaddress_indices = [index.index]
+        query.subaddress_indices.append(index.index)
         
         query.tx_query = MoneroTxQuery()
         query.tx_query.is_incoming = True

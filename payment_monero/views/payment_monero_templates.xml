@@ -2,7 +2,6 @@
 <odoo>
     <template id="xmr_payment_form">
         <input type="hidden" name="data_set" data-create-route="/shop/payment/monero/submit"/>
-        <input type="hidden" id="wallet_address" name="wallet_address" data-is-required="true" t-att-value="wallet_address"/>
         <input type="hidden" name="type" t-att-value="'XMR'"/>
         <input type="hidden" name="acquirer_id" t-att-value="id"/>
         <input t-if="return_url" type="hidden" name="return_url" t-att-value="return_url"/>
@@ -92,6 +91,21 @@
                         <i class="fa fa-clipboard"></i>
                 </button>
             </t>
+            <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.state == 'cancel'">
+
+                <!--PATCH when the payment is done the page refreshes and
+                clipboardjs still expects a button to be there
+                    would be better to do clipboard.destroy(); but I don't know
+                    where / when / how that would be execute-->
+                <button id="copy_address_button" class="copy_btn"
+                            name="copy_address_button"
+                            t-att-data-clipboard-text="payment_tx_id.token_id.name"
+                            style="font-size:20px"
+                            hidden="true"
+                            title="Copy payment address">
+                        <i class="fa fa-clipboard"></i>
+                </button>
+            </t>
             <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.token_id.name and payment_tx_id.state == 'pending' and not payment_tx_id.fully_paid">
                 <p>Deposit <t t-raw="payment_tx_id.amount_remaining_xmr"/> XMR to the address below:
                     <ul>
@@ -121,6 +135,9 @@
                                 </button>
                                 <div id="monero_payment_address">
                                     <t t-raw="payment_tx_id.token_id.name"/>
+                                </div>
+                                <div id="monero_payment_expiration">
+                                    Payment will expire at <t t-raw="payment_tx_id.expiration"/>
                                 </div>
                             </li>
                         </b>

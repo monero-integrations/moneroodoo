@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from abc import ABC, abstractmethod
 
 
@@ -33,6 +34,9 @@ class MoneroExchangeRateConverter(ABC):
             raise Exception("Unknow error")
 
     def usd_to_xmr(self, usd: float) -> float:
+        if usd == 0:
+            return 0
+        
         rate = self.get_exchange_rate()
 
         return usd / rate
