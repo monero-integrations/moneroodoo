@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="xmr_payment_form">
+        <input type="hidden" name="data_set" data-create-route="/shop/payment/monero/submit"/>
+        <input type="hidden" name="type" t-att-value="'XMR'"/>
+        <input type="hidden" name="acquirer_id" t-att-value="id"/>
+        <input t-if="return_url" type="hidden" name="return_url" t-att-value="return_url"/>
+        <input t-if="partner_id" type="hidden" name="partner_id" t-att-value="partner_id"/>
+    </template>
+
+    <template id="xmr_acquirer_button"></template>
+
+    <template id="redirect_form">
+        <form t-att-action="api_url" method="post">
+            <input type="hidden" name="reference" t-att-value="reference"/>
+        </form>
+    </template>
+
+    <template id="monero_confirmation"
+                inherit_id="website_sale.confirmation">
+        <xpath expr="." position="inside">
+        <!--<script>$(document).ready(function() { $.getScript("/payment_monero/static/src/js/jquery.qrcode.min.js") });</script>-->
+            <script>
+                var show_qr = false;
+            </script>
+            <script>function enable_qr(uri)
+                {
+                if (show_qr === false) {
+                    uri = encodeURI(uri);
+                    jQuery('#qrcode_monero_payment').qrcode({text: uri, width:
+                240, height: 240});
+                    show_qr = true;
+                }
+                if (document.getElementById("qr_div1").style.display == "block") {
+                    document.getElementById("qr_div1").style.display = "none";
+                    document.getElementById("qr_div2").style.display = "none";
+                } else if (document.getElementById("qr_div1").style.display == "none") {
+                    document.getElementById("qr_div1").style.display = "block";
+                    document.getElementById("qr_div2").style.display = "block";
+                }
+                }
+            </script>
+        </xpath>
+        <xpath expr="//*[@class='card mt-3']" position="before">
+            <div id="qr_div1" class="card mt-3" style="display:none">
+                <div id="qr_div2" class="card-body" style="display:none">
+                    <div id="qrcode_monero_payment"></div>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+    <template id="monero_payment_confirmation"
+                inherit_id="website_sale.payment_confirmation_status">
+        <xpath expr="//*[@class='card-header']" position="inside">
+            <script type="text/javascript" src="/payment_monero/static/src/js/jquery.qrcode.min.js"></script>
+            <script>
+                var btn = document.getElementById('copy_address_button');
+
+                    $('.copy_btn').tooltip({
+                        trigger: 'click',
+                        placement: 'bottom'
+                    });
+                    var clipboard = new ClipboardJS(btn);
+
+                    clipboard.on('success', function(e) {
+                        $('.copy_btn').tooltip('hide').attr('data-original-title',
+                            'Copied payment address!').tooltip('show');
+                        setTimeout(function() {
+                            $('.copy_btn').tooltip('hide');
+                        }, 500);
+                    });
+
+                    clipboard.on('error', function(e) {
+                        console.log(e);
+                    });
+            </script>
+            <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.state == 'done'">
+                Amount paid <t t-raw="payment_tx_id.amount_paid_xmr"/> XMR
+
+                <!--PATCH when the payment is done the page refreshes and
+                clipboardjs still expects a button to be there
+                    would be better to do clipboard.destroy(); but I don't know
+                    where / when / how that would be execute-->
+                <button id="copy_address_button" class="copy_btn"
+                            name="copy_address_button"
+                            t-att-data-clipboard-text="payment_tx_id.token_id.name"
+                            style="font-size:20px"
+                            hidden="true"
+                            title="Copy payment address">
+                        <i class="fa fa-clipboard"></i>
+                </button>
+            </t>
+            <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.state == 'cancel'">
+
+                <!--PATCH when the payment is done the page refreshes and
+                clipboardjs still expects a button to be there
+                    would be better to do clipboard.destroy(); but I don't know
+                    where / when / how that would be execute-->
+                <button id="copy_address_button" class="copy_btn"
+                            name="copy_address_button"
+                            t-att-data-clipboard-text="payment_tx_id.token_id.name"
+                            style="font-size:20px"
+                            hidden="true"
+                            title="Copy payment address">
+                        <i class="fa fa-clipboard"></i>
+                </button>
+            </t>
+            <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.token_id.name and payment_tx_id.state == 'pending' and not payment_tx_id.fully_paid">
+                <p>Deposit <t t-raw="payment_tx_id.amount_remaining_xmr"/> XMR to the address below:
+                    <ul>
+                        <b>
+                            <li style="clear: both;">
+                                <button id="copy_address_button" class="copy_btn"
+                                        name="copy_address_button"
+                                        t-att-data-clipboard-text="payment_tx_id.token_id.name"
+                                        style="font-size:20px"
+                                        title="Copy payment address">
+                                    <i class="fa fa-clipboard"></i>
+                                </button>
+                                <a
+                                        t-att-href="'monero:%s?tx_amount=%s&amp;tx_description=%s' % (payment_tx_id.token_id.name, payment_tx_id.amount, order.name)" target="_blank">
+                                    <button id="open_wallet" class="open_btn"
+                                        name="open_wallet"
+                                        style="font-size:20px"
+                                        title="Open with Monero Wallet">
+                                        <i class="fa fa-external-link"></i>
+                                    </button>
+                                </a>
+                                <button id="show_qr" class="show_qr"
+                                        name="show_qr" style="font-size:20px"
+                                        title="Show QR Code"
+                                        t-attf-onclick="enable_qr('monero:{{payment_tx_id.token_id.name}}?tx_amount={{payment_tx_id.amount}}&amp;tx_description={{order.name}}&amp;recipient_name={{order.company_id.name}}')">
+                                    <i class="fa fa-qrcode"></i>
+                                </button>
+                                <div id="monero_payment_address">
+                                    <t t-raw="payment_tx_id.token_id.name"/>
+                                </div>
+                                <div id="monero_payment_expiration">
+                                    Payment will expire at <t t-raw="payment_tx_id.expiration"/>
+                                </div>
+                            </li>
+                        </b>
+                    </ul>
+                </p>
+            </t>
+
+            <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.token_id.name and payment_tx_id.state == 'pending' and payment_tx_id.fully_paid">
+                <p>Monero payment received.
+
+                Waiting for <t t-raw="payment_tx_id.confirmations_required"/> network confirmations.
+                <button id="copy_address_button" class="copy_btn"
+                            name="copy_address_button"
+                            t-att-data-clipboard-text="payment_tx_id.token_id.name"
+                            style="font-size:20px"
+                            hidden="true"
+                            title="Copy payment address">
+                        <i class="fa fa-clipboard"></i>
+                </button>
+                </p>
+            </t>
+        </xpath>
+    </template>
+
+</odoo>
