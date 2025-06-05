@@ -221,7 +221,12 @@ class MoneroPaymentTransaction(payment_transaction.PaymentTransaction):
                 raise ValueError(f"Could not get exchange rate: {e}")
         if 'amount_xmr' not in vals:
             try:
-                vals['amount_xmr'] = self.usd_to_xmr(vals['amount'], acquirer)
+                amount = vals['amount']
+                amount_xmr = self.usd_to_xmr(amount, acquirer)
+                if amount_xmr == 0 and amount > 0:
+                    raise ValueError(f"Could not convert amount to xmr, converted amount is 0")
+                
+                vals['amount_xmr'] = amount_xmr
             except Exception as e:
                 raise ValueError(f"Could not convert usd to xmr: {e}")
         
