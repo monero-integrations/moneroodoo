@@ -2,6 +2,10 @@
 
 from monero import MoneroIncomingTransfer
 
+import logging
+
+_logger = logging.getLogger(__name__)
+
 
 class MoneroWalletIncomingTransfers:
     amount: int
@@ -45,6 +49,8 @@ class MoneroWalletIncomingTransfers:
 
         num_confirmations: int | None = None
 
+        _logger.warning(f"MoneroWalletIncomingTransfer(): got {len(transfers)}")
+
         for transfer in transfers:
             if transfer.amount is None:
                 continue
@@ -53,11 +59,19 @@ class MoneroWalletIncomingTransfers:
 
             if num_confirmations is None:
                 num_confirmations = transfer.tx.num_confirmations
+                _logger.warning(f"MoneroWalletIncomingTransfer(): set num_confirmations: {num_confirmations} from first tx confirmations: {transfer.tx.num_confirmations}")
+
             elif transfer.tx.num_confirmations is not None and transfer.tx.num_confirmations < num_confirmations:
                 num_confirmations = transfer.tx.num_confirmations
+                _logger.warning(f"MoneroWalletIncomingTransfer(): set num_confirmations: {num_confirmations} from better tx confirmations: {transfer.tx.num_confirmations}")
 
         if num_confirmations is not None:
             self.num_confirmations = num_confirmations
+            _logger.warning(f"MoneroWalletIncomingTransfer(): self.num_confirmations: {self.num_confirmations}")
+        else:
+            _logger.warning(f"MoneroWalletIncomingTransfer(): self.num_confirmations: zero")
 
         if len(transfers) > 0:
             transfer = transfers[0]
+            _logger.warning(f"MoneroWalletIncomingTransfer(): first transfer confirmations: {transfer.tx.num_confirmations}")
+

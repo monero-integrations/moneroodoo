@@ -19,7 +19,7 @@ class MoneroWalletManagerListener(MoneroWalletListener):
     
     @override
     def on_sync_progress(self, height: int, start_height: int, end_height: int, percent_done: float, message: str) -> None:
-        _logger.info(f"Monero wallet sync progess {percent_done}% (height: {height}, start_height: {start_height}, end_height: {end_height})")
+        _logger.info(f"Monero wallet sync progess {percent_done*100}% (height: {height}, start_height: {start_height}, end_height: {end_height})")
 
     @override
     def on_output_received(self, output: MoneroOutputWallet) -> None:
@@ -162,9 +162,9 @@ class MoneroWalletManager:
             config.subaddress_lookahead = 10
         # config.server = connection
         config.restore_height = cls.get_daemon_height() - 10
-
+        _logger.warning(f"Creating full walet with restore height: {config.restore_height}")
         wallet = MoneroWalletFull.create_wallet(config)
-        
+        wallet.set_restore_height(config.restore_height)
         wallet.set_daemon_connection(connection)
         return wallet
 
@@ -223,7 +223,7 @@ class MoneroWalletManager:
             raise Exception("Invalid wallet type provided")
         
         _logger.warning(f"Starting wallet sync...")
-        # cls._wallet.add_listener(cls._listener)
+        cls._wallet.add_listener(cls._listener)
         cls._wallet.start_syncing()
         _logger.warning(f"Started wallet syncing")
 

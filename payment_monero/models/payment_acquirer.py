@@ -210,7 +210,9 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
             raise MoneroWalletNotSynchronizedError()
 
         account_index = self.get_account_index()
-        return wallet.create_subaddress(account_index, tag)
+        subaddress = wallet.create_subaddress(account_index, tag)
+        wallet.save()
+        return subaddress
 
     def get_num_confirmations_required(self) -> int:
         return int(self.num_confirmation_required) # type: ignore
