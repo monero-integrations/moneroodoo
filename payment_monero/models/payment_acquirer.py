@@ -16,6 +16,8 @@ from monero import (
 
 from ..utils import MoneroWalletManager
 
+from .exceptions import MoneroWalletNotSynchronizedError
+
 _logger = logging.getLogger(__name__)
 
 
@@ -203,6 +205,10 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
 
     def create_subaddress(self, tag: str = '') -> MoneroSubaddress:
         wallet = self.get_wallet()
+        
+        if not self.is_test_mode() and not wallet.is_synced():
+            raise MoneroWalletNotSynchronizedError()
+
         account_index = self.get_account_index()
         return wallet.create_subaddress(account_index, tag)
 
@@ -237,6 +243,13 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
 
         return result
 
+    def get_state(self) -> str:
+        return str(self.state)
+
+    def is_test_mode(self) -> bool:
+        state = self.get_state()
+        return state == 'test'        
+
     def load_wallet(self) -> MoneroWallet:
         MoneroWalletManager.load_connection(self.get_rpc_uri(), self.get_rpc_username(), self.get_rpc_password())
         MoneroWalletManager.check_connection()
@@ -254,7 +267,7 @@ class MoneroPaymentAcquirer(payment_acquirer.PaymentAcquirer):
             self.get_rpc_username(),
             self.get_rpc_password()
         )
-
+    
     # endregion
 
     # region API

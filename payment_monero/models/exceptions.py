@@ -13,3 +13,9 @@ class MoneroNoTransactionFoundError(RetryableJobError):
 
 class MoneroNumConfirmationsNotMetError(RetryableJobError):
     pass
+
+
+class MoneroWalletNotSynchronizedError(Exception):
+    
+    def __init__(self) -> None:
+        super().__init__("Wallet is not synchronized")
