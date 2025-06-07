@@ -7,6 +7,7 @@ import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_d
 import { loadJS } from "@web/core/assets";
 import { rpc } from "@web/core/network/rpc";
 import { useService } from "@web/core/utils/hooks";
+import { renderToString } from "@web/core/utils/render";
 import { markup } from "@odoo/owl";
 
 const DEBUG_TAG = "[MoneroPayment]";
@@ -203,11 +204,10 @@ export const PaymentFormMonero = {
 
         // Render the static template (already loaded via assets)
         const templateContent = document.createElement('div');
-        templateContent.innerHTML = `
-            <t t-call="payment_monero_rpc.monero_payment_page">
-                <t t-set="payment" t-value='${JSON.stringify(payment)}'/>
-            </t>
-        `;
+        templateContent.innerHTML = renderToString('payment_monero_rpc.monero_payment_template_page', {
+            payment_data: payment
+        });
+        console.debug(`${DEBUG_TAG} Rendering payment template`);
 
         // Append the rendered template
         this.moneroPaymentContainer.appendChild(templateContent);

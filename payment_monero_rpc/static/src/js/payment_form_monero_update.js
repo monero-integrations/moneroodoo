@@ -4,6 +4,7 @@
 
 import { Component, onMounted, onWillUnmount, useState } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
+import { renderToString } from "@web/core/utils/render";
 import { _t } from "@web/core/l10n/translation";
 import { ConfirmationDialog } from "@web/core/confirmation_dialog/confirmation_dialog";
 import { loadJS } from "@web/core/assets";
@@ -258,8 +259,7 @@ export class MoneroPaymentForm extends Component {
 
         try {
             console.debug(`${DEBUG_TAG} Rendering payment template`);
-            const qweb = useService("qweb");
-            const html = qweb.render("payment_monero_rpc.monero_payment_template_page", {
+            const html = renderToString('payment_monero_rpc.monero_payment_template_page', {
                 payment_data: payment
             });
             
