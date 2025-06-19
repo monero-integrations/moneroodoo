@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <template id="assets_frontend" name="monero frontend assets" inherit_id="web.assets_frontend">
+        <xpath expr="." position="inside">
+            <script type="module" src="/payment_monero_rpc/static/src/js/payment_form_extension.js"/>
+        </xpath>
+    </template>
+</odoo>
+

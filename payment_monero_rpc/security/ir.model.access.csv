@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+payment_monero_rpc.access_monero_payment,monero.payment,payment_monero_rpc.model_monero_payment,base.group_user,1,1,1,0
+payment_monero_rpc.access_monero_transaction,monero.transaction,payment_monero_rpc.model_monero_transaction,base.group_user,1,0,0,0
+payment_monero_rpc.access_monero_daemon,monero.daemon,payment_monero_rpc.model_monero_daemon,base.group_user,1,1,1,0
+payment_monero_rpc.access_payment_provider_monero,payment.provider.monero,payment_monero_rpc.model_payment_provider,base.group_user,1,1,1,0
+payment_monero_rpc.access_pos_payment_monero,pos.payment.monero,payment_monero_rpc.model_pos_payment_method,base.group_user,1,1,1,0
+payment_monero_rpc.access_pos_order_monero,pos.order.monero,payment_monero_rpc.model_pos_order,base.group_user,1,1,1,0
+payment_monero_rpc.access_res_config_monero,res.config.settings.monero,payment_monero_rpc.model_res_config_settings,base.group_system,1,1,1,0

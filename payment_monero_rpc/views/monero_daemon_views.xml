@@ -1,0 +1,68 @@
+<odoo>
+    <record id="view_monero_daemon_tree" model="ir.ui.view">
+        <field name="name">monero.daemon.tree</field>
+        <field name="model">monero.daemon</field>
+        <field name="arch" type="xml">
+            <list>           
+                <field name="last_checked"/>
+                <field name="state" widget="statusbar"/>
+                <field name="network"/>
+                <field name="current_height"/>
+                <field name="target_height"/>
+                <field name="connections"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_monero_daemon_form" model="ir.ui.view">
+        <field name="name">monero.daemon.form</field>
+        <field name="model">monero.daemon</field>
+        <field name="arch" type="xml">
+            <form string="Monero Daemon Status">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="state" widget="statusbar"/>
+                            <field name="last_checked"/>
+                            <field name="network"/>
+                            <field name="version"/>
+                        </group>
+                        <group>
+                            <field name="current_height"/>
+                            <field name="target_height"/>
+                            <field name="connections"/>
+                            <field name="update_available"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <field name="last_error" colspan="4"/>
+                    </group>
+
+                    <div class="alert alert-info" role="alert" invisible="state != 'syncing'">
+                        <strong>Daemon is syncing:</strong> 
+                        <field name="current_height" invisible="1"/>
+                        <field name="target_height" invisible="1"/>
+                        <span>Blocks synced: </span>
+                        <span>
+                            <field name="current_height"/> / <field name="target_height"/>
+                        </span>
+                        <div class="progress mt-2" invisible="target_height &lt;= 0">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: 0%;"
+                                 expr="'width: ' + (100 * current_height / target_height if target_height > 0 else 0) + '%;'"/>
+                        </div>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_monero_daemon_status" model="ir.actions.act_window">
+        <field name="name">Monero Daemon Status</field>
+        <field name="res_model">monero.daemon</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[]</field>
+        <field name="context">{'search_default_latest': 1}</field>
+    </record>
+</odoo>
