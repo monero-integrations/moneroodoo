@@ -27,7 +27,7 @@
 		"data/monero_payment_data.xml",
 		"views/monero_daemon_views.xml",
 		"views/monero_payment_views.xml",
-    	"views/monero_payment_templates.xml",
+    	    "views/monero_payment_templates.xml",
         "views/monero_payment_template_confirmation.xml",
         "views/monero_payment_template_email.xml",
         "views/monero_payment_template_invoice.xml",

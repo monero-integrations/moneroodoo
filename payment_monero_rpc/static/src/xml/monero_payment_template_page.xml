@@ -1,4 +1,4 @@
-<t t-name="payment_monero_rpc.monero_payment_page">
+<t t-name="payment_monero_rpc.monero_payment_template_page">
     <div id="wrap">
         <div class="oe_website_sale o_website_sale_checkout container py-2">
             <div t-att-class="'container mt-4 ' + ('dark-mode' if is_dark else 'light-mode')">

@@ -1,204 +1,163 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<odoo>
-    <!-- Main payment page template (server-side rendered) -->
-    <template id="monero_payment_page" name="Monero Payment Page" inherit_id="website.layout" page="True">
-        <t t-call="website.layout">
-            <t t-set="head">
-                <script src="payment/static/src/js/payment_wizard_copy_clipboard_field.js"></script>
-            </t>
-            
-            <div id="monero_payment_wrapper" class="container mt-4 mb-5">
-                <!-- Dark Mode Toggle -->
-<!--                <div class="float-right">
-                    <button class="btn btn-sm btn-secondary toggle-dark">
-                        <i class="fa fa-adjust"/> <span>Dark Mode</span>
-                    </button>
-                </div>
--->
+<t t-name="payment_monero_rpc.monero_payment_template_page">
+    <div id="wrap">
+        <div class="oe_website_sale o_website_sale_checkout container py-2">
+            <div t-att-class="'container mt-4 ' + ('dark-mode' if is_dark else 'light-mode')">
                 <div class="row justify-content-center">
-                    <div class="col-lg-8">
-                        <!-- Payment Status Header -->
-                        <div class="text-center mb-4">
-                            <h1>Monero Payment</h1>
-                            <t t-if="state == 'pending'">
-                                <div class="alert alert-info">
-                                    <i class="fa fa-clock-o mr-2"/>
-                                    <span>Waiting for payment - expires in </span>
-                                    <span t-esc="payment.expiry_time_str"/>
+                    <div class="col-md-8 text-center">
+                        <!-- Header -->
+                        <h2>Pay with Monero</h2>
+
+                        <!-- Payment Summary -->
+                        <div class="alert" t-att-class="'alert-' + payment['status_alert_class']">
+                            <h4>
+                                <span t-esc="payment['amount_str']"/> XMR
+                                <t t-if="payment['original_amount_str']">
+                                    <br/>
+                                    <small>
+                                        (≈ <span t-esc="payment['original_currency']"/> 
+                                        <span t-esc="payment['original_amount_str']"/>)
+                                    </small>
+                                </t>
+                            </h4>
+                            <t t-if="payment['exchange_rate_str']">
+                                <small>
+                                    Rate: 1 XMR = 
+                                    <span t-esc="payment['exchange_rate_str']"/> 
+                                    <span t-esc="payment['original_currency']"/>
+                                </small>
+                            </t>
+                        </div>
+
+                        <!-- QR Code -->
+                        <div class="mb-4 border p-3" style="background:white;display:inline-block">
+                            <img t-att-src="'/shop/payment/monero/qr/' + str(payment['id'])" 
+                                 class="img-fluid" 
+                                 style="max-width: 250px"
+                                 alt="Monero Payment QR Code"/>
+                            <p class="mt-2 mb-0">
+                                <i class="fa fa-qrcode"/> 
+                                Scan with Monero wallet
+                            </p>
+                        </div>
+
+                        <!-- PDF Download Buttons -->
+                        <div class="mb-3">
+                            <t t-if="invoice_ids and len(invoice_ids) > 0">
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="invoiceDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fa fa-file-pdf"/> Download Invoice
+                                    </button>
+                                    <div class="dropdown-menu" aria-labelledby="invoiceDropdown">
+                                        <t t-foreach="invoice_ids" t-as="invoice_id">
+                                            <a t-att-href="'/my/invoices/' + str(invoice_id) + '?download=1'" 
+                                               class="dropdown-item">
+                                                Invoice <span t-esc="invoice_id"/>
+                                            </a>
+                                        </t>
+                                    </div>
                                 </div>
                             </t>
-                            <t t-if="state == 'paid_unconfirmed'">
-                                <div class="alert alert-warning">
-                                    <i class="fa fa-check-circle mr-2"/>
-                                    <span>Payment received - waiting for confirmations (</span>
-                                    <span t-esc="payment.confirmations"/>/
-                                    <span t-esc="payment.required_confirmations"/>)
-                                </div>
+                            <t t-else="">
+                                <a href="#" class="btn btn-outline-primary disabled">
+                                    <i class="fa fa-file-pdf"/> No Invoices Available
+                                </a>
                             </t>
-                            <t t-if="state == 'confirmed'">
-                                <div class="alert alert-success">
-                                    <i class="fa fa-check-circle mr-2"/>
-                                    <span>Payment confirmed! Thank you.</span>
-                                </div>
+
+                            <t t-if="payment['state'] == 'confirmed'">
+                                <a href="#" class="btn btn-outline-secondary ml-2">
+                                    <i class="fa fa-file-alt"/> Payment Proof
+                                </a>
                             </t>
                         </div>
 
                         <!-- Payment Details Card -->
-                        <div class="card">
-                            <div class="card-header">
-                                <h4 class="mb-0">Payment Details</h4>
-                            </div>
+                        <div class="card mb-4 text-left">
                             <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <!-- QR Code -->
-                                        <div class="text-center mb-4">
-                                            <img t-att-src="'/payment/monero/qr/%s' % id" 
-                                                 class="img-fluid" 
-                                                 style="max-width: 250px;"
-                                                 alt="Monero Payment QR Code"/>
-                                            <p class="text-muted mt-2">Scan to pay with Monero wallet</p>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <!-- Payment Information -->
-                                        <dl class="row">
-                                            <dt class="col-sm-5">Order Reference:</dt>
-                                            <dd class="col-sm-7" t-esc="payment.order_ref"/>
-
-                                            <dt class="col-sm-5">Amount to Pay:</dt>
-                                            <dd class="col-sm-7">
-                                                <span t-esc="payment.amount_str"/> XMR
-                                                <small class="text-muted d-block">
-                                                    (≈ <span t-esc="payment.original_amount_str"/> 
-                                                    <span t-esc="payment.original_currency"/>)
+                                <h5 class="card-title">Payment Details</h5>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <th>Seller Address:</th>
+                                        <td class="monospace" style="word-break:break-all">
+                                            <small t-esc="payment['address_seller']"/>
+                                        </td>
+                                    </tr>
+                                    <tr t-if="payment['payment_id']">
+                                        <th>Payment ID:</th>
+                                        <td class="monospace"><small t-esc="payment['payment_id']"/></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Order Reference:</th>
+                                        <td t-esc="payment['order_ref'] or 'N/A'"/>
+                                    </tr>
+                                    <tr t-if="payment['expiry_time_str']">
+                                        <th>Expires:</th>
+                                        <td>
+                                            <span t-esc="payment['expiry_time_str']"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Confirmations:</th>
+                                        <td>
+                                            <span t-esc="payment['confirmations']"/>/<span t-esc="payment['required_confirmations']"/>
+                                            <t t-if="payment['confirmations'] &lt; payment['required_confirmations']">
+                                                <br/>
+                                                <small class="text-muted">
+                                                    (Waiting for <span t-esc="payment['required_confirmations'] - payment['confirmations']"/> more)
                                                 </small>
-                                            </dd>
-
-                                            <dt class="col-sm-5">Exchange Rate:</dt>
-                                            <dd class="col-sm-7">
-                                                1 XMR = <span t-esc="payment.exchange_rate_str"/> 
-                                                <span t-esc="payment.original_currency"/>
-                                            </dd>
-
-                                            <dt class="col-sm-5">Payment Address:</dt>
-                                            <dd class="col-sm-7">
-                                                <code t-esc="payment.address"/>
-                                                <button class="btn btn-sm btn-link copy-btn" 
-                                                        t-att-data-clipboard-text="address"
-                                                        title="Copy to clipboard">
-                                                    <i class="fa fa-copy"/>
-                                                </button>
-                                            </dd>
-
-                                            <dt class="col-sm-5">Payment ID:</dt>
-                                            <dd class="col-sm-7">
-                                                <code t-esc="payment.payment_id"/>
-                                            </dd>
-                                        </dl>
-                                    </div>
-                                </div>
-
-                                <!-- Payment Instructions -->
-                                <div class="alert alert-light mt-4">
-                                    <h5 class="alert-heading">How to pay:</h5>
-                                    <ol>
-                                        <li>Open your Monero wallet</li>
-                                        <li>
-                                            Send <strong><span t-esc="payment.amount_str"/> XMR</strong> 
-                                            to the address above
-                                        </li>
-                                        <li>Wait for transaction confirmations (typically 10-20 minutes)</li>
-                                    </ol>
-                                    <p class="mb-0">
-                                        <small class="text-muted">For help, please contact our support team.</small>
-                                    </p>
-                                </div>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </table>
                             </div>
                         </div>
 
-                        <!-- Action Buttons -->
-                        <div class="text-center mt-3">
-                            <a t-att-href="'/shop/order/%s' % sale_order_id" 
-                               class="btn btn-outline-secondary mr-2">Back to Order</a>
-                            <a t-att-href="'/payment/monero/invoice/%s' % id" 
-                               class="btn btn-outline-primary">Download Invoice</a>
-                            <t t-if="state == 'confirmed'">
-                                <a t-att-href="'/payment/monero/proof/%s' % id" 
-                                   class="btn btn-outline-success ml-2">Payment Proof</a>
+                        <!-- Payment Status -->
+                        <div t-att-class="'alert alert-' + payment['status_alert_class']">
+                            <i t-att-class="'fa ' + payment['status_icon']"/> 
+                            <span t-esc="payment['status_message']"/>
+
+                            <t t-if="payment['state'] == 'pending'">
+                                <div class="mt-2">
+                                    <a t-att-href="'/payment/monero/status?payment_id=' + str(payment['id'])" 
+                                       class="btn btn-sm btn-primary">
+                                        Check Payment Status
+                                    </a>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Payment Instructions -->
+                        <div class="text-left border-top pt-3">
+                            <h5>How to Pay:</h5>
+                            <ol>
+                                <li>Open your Monero wallet (GUI, CLI, or mobile)</li>
+                                <li>
+                                    Send <strong t-esc="payment['amount_str']"/> XMR to the address above
+                                    <t t-if="payment['original_amount_str']">
+                                        (≈ <span t-esc="payment['original_currency']"/> 
+                                        <span t-esc="payment['original_amount_str']"/>)
+                                    </t>
+                                </li>
+                                <li>Wait for <span t-esc="payment['required_confirmations']"/> network confirmations</li>
+                            </ol>
+                            <t t-if="payment['monero_uri']">
+                                <p class="mt-2">
+                                    <a t-att-href="payment['monero_uri']" class="btn btn-sm btn-outline-primary">
+                                        <i class="fa fa-external-link-alt"/> Open in Wallet
+                                    </a>
+                                </p>
                             </t>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- JavaScript Section -->
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    // Initialize clipboard.js
-                    new ClipboardJS('.copy-btn').on('success', function(e) {
-                        var btn = e.trigger;
-                        btn.setAttribute('title', 'Copied!');
-                        btn.querySelector('i').className = 'fa fa-check';
-                        setTimeout(function() {
-                            btn.setAttribute('title', 'Copy to clipboard');
-                            btn.querySelector('i').className = 'fa fa-copy';
-                        }, 2000);
-                    });
-                    
-                    // Auto-refresh logic for pending payments
-                    <t t-if="state in ['pending', 'paid_unconfirmed']">
-                        var checkStatus = function() {
-                            fetch('/payment/monero/status/<t t-esc="payment.id"/>')
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.error) {
-                                        console.error(data.error);
-                                        return;
-                                    }
-                                    if (data.status === 'confirmed') {
-                                        window.location.reload();
-                                    } else if (data.status === 'paid_unconfirmed') {
-                                        document.querySelector('.alert-warning span').textContent = data.confirmations;
-                                        setTimeout(checkStatus, 30000);
-                                    } else if (data.status === 'pending') {
-                                        setTimeout(checkStatus, 60000);
-                                    }
-                                })
-                                .catch(error => console.error('Error:', error));
-                        };
-                        setTimeout(checkStatus, 60000);
-                    </t>
-
-                    // Dark mode toggle
-                    document.querySelector('.toggle-dark').addEventListener('click', function() {
-                        fetch('/website/switch_theme_mode', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                            }
-                        }).then(() => window.location.reload());
-                    });
-                });
-            </script>
-        </t>
-    </template>
-
-    <!-- Simple version for client-side rendering -->
-    <template id="monero_payment_component" name="Monero Payment Component" owl="1">
-        <div class="monero-payment-component">
-            <div class="alert alert-info" t-if="props.state === 'pending'">
-                <i class="fa fa-clock-o mr-2"/>
-                <span>Pending Monero Payment</span>
-            </div>
-            <div class="payment-details">
-                <p>Amount: <strong t-esc="payment.props.amount_str"/> XMR</p>
-                <p>Address: <code t-esc="payment.props.address"/></p>
-                <button class="btn btn-primary check-status-btn">
-                    Check Payment Status
-                </button>
-            </div>
         </div>
-    </template>
-</odoo>
+    </div>
+    <!-- Auto-refresh script -->
+    <script t-if="payment['state'] == 'pending'">
+        setTimeout(function(){
+            window.location.reload();
+        }, 30000); // Refresh every 30 seconds
+    </script>
+</t>
+
