@@ -66,6 +66,19 @@
                                         <span t-esc="payment.required_confirmations"/>
                                     </td>
                                 </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <img t-att-src="'/shop/payment/monero/qr/' + str(payment['id'])" 
+                                             class="img-fluid" 
+                                             style="max-width: 250px"
+                                             alt="Monero Payment QR Code"/>
+                                        <p class="mt-2 mb-0">
+                                            <i class="fa fa-qrcode"/> 
+                                            Scan with Monero wallet
+                                        </p>                                    
+                                    </td>
+                                </tr>
                             </table>
                         </div>
                     </div>
