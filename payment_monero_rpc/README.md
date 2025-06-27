@@ -114,32 +114,12 @@ Due to significant changes in both Odoo's payment framework and this module's ar
   - Large-scale view architecture redesign
   - Component-based UI replaces many older patterns
 
-- **Core Changes**:
-  - Authentication system modifications
-  - Database API changes
-  - New async processing capabilities
-
-- **Frontend**:
-  - Comprehensive JavaScript framework changes
-  - New theming system
-  - Responsive design improvements
-
 ### Odoo 17 → 18
 
 - **Technical Foundation**:
   - Python 3.11 optimization advantages
   - New database access patterns
   - Enhanced caching mechanisms
-
-- **Developer Experience**:
-  - New developer tools and debugging
-  - Improved module testing framework
-  - Better documentation and typing
-
-- **Enterprise Features**:
-  - Enhanced integration capabilities
-  - New API endpoints
-  - Better extensibility points
 
 ## Module Migration Strategy
 

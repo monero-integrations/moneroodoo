@@ -4,6 +4,16 @@
 
 Allows you to accept Monero as Payment within your Odoo Ecommerce shop
 
+- Full compatibility with Odoo 18
+- RPC communication with Monero daemon/wallet using Python Monero
+- Automated payment verification through scheduled jobs
+- Support for multiple wallet addresses as long `payment_ids` (which were used in previous version) are no longer supported
+- Seamless integration with Odoo's payment flow
+- Periodically check for incoming transactions
+- Verify transaction confirmations
+- Update payment statuses accordingly
+- Reconcile completed payments with orders
+
 ![Monero](https://raw.githubusercontent.com/t-900-a/moneroodoo/dev/monero-rpc-odoo/static/src/img/logo.png)
 
 
