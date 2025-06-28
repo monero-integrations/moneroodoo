@@ -22,6 +22,14 @@ Available addons
 |---|---|---|
 |  [monero-rpc-odoo](monero-rpc-odoo/) |  18.0.0.0.1 |  Accept Monero Payment via a Wallet RPC |
 
+
+## Installation Requirements
+
+- Odoo 18
+- Access to a Monero wallet RPC instance
+- Proper network configuration for RPC communication
+
+
 ## Configuration
 
 After installation, the module can be configured through the Odoo Payment Provider settings:
