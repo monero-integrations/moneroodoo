@@ -16,9 +16,26 @@ Allows you to accept Monero as Payment within your Odoo Ecommerce shop
 
 ![Monero](https://raw.githubusercontent.com/t-900-a/moneroodoo/dev/monero-rpc-odoo/static/src/img/logo.png)
 
-
 Available addons
 ----------------
 |  addon | version  | summary  |
 |---|---|---|
 |  [monero-rpc-odoo](monero-rpc-odoo/) |  18.0.0.0.1 |  Accept Monero Payment via a Wallet RPC |
+
+## Configuration
+
+After installation, the module can be configured through the Odoo Payment Provider settings:
+
+1. Enable the Monero payment provider
+2. Configure Monero RPC connection details
+3. Set confirmation thresholds and verification intervals
+4. Test the connection to ensure proper communication
+
+## Package reorganization
+
+The 2 modules monero-rpc-odoo and monero-rpc-odoo-pos have been merged into one and following the naming convention for payment modules renamed to payment_monero_rpc.
+
+## Upgrading from Previous Versions
+
+Due to significant changes in both Odoo's payment framework and this module's architecture, a clean installation is recommended when upgrading from versions prior to Odoo 18. Data migration scripts are included but should be tested in a staging environment before use in production.
+
