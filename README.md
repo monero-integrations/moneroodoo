@@ -44,6 +44,13 @@ This automation ensures payment integrity and reduces manual verification requir
 
 After installation, the module can be configured through the Odoo Payment Provider settings:
 
+### Payment Provider Implementation
+
+The module now implements the `payment.provider` model instead of the deprecated `payment.acquirer` model that was used in versions prior to v15. This change follows Odoo's payment framework evolution and ensures proper integration with the current payment flow system.
+
+### Secondary Address System
+
+The module has moved away from using the long `payment_ids` (which are no longer supported) to using secondary Monero addresses for payment tracking. This architectural change provides better isolation between transactions and improves the reliability of payment matching.
 1. Enable the Monero payment provider
 2. Configure Monero RPC connection details
 3. Set confirmation thresholds and verification intervals
