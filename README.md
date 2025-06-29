@@ -22,6 +22,16 @@ Available addons
 |---|---|---|
 |  [monero-rpc-odoo](monero-rpc-odoo/) |  18.0.0.0.1 |  Accept Monero Payment via a Wallet RPC |
 
+### Automated Payment Verification
+
+The module implements Odoo cron jobs to:
+
+- Periodically check for incoming transactions
+- Verify transaction confirmations
+- Update payment statuses accordingly
+- Reconcile completed payments with orders
+
+This automation ensures payment integrity and reduces manual verification requirements.
 
 ## Installation Requirements
 
