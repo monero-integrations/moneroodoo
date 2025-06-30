@@ -1,6 +1,6 @@
 {
     "name": "payment_monero_rpc",
-    "summary": "Allows you to accept Monero Payments",
+    "summary": "Allows you to accept Monero Payments on the Online Market and POS",
     "author": "Monero Integrations",
     "website": "https://monerointegrations.com/",
     "category": "Accounting/Payment Providers",
