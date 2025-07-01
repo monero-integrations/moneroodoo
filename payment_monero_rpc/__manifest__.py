@@ -1,6 +1,6 @@
 {
     "name": "payment_monero_rpc",
-    "summary": "Allows you to accept Monero Payments on the Online Market and POS",
+    "summary": "Accept private, secure Monero (XMR) payments on your website and point of sale, with full RPC integration and real-time transaction tracking.",
     "author": "Monero Integrations",
     "website": "https://monerointegrations.com/",
     "category": "Accounting/Payment Providers",
