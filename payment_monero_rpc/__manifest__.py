@@ -1,6 +1,6 @@
 {
     "name": "payment_monero_rpc",
-    "summary": "Accept private, secure Monero (XMR) payments on your website and point of sale, with full RPC integration and real-time transaction tracking.",
+    "summary": "This module enables private and secure Monero (XMR) payments across your Odoo website and point of sale (POS) systems. It features full RPC integration for seamless interaction with a Monero daemon, real-time transaction tracking, and automated processing of payments. Ideal for merchants seeking privacy-focused crypto payments, the app supports both online and in-store transactions with customizable templates, frontend components, and POS interface enhancements.",
     "author": "Monero Integrations",
     "website": "https://monerointegrations.com/",
     "category": "Accounting/Payment Providers",
