@@ -2,11 +2,13 @@ import base64
 from odoo.modules.module import get_module_resource
 from odoo import SUPERUSER_ID
 
+# initialize logo by uploading
 def load_monero_logo():
     logo_path = get_module_resource('payment_monero_rpc', 'static/src/img', 'logo.png')
     with open(logo_path, 'rb') as logo_file:
         return base64.b64encode(logo_file.read())
 
+# setup POS configs and Payment Provider associations
 def associate_monero_with_pos_configs(cr, registry):
     from odoo.api import Environment
     env = Environment(cr, SUPERUSER_ID, {})
