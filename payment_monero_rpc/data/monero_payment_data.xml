@@ -53,7 +53,6 @@
           <field name="wallet_file">odoo_wallet</field>
           <field name="wallet_password">odoo_wallet_password</field>
           <field name="wallet_dir">/home/niyid/monero-x86_64-linux-gnu-v0.18.3.4/wallets</field>
-          <field name="wallet_address"></field>
           <field name="exchange_rate_api">https://api.coingecko.com/api/v3/simple/price</field>
           <field name="manual_rates" eval="{'USD': 200, 'EUR': 180}"/>
           <field name="payment_method_ids" eval="[(4, ref('payment_method_monero'))]"/>
