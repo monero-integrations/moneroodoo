@@ -1,3 +1,4 @@
+#TODO explore the possibility of moving other initialization parameters here
 import base64
 from odoo.modules.module import get_module_resource
 from odoo import SUPERUSER_ID
