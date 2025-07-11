@@ -1,5 +1,6 @@
 [![Build Status](https://api.travis-ci.com/t-900-a/moneroodoo.svg?branch=main)](https://travis-ci.com/t-900-a/moneroodoo)
 [![codecov](https://codecov.io/gh/t-900-a/moneroodoo/branch/main/graph/badge.svg?token=10S5GGNRHH)](https://codecov.io/gh/t-900-a/moneroodoo)
+
 # Monero addons for Odoo
 
 Allows you to accept Monero as Payment within your Odoo Ecommerce shop
@@ -8,8 +9,8 @@ Allows you to accept Monero as Payment within your Odoo Ecommerce shop
 - RPC communication with Monero daemon/wallet using Python Monero
 - Automated payment verification through scheduled jobs
 - Support for multiple wallet addresses as long `payment_ids` (which were used in previous version) are no longer supported
-- Seamless integration with Odoo's payment flow
-- Periodically check for incoming transactions
+- Integration with Odoo's payment flow
+- Periodic check for incoming transactions
 - Verify transaction confirmations
 - Update payment statuses accordingly
 - Reconcile completed payments with orders
@@ -39,7 +40,6 @@ This automation ensures payment integrity and reduces manual verification requir
 - Access to a Monero wallet RPC instance
 - Proper network configuration for RPC communication
 
-
 ## Configuration
 
 After installation, the module can be configured through the Odoo Payment Provider settings:
@@ -50,7 +50,7 @@ The module now implements the `payment.provider` model instead of the deprecated
 
 ### Secondary Address System
 
-The module has moved away from using the long `payment_ids` (which are no longer supported) to using secondary Monero addresses for payment tracking. This architectural change provides better isolation between transactions and improves the reliability of payment matching.
+The module has moved away from using the long `payment_ids` to using secondary Monero addresses for payment tracking. This architectural change provides better isolation between transactions and improves the reliability of payment matching.
 1. Enable the Monero payment provider
 2. Configure Monero RPC connection details
 3. Set confirmation thresholds and verification intervals
