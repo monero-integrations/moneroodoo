@@ -14,7 +14,7 @@ class MoneroSalesOrder(models.Model):
 
     def process_transaction(self, transaction, token, num_confirmation_required):
         try:
-            wallet = transaction.acquirer_id.get_wallet()
+            wallet = transaction.provider_id.get_wallet()
         except MoneroPaymentAcquirerRPCUnauthorized:
             raise MoneroPaymentAcquirerRPCUnauthorized(
                 "Monero Processing Queue: "
@@ -46,7 +46,7 @@ class MoneroSalesOrder(models.Model):
             if job.retry == job.max_retries - 1:
                 self.write({"state": "cancel", "is_expired": "true"})
                 log_msg = (
-                    f"PaymentAcquirer: {transaction.acquirer_id.provider} "
+                    f"PaymentProvider: {transaction.provider_id.provider} "
                     f"Subaddress: {token.name} "
                     "Status: No transaction found. Too much time has passed, "
                     "customer has most likely not sent payment. "
@@ -57,7 +57,7 @@ class MoneroSalesOrder(models.Model):
                 return log_msg
             else:
                 exception_msg = (
-                    f"PaymentAcquirer: {transaction.acquirer_id.provider} "
+                    f"PaymentProvider: {transaction.provider_id.provider} "
                     f"Subaddress: {token.name} "
                     "Status: No transaction found. "
                     "TX probably hasn't been added to a block or mem-pool yet. "
@@ -72,7 +72,7 @@ class MoneroSalesOrder(models.Model):
             # this would involve creating another "payment.transaction"
             # and notifying both the buyer and seller
             raise MoneroAddressReuse(
-                f"PaymentAcquirer: {transaction.acquirer_id.provider} "
+                f"PaymentProvider: {transaction.provider_id.provider} "
                 f"Subaddress: {token.name} "
                 "Status: Address reuse found. "
                 "The end user most likely sent "

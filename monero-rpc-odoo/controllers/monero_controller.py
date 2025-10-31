@@ -39,7 +39,7 @@ class MoneroController(http.Controller):
                 "Monero Pricelist"
             )
 
-        payment_acquirer_id = int(kwargs.get("acquirer_id"))
+        payment_provider_id = int(kwargs.get("provider_id"))
 
         payment_partner_id = int(kwargs.get("partner_id"))
 
@@ -60,7 +60,7 @@ class MoneroController(http.Controller):
             # partner_id creating sales order
             "active": False,
             # token shoudn't be active, the subaddress shouldn't be reused
-            "acquirer_id": payment_acquirer_id,
+            "provider_id": payment_provider_id,
             # surrogate key for payment acquirer
             "acquirer_ref": "payment.payment_acquirer_monero_rpc",
         }
@@ -78,7 +78,7 @@ class MoneroController(http.Controller):
             "partner_id": sales_order.partner_id.id,
             # Referencing the Sale Order Partner ID
             "payment_token_id": token_id,  # Associating the Payment Token ID.
-            "acquirer_id": payment_acquirer_id,  # Payment Acquirer - Monero
+            "provider_id": payment_provider_id,  # Payment Provider - Monero
             "state": "pending",
             # tx is pending,
             # because the customer will know the address to send the tx to,
@@ -115,7 +115,7 @@ class MoneroController(http.Controller):
         )
 
         payment_acquirer = (
-            request.env["payment.acquirer"].sudo().browse(payment_acquirer_id)
+            request.env["payment.provider"].sudo().browse(payment_provider_id)
         )
         # set queue channel and max_retries settings
         # for queue depending on num conf settings
@@ -206,10 +206,10 @@ class MoneroController(http.Controller):
                 f"created transaction: {transaction.id} "
                 f"for payment token: {token.id}"
             )
-            if transaction.acquirer_id.is_cryptocurrency:
+            if transaction.provider_id.is_cryptocurrency:
                 _logger.info(
                     f"Processing cryptocurrency "
-                    f"payment acquirer: {transaction.acquirer_id.name}"
+                    f"payment provider: {transaction.provider_id.name}"
                 )
                 _logger.info(
                     f"setting sales_order state to "

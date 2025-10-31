@@ -14,11 +14,11 @@ _logger = logging.getLogger(__name__)
 
 class MoneroPaymentAcquirer(models.Model):
     """
-    Inherits from payment.acquirer
+    Inherits from payment.provider
     Custom fields added: is_cryptocurrency, environment, type
     """
 
-    _inherit = "payment.acquirer"
+    _inherit = "payment.provider"
     _recent_transactions = []
 
     def get_wallet(self):
