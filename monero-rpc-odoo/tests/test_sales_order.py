@@ -303,7 +303,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
             "partner_id": self.sale_order.partner_id.id,
             "active": False,
             "provider_id": self.payment_acquirer.id,
-            "acquirer_ref": "payment.payment_acquirer_monero_rpc",
+            "provider_ref": "payment.payment_provider_monero_rpc",
         }
 
         token = self.env["payment.token"].sudo().create(payment_token)
@@ -377,7 +377,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
             "partner_id": self.sale_order.partner_id.id,
             "active": False,
             "acquirer_id": self.payment_acquirer.id,
-            "acquirer_ref": "payment.payment_acquirer_monero_rpc",
+            "provider_ref": "payment.payment_provider_monero_rpc",
         }
 
         token = self.env["payment.token"].sudo().create(payment_token)

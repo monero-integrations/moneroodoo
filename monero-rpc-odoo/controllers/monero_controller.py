@@ -62,7 +62,7 @@ class MoneroController(http.Controller):
             # token shoudn't be active, the subaddress shouldn't be reused
             "provider_id": payment_provider_id,
             # surrogate key for payment acquirer
-            "acquirer_ref": "payment.payment_acquirer_monero_rpc",
+            "provider_ref": "payment.payment_provider_monero_rpc",
         }
 
         _logger.info(f"creating payment token " f"for sales_order: {sales_order.id}")
