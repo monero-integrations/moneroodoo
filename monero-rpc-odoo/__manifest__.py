@@ -6,13 +6,12 @@
     # Categories can be used to filter modules in modules listing
     # for the full list
     "category": "Accounting",
-    "version": "19.0.1.0.0",
+    "version": "19.0.1",
     # any module necessary for this one to work correctly
     "depends": [
         "website_sale",
         "website_payment",
         "website",
-        "payment_transfer",
         "payment",
         "base_setup",
         "web",
@@ -24,7 +23,7 @@
         "views/monero_acquirer_form.xml",
         "views/monero_payment_confirmation.xml",
         "data/currency.xml",
-        "data/monero_xmr_payment_acquirer.xml",
+        "data/monero_xmr_payment_provider.xml",
         "data/payment_icon_data.xml",
         "data/queue.xml",
     ],

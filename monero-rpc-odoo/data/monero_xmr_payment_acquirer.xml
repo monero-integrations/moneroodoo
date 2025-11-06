@@ -5,7 +5,7 @@
             <input type="hidden" name="data_set" data-create-route="/shop/payment/monero/submit"/>
             <input type="hidden" id="wallet_address" name="wallet_address" data-is-required="true" t-att-value="request.wallet_address"/>
             <input type="hidden" name="type" t-att-value="'XMR'"/>
-            <input type="hidden" name="provider_id" t-att-value="id"/>
+            <input type="hidden" name="acquirer_id" t-att-value="id"/>
             <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
             <input t-if="return_url" type="hidden" name="return_url" t-att-value="return_url"/>
             <input t-if="partner_id" type="hidden" name="partner_id" t-att-value="partner_id"/>
@@ -26,7 +26,7 @@
             <field name="view_template_id" ref="xmr_acquirer_button"/>
             <field name="registration_view_template_id" ref="xmr_payment_form"/>
             <field name="state">test</field>
-            <field name="payment_flow">direct</field>
+            <field name="payment_flow">s2s</field>
             <field name="pre_msg">
             <![CDATA[<p>You will be redirected to the Payment information and processing page after clicking on the payment button.</p>]]>
             </field>
