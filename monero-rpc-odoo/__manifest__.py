@@ -15,7 +15,6 @@
         "payment",
         "base_setup",
         "web",
-        "queue_job",
     ],
     "external_dependencies": {"python": ["monero"]},
     # always loaded
@@ -25,7 +24,6 @@
         "data/currency.xml",
         "data/monero_xmr_payment_provider.xml",
         "data/payment_icon_data.xml",
-        "data/queue.xml",
     ],
     # only loaded in demonstration mode
     # TODO add demo data

@@ -101,8 +101,8 @@ class MoneroController(http.Controller):
         last_tx = request.env["payment.transaction"].browse(last_tx_id).sudo().exists()
         if last_tx:
            # PaymentProcessing.remove_payment_transaction(last_tx)
-          PaymentPostProcessing.monitor_transaction(transaction)
-        request.session["__website_sale_last_tx_id"] = transaction.id
+                  PaymentPostProcessing.monitor_transaction(transaction)
+                  request.session["__website_sale_last_tx_id"] = transaction.id
 
         # Sale Order is quotation sent
         #   , so the state should be set to "sent"
@@ -129,9 +129,39 @@ class MoneroController(http.Controller):
 
         # Add payment token and sale order to transaction processing queue
 
-        sales_order.with_delay(
-            channel=queue_channel, max_retries=queue_max_retries
-        ).process_transaction(transaction, token, num_conf_req)
+        # Create server action for the transaction processing
+        action = request.env['ir.actions.server'].create({
+            'name': f'Monero Transaction Processing ({queue_channel})',
+            'model_id': request.env['ir.model']._get_id('sale.order'),
+            'state': 'code',
+            'code': f"""
+record = env['sale.order'].browse({sales_order.id})
+record.process_transaction(
+    env['payment.transaction'].browse({transaction.id}),
+    env['payment.token'].browse({token.id}),
+    {num_conf_req}
+)
+""",
+        })
+
+        # Create cron job with appropriate interval based on channel
+        interval_number = 1
+        if queue_channel == "monero_zeroconf_processing":
+            interval_number = 15  # Check every 15 minutes for zero-conf
+        else:
+            interval_number = 60  # Check every hour for secure processing
+
+        cron = request.env['ir.cron'].create({
+            'name': f'Monero Processing ({queue_channel}) - {sales_order.name}',
+            'ir_actions_server_id': action.id,
+            'user_id': request.env.user.id,
+            'active': True,
+            'interval_number': interval_number,
+            'interval_type': 'minutes',
+        })
+
+        # Trigger immediately for first check
+        cron._trigger()
 
         if transaction:
             res = {

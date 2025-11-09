@@ -1,6 +1,5 @@
 from monero.backends.jsonrpc import Unauthorized
 from requests.exceptions import SSLError
-from odoo.addons.queue_job.exception import RetryableJobError
 
 
 class MoneroPaymentAcquirerRPCUnauthorized(Unauthorized):
@@ -11,11 +10,13 @@ class MoneroPaymentAcquirerRPCSSLError(SSLError):
     pass
 
 
-class NoTXFound(RetryableJobError):
+class NoTXFound(Exception):
+    """Raised when no transaction is found; cron will retry automatically."""
     pass
 
 
-class NumConfirmationsNotMet(RetryableJobError):
+class NumConfirmationsNotMet(Exception):
+    """Raised when confirmations are insufficient; cron will retry automatically."""
     pass
 
 
