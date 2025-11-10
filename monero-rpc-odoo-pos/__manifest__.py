@@ -6,13 +6,12 @@
     # Categories can be used to filter modules in modules listing
     # for the full list
     "category": "Accounting",
-    "version": "14.0.0.0.1",
+    "version": "19.0.1",
     # any module necessary for this one to work correctly
     "depends": [
         "account",
         "base_setup",
         "web",
-        "queue_job",
         "point_of_sale",
     ],
     "external_dependencies": {"python": ["monero"]},
@@ -20,7 +19,6 @@
     "data": [
         # "data/currency.xml", # not including as xmr may already be there
         "data/monero_xmr_payment_method.xml",
-        "data/queue.xml",
         "views/pos_payment_method_form.xml",
         "views/pos_payment_method_views.xml",
         "views/pos_payment_views.xml",

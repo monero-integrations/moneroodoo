@@ -53,35 +53,34 @@ class MoneroPosPayment(models.Model):
         )
 
         if incoming_payment == []:
-            job = (
-                self.env["queue.job"]
-                .sudo()
-                .search([("uuid", "=", self.env.context.get("job_uuid"))])
+            # Get the current cron job from context
+            cron_id = self.env.context.get('cron_id')
+            if cron_id:
+                cron = self.env['ir.cron'].browse(cron_id)
+                # Check if we're approaching the failure limit (default is 5 before deactivation)
+                if cron.failure_count >= 4:  # Cancel on the 4th failure (before deactivation)
+                    self.write({"state": "cancel", "is_expired": "true"})
+                    log_msg = (
+                        f"PaymentMethod: {self.payment_method_id.name} "
+                        f"Subaddress: {self.wallet_address} "
+                        "Status: No transaction found. Too much time has passed, "
+                        "customer has most likely not sent payment. "
+                        f"Cancelling order # {self.pos_order_id.id}. "
+                        f"Action: Nothing"
+                    )
+                    _logger.warning(log_msg)
+                    return log_msg
+
+            # If not the last retry, raise exception for cron to handle retry
+            exception_msg = (
+                f"PaymentMethod: {self.payment_method_id.name} "
+                f"Subaddress: {self.wallet_address} "
+                "Status: No transaction found. "
+                "TX probably hasn't been added to a block or mem-pool yet. "
+                "This is fine. "
+                f"Another job will execute. Action: Nothing"
             )
-            _logger.info(job.max_retries)
-            _logger.info(job.retry)
-            if job.retry == job.max_retries - 1:
-                self.write({"state": "cancel", "is_expired": "true"})
-                log_msg = (
-                    f"PaymentMethod: {self.payment_method_id.name} "
-                    f"Subaddress: {self.wallet_address} "
-                    "Status: No transaction found. Too much time has passed, "
-                    "customer has most likely not sent payment. "
-                    f"Cancelling order # {self.pos_order_id.id}. "
-                    f"Action: Nothing"
-                )
-                _logger.warning(log_msg)
-                return log_msg
-            else:
-                exception_msg = (
-                    f"PaymentMethod: {self.payment_method_id.name} "
-                    f"Subaddress: {self.wallet_address} "
-                    "Status: No transaction found. "
-                    "TX probably hasn't been added to a block or mem-pool yet. "
-                    "This is fine. "
-                    f"Another job will execute. Action: Nothing"
-                )
-                raise NoTXFound(exception_msg)
+            raise NoTXFound(exception_msg)
 
         if len(incoming_payment) > 1:
             # TODO custom logic if the end user sends
