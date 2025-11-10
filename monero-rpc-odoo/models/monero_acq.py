@@ -76,7 +76,8 @@ class MoneroPaymentAcquirer(models.Model):
         return {"warning": warning}
 
     provider = fields.Selection(
-        selection=[("monero-rpc", "Monero")], default="monero-rpc", ondelete={"monero-rpc": "set default"}
+        selection=[("monero-rpc", "Monero")],
+        default="monero-rpc"
     )
 
     is_cryptocurrency = fields.Boolean("Cryptocurrency?", default=False)
