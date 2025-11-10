@@ -75,8 +75,8 @@ class MoneroPaymentAcquirer(models.Model):
 
         return {"warning": warning}
 
-    provider = fields.Selection(
-        selection=[("monero-rpc", "Monero")],
+    code = fields.Selection(
+        selection_add=[("monero-rpc", "Monero")],
         default="monero-rpc"
     )
 
