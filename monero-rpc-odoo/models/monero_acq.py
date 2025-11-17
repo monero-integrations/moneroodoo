@@ -75,9 +75,9 @@ class MoneroPaymentAcquirer(models.Model):
 
         return {"warning": warning}
 
-    provider = fields.Selection(
+    code = fields.Selection(
         selection_add=[("monero-rpc", "Monero")],
-        default="monero-rpc"
+        ondelete={'monero-rpc': 'set default'}
     )
 
     is_cryptocurrency = fields.Boolean("Cryptocurrency?", default=False)
@@ -134,13 +134,3 @@ class MoneroPaymentAcquirer(models.Model):
         "before an order's transactions is set to done",
     )
 
-    def _get_code(self):
-        """ Return the code of the provider.
-
-        Note: `self.ensure_one()`
-
-        :return: The code of the provider.
-        :rtype: str
-        """
-        self.ensure_one()
-        return self.provider
