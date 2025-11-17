@@ -23,7 +23,6 @@
 <!--         Odoo bug, the payment icon isn't generated yet so there will be an-->
 <!--           error on install, the user has to manually set the payment icon-->
             <field name="company_id" ref="base.main_company"/>
-            <field name="view_template_id" ref="xmr_acquirer_button"/>
             <field name="state">test</field>
             <field name="payment_flow">direct</field>
             <field name="pre_msg">
