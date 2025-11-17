@@ -3,7 +3,7 @@
     <record id="provider_form_monero" model="ir.ui.view">
         <field name="name">payment.provider.form.inherit.payment.monero</field>
         <field name="model">payment.provider</field>
-        <field name="inherit_id" ref="payment_provider_form"/>
+        <field name="inherit_id" ref="payment.payment_provider_form"/>
         <field name="arch" type="xml">
             <xpath expr='//group[@name="provider"]' position='inside'>
                 <group attrs="{'invisible': [('code', '!=', 'monero-rpc')]}">
