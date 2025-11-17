@@ -22,7 +22,7 @@
         "views/monero_acquirer_form.xml",
         "views/monero_payment_confirmation.xml",
         "data/currency.xml",
-        "data/monero_xmr_payment_provider.xml",
+        "data/monero_xmr_payment_acquirer.xml",
         "data/payment_icon_data.xml",
     ],
     # only loaded in demonstration mode
