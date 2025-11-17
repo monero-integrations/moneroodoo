@@ -80,6 +80,11 @@ class MoneroPaymentAcquirer(models.Model):
         default="monero-rpc"
     )
 
+    provider = fields.Selection(
+        selection=[("monero-rpc", "Monero")],
+        default="monero-rpc"
+    )
+
     is_cryptocurrency = fields.Boolean("Cryptocurrency?", default=False)
     # not used right now, could be used to update price data?
     type = fields.Selection(
