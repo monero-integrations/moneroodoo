@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="payment.provider_form"/>
         <field name="arch" type="xml">
             <xpath expr='//group[@name="provider"]' position='inside'>
-                <group attrs="{'invisible': [('provider', '!=', 'monero-rpc')]}">
+                <group attrs="{'invisible': [('code', '!=', 'monero-rpc')]}">
                     <field name="is_cryptocurrency" readonly="1" groups="base.group_no_one"/>
                     <field name="rpc_protocol" on_change="update_rpc_server()"/>
                     <field name="monero_rpc_config_host" on_change="update_rpc_server()"/>
