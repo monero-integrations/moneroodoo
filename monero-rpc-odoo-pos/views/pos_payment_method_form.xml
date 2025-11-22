@@ -20,7 +20,7 @@
                 <field name="monero_rpc_config_password"
                        on_change="update_rpc_server()"
                        invisible="use_payment_terminal != 'monero-rpc'" required="use_payment_terminal == 'monero-rpc'"/>
-                <field name="type" readonly="1" string="Type"
+                <field name="crypto_type" readonly="1" string="Type"
                        invisible="use_payment_terminal != 'monero-rpc'" required="use_payment_terminal == 'monero-rpc'"/>
                 <field name="num_confirmation_required"
                        invisible="use_payment_terminal != 'monero-rpc'" required="use_payment_terminal == 'monero-rpc'"/>
