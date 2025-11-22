@@ -32,7 +32,7 @@ class MoneroWebsiteSale(WebsiteSale):
            paying / canceling
         """
         order = request.website.sale_get_order()
-        redirection = self.checkout_redirection(order)
+        redirection = order.checkout_redirection()
         if redirection:
             return redirection
 
