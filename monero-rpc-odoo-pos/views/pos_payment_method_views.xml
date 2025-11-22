@@ -11,7 +11,7 @@
                 <field name="is_cash_count" />
                 <field name="is_cryptocurrency" />
                 <field name="split_transactions" groups="base.group_no_one" />
-                <field name="use_payment_terminal" attrs="{'invisible': [('hide_use_payment_terminal', '=', True)]}" />
+                <field name="use_payment_terminal" invisible="hide_use_payment_terminal" />
                 <field name="company_id" groups="base.group_multi_company" />
             </list>
         </field>
