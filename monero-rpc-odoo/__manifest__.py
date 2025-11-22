@@ -23,7 +23,6 @@
         "views/monero_payment_confirmation.xml",
         "data/currency.xml",
         "data/monero_xmr_payment_acquirer.xml",
-        "data/payment_icon_data.xml",
     ],
     # only loaded in demonstration mode
     # TODO add demo data
