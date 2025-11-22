@@ -32,9 +32,6 @@ class MoneroWebsiteSale(WebsiteSale):
            paying / canceling
         """
         order = request.website.sale_get_order()
-        redirection = order.checkout_redirection()
-        if redirection:
-            return redirection
 
         render_values = self._get_shop_payment_values(order, **post)
         render_values["only_services"] = order and order.only_services or False
