@@ -37,7 +37,7 @@
             </b></p><br><p>Please note your order number for future reference.</p>]]>
             </field>
             <field name="is_cryptocurrency">True</field>
-            <field name="type">xmr</field>
+            <field name="type">custom</field>
             <field name="num_confirmation_required">0</field>
             <field name="rpc_protocol">http</field>
             <field name="monero_rpc_config_host">127.0.0.1</field>
@@ -49,7 +49,6 @@
         <record id="payment_method_monero_rpc" model="payment.method">
             <field name="name">XMR</field>
             <field name="code">xmr</field>
-            <field name="primary_payment_method_id" ref="payment.payment_method_unknown"/>
         </record>
     </data>
 </odoo>
