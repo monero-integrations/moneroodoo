@@ -23,6 +23,7 @@
 <!--         Odoo bug, the payment icon isn't generated yet so there will be an-->
 <!--           error on install, the user has to manually set the payment icon-->
             <field name="company_id" ref="base.main_company"/>
+            <field name="payment_method_ids" eval="[(4, ref('payment_method_monero_rpc'))]"/>
             <field name="state">test</field>
             <field name="pre_msg">
             <![CDATA[<p>You will be redirected to the Payment information and processing page after clicking on the payment button.</p>]]>
@@ -43,6 +44,12 @@
             <field name="monero_rpc_config_port">18082</field>
             <field name="monero_rpc_config_user">user</field>
             <field name="monero_rpc_config_password">password</field>
+        </record>
+
+        <record id="payment_method_monero_rpc" model="payment.method">
+            <field name="name">XMR</field>
+            <field name="code">xmr</field>
+            <field name="primary_payment_method_id" ref="payment.payment_method_unknown"/>
         </record>
     </data>
 </odoo>
