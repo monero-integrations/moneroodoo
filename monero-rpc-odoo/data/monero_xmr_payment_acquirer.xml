@@ -23,7 +23,6 @@
 <!--         Odoo bug, the payment icon isn't generated yet so there will be an-->
 <!--           error on install, the user has to manually set the payment icon-->
             <field name="company_id" ref="base.main_company"/>
-            <field name="primary_payment_method_id" ref="payment_method_monero_rpc"/>
             <field name="payment_method_ids" eval="[(4, ref('payment_method_monero_rpc'))]"/>
             <field name="state">test</field>
             <field name="pre_msg">
