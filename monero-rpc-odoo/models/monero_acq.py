@@ -77,7 +77,8 @@ class MoneroPaymentAcquirer(models.Model):
 
     code = fields.Selection(
         selection_add=[("monero-rpc", "Monero")],
-        required=False,
+        string="Code",
+        required=True,
     )
 
     is_cryptocurrency = fields.Boolean("Cryptocurrency?", default=False)
