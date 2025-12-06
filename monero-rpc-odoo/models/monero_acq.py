@@ -133,4 +133,13 @@ class MoneroPaymentAcquirer(models.Model):
         help="Required Number of confirmations "
         "before an order's transactions is set to done",
     )
+class PaymentMethod(models.Model):
+    _inherit = "payment.method"
+
+    @api.model
+    def default_get(self, fields_list):
+        defaults = super().default_get(fields_list)
+        if 'code' in fields_list and not defaults.get('code'):
+            defaults['code'] = 'xmr'
+        return defaults
 
