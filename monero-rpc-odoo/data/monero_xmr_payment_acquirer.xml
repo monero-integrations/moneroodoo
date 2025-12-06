@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
+    <data noupdate="0">
         <template id="xmr_payment_form">
             <input type="hidden" name="data_set" data-create-route="/shop/payment/monero/submit"/>
             <input type="hidden" id="wallet_address" name="wallet_address" data-is-required="true" t-att-value="request.wallet_address"/>
