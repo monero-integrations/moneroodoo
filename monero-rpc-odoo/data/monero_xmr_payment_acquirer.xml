@@ -44,7 +44,7 @@
             </b></p><br><p>Please note your order number for future reference.</p>]]>
             </field>
             
-            <field name="type">custom</field>
+            
             <field name="num_confirmation_required">0</field>
             <field name="rpc_protocol">http</field>
             <field name="monero_rpc_config_host">127.0.0.1</field>
