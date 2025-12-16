@@ -31,9 +31,7 @@
 <!--           error on install, the user has to manually set the payment icon-->
             <field name="company_id" ref="base.main_company"/>
             <field name="payment_method_ids" eval="[(4, ref('payment_method_monero_rpc'))]"/>
-            <field name="supported_currency_ids" eval="[(4, ref('currency_xmr'))]"/>
             <field name="state">enabled</field>
-            <field name="is_published">True</field>
             <field name="pre_msg">
             <![CDATA[<p>You will be redirected to the Payment information and processing page after clicking on the payment button.</p>]]>
             </field>
