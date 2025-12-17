@@ -170,6 +170,7 @@ record.process_transaction(
                 "short_name": token_short_name,
                 "3d_secure": False,
                 "verified": False,
+                "redirect_url": "/shop/payment/validate",
             }
 
             if verify_validity is not False:
