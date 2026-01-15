@@ -41,7 +41,7 @@
             </field>
             <field name="done_msg">
             <![CDATA[<p><b>
-            Thanks for using Monero(XMR) for payment.
+            Thanks for using XMR for payment.
             </b></p><br><p>Please note your order number for future reference.</p>]]>
             </field>
             
