@@ -23,6 +23,7 @@
         <record id="payment_provider_monero_rpc" model="payment.provider">
             <field name="name">Monero RPC</field>
             <field name="code">monero-rpc</field>
+            <field name="is_cryptocurrency">True</field>
             <field name="image_128" type="base64"
                    file="monero-rpc-odoo/static/description/icon.png"/>
 

@@ -133,6 +133,67 @@ class MoneroPaymentAcquirer(models.Model):
         help="Required Number of confirmations "
         "before an order's transactions is set to done",
     )
+
+    def _process_transaction(self, transaction):
+        """
+        Process the Monero payment transaction.
+        Creates token, subaddress, and sets up monitoring.
+        """
+        try:
+            wallet = self.get_wallet()
+            subaddress = wallet.new_address()[0]
+
+            token = self.env['payment.token'].create({
+                'name': subaddress,
+                'partner_id': transaction.partner_id.id,
+                'acquirer_id': self.id,
+                'acquirer_ref': 'payment.payment_acquirer_monero_rpc',
+                'active': False,
+            })
+
+            transaction.payment_token_id = token
+            transaction.state = 'pending'
+
+            # Set up cron for monitoring (copied from controller)
+            num_conf_req = int(self.num_confirmation_required)
+            if num_conf_req == 0:
+                queue_channel = "monero_zeroconf_processing"
+                interval_number = 15
+            else:
+                queue_channel = "monero_secure_processing"
+                interval_number = 60
+
+            action = self.env['ir.actions.server'].create({
+                'name': f'Monero Transaction Processing ({queue_channel})',
+                'model_id': self.env['ir.model']._get_id('sale.order'),
+                'state': 'code',
+                'code': f"""
+record = env['sale.order'].browse({transaction.sale_order_ids[0].id})
+record.process_transaction(
+    env['payment.transaction'].browse({transaction.id}),
+    env['payment.token'].browse({token.id}),
+    {num_conf_req}
+)
+""",
+            })
+
+            self.env['ir.cron'].create({
+                'name': f'Monero Processing ({queue_channel}) - {transaction.reference}',
+                'ir_actions_server_id': action.id,
+                'user_id': self.env.user.id,
+                'active': True,
+                'interval_number': interval_number,
+                'interval_type': 'minutes',
+            })
+
+            return {'url': '/shop/payment/validate'}
+
+        except Exception as e:
+            _logger.error(f"Monero transaction processing failed: {e}")
+            transaction.state = 'error'
+            return {'url': '/shop/payment'}
+
+
 class PaymentMethod(models.Model):
     _inherit = "payment.method"
 
@@ -142,4 +203,3 @@ class PaymentMethod(models.Model):
         if 'code' in fields_list and not defaults.get('code'):
             defaults['code'] = 'xmr'
         return defaults
-
