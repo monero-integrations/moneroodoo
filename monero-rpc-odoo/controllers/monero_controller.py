@@ -164,20 +164,9 @@ record.process_transaction(
         cron._trigger()
 
         if transaction:
-            res = {
-                "result": True,
-                "id": token_id,
-                "short_name": token_short_name,
-                "3d_secure": False,
-                "verified": False,
+            return {
                 "redirect_url": "/shop/payment/validate",
             }
-
-            if verify_validity is not False:
-                token.validate()
-                res["verified"] = token.verified
-
-            return res
 
     @http.route(
         "/shop/payment/token", type="http", auth="public", website=True, sitemap=False
