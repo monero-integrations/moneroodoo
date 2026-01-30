@@ -164,9 +164,15 @@ record.process_transaction(
         cron._trigger()
 
         if transaction:
-            return {
-                "redirect_url": "/shop/payment/validate",
-            }
+            # Return an HTML form that the Odoo payment frontend expects
+            # The frontend will insert this HTML into the DOM and submit it.
+            redirect_form_html = (
+                f'<form action="/shop/payment/token" method="GET">'
+                f'<input type="hidden" name="pm_id" value="{token_id}" />'
+                "</form>"
+            )
+
+            return {"redirect_form_html": redirect_form_html}
 
     @http.route(
         "/shop/payment/token", type="http", auth="public", website=True, sitemap=False
