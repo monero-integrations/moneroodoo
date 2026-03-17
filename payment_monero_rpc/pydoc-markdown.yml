@@ -1,0 +1,14 @@
+# pydoc-markdown configuration for payment_monero_rpc
+loaders:
+  - type: python
+    search_path: ["."]
+    packages: ["payment_monero_rpc"]
+
+processors:
+  - type: filter
+    skip_empty_modules: true
+  - type: smart
+
+renderer:
+  type: markdown
+  filename: "payment_monero_rpc_docs.md"

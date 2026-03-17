@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================= -->
+    <!--   Monero Security Category    -->
+    <!-- ============================= -->
+    <record id="module_category_monero" model="ir.module.category">
+        <field name="name">Monero</field>
+        <field name="sequence">20</field>
+    </record>
+
+    <!-- ============================= -->
+    <!--          User Group           -->
+    <!-- ============================= -->
+    <record id="group_monero_user" model="res.groups">
+        <field name="name">Monero User</field>
+        <field name="category_id" ref="payment_monero_rpc.module_category_monero"/>
+    </record>
+
+    <!-- ============================= -->
+    <!--        Manager Group          -->
+    <!-- ============================= -->
+    <record id="group_monero_manager" model="res.groups">
+        <field name="name">Monero Manager</field>
+        <field name="implied_ids" eval="[(4, ref('payment_monero_rpc.group_monero_user'))]"/>
+        <field name="category_id" ref="payment_monero_rpc.module_category_monero"/>
+    </record>
+
+    <!-- ============================= -->
+    <!--         Admin Group           -->
+    <!-- ============================= -->
+    <record id="group_monero_admin" model="res.groups">
+        <field name="name">Monero Admin</field>
+        <field name="implied_ids" eval="[(4, ref('payment_monero_rpc.group_monero_manager'))]"/>
+        <field name="category_id" ref="payment_monero_rpc.module_category_monero"/>
+    </record>
+
+    <!-- ============================= -->
+    <!--     Record-Level Security     -->
+    <!-- ============================= -->
+
+    <!-- Users may only read their own payment records -->
+    <record id="rule_monero_payment_own" model="ir.rule">
+        <field name="name">Own Monero Payments</field>
+        <field name="model_id" ref="model_monero_payment"/>
+        <field name="groups" eval="[(4, ref('payment_monero_rpc.group_monero_user'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+        <field name="domain_force">[('sale_order_id.partner_id', '=', user.partner_id.id)]</field>
+    </record>
+
+    <!-- Managers and Admins have unrestricted access (no domain filter) -->
+    <record id="rule_monero_payment_manager" model="ir.rule">
+        <field name="name">All Monero Payments (Manager)</field>
+        <field name="model_id" ref="model_monero_payment"/>
+        <field name="groups" eval="[(4, ref('payment_monero_rpc.group_monero_manager'))]"/>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+</odoo>
+

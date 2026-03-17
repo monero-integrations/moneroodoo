@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="group_monero_user" model="res.groups">
+        <field name="name">Monero User</field>
+    </record>
+
+    <record id="group_monero_manager" model="res.groups">
+        <field name="name">Monero Manager</field>
+    </record>
+
+    <record id="group_monero_admin" model="res.groups">
+        <field name="name">Monero Admin</field>
+    </record>
+</odoo>
+

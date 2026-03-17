@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="email_template_payment_confirmed" model="mail.template">
+            <field name="name">Monero Payment Confirmed</field>
+            <field name="model_id" ref="model_monero_payment"/>
+            <field name="subject">Your Payment Has Been Confirmed</field>
+            <field name="email_from">${object.company_id.email or 'noreply@example.com'}</field>
+            <field name="email_to">${object.partner_id.email}</field>
+            <field name="body_html"><![CDATA[
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+    <h2 style="color: #2E6E9E;">Payment Confirmed</h2>
+    <p>Dear ${object.partner_id.name},</p>
+    
+    <p>We're pleased to inform you that your Monero payment has been confirmed with the following details:</p>
+    
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+        <tr>
+            <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Amount Expected:</th>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${object.amount} XMR</td>
+        </tr>
+        <tr>
+            <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Amount Received:</th>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${object.amount_received} XMR</td>
+        </tr>
+        <tr>
+            <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Confirmations:</th>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${object.confirmations}</td>
+        </tr>
+        <tr>
+            <th style="text-align: left; padding: 8px; border-bottom: 1px solid #ddd;">Payment Address:</th>
+            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${object.address_seller}</td>
+        </tr>
+    </table>
+    
+    % if object.transaction_ids:
+    <h3 style="color: #2E6E9E;">Transaction Details:</h3>
+    <ul>
+        % for tx in object.transaction_ids:
+        <li>
+            TXID: ${tx.txid}<br/>
+            Amount: ${tx.amount} XMR<br/>
+            Block Height: ${tx.block_height or 'Pending'}<br/>
+            Fee: ${tx.fee} XMR<br/>
+            Timestamp: ${tx.timestamp}
+        </li>
+        % endfor
+    </ul>
+    % endif
+    
+    <p>Thank you for your payment. Your order will now be processed.</p>
+    
+    <p>Best regards,<br/>
+    ${object.company_id.name}</p>
+    
+    <p style="font-size: 0.8em; color: #777;">
+        If you have any questions, please contact us at ${object.company_id.email or 'our support email'}.
+    </p>
+</div>
+]]></field>
+        </record>
+    </data>
+</odoo>
