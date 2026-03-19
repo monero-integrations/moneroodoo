@@ -76,8 +76,8 @@ class MoneroPaymentAcquirer(models.Model):
         return {"warning": warning}
 
     code = fields.Selection(
-        selection_add=[("monero-rpc", "Monero")],
-        ondelete={"monero-rpc": "set default"},
+        selection_add=[("monero_rpc", "Monero")],
+        ondelete={"monero_rpc": "set default"},
     )
 
     is_cryptocurrency = fields.Boolean("Cryptocurrency?", default=False)
@@ -134,6 +134,13 @@ class MoneroPaymentAcquirer(models.Model):
         "before an order's transactions is set to done",
     )
 
+    def _get_default_payment_method_codes(self):
+        """Return the default payment method codes for Monero provider."""
+        self.ensure_one()
+        if self.code == 'monero_rpc':
+            return {'monero_rpc'}
+        return super()._get_default_payment_method_codes()
+
     def _process_transaction(self, transaction):
         """
         Process the Monero payment transaction.
@@ -143,18 +150,24 @@ class MoneroPaymentAcquirer(models.Model):
             wallet = self.get_wallet()
             subaddress = wallet.new_address()[0]
 
-            token = self.env['payment.token'].create({
-                'name': subaddress,
+            # Get the monero payment method
+            payment_method = self.env['payment.method'].sudo().search(
+                [('code', '=', 'monero_rpc')], limit=1
+            )
+
+            token = self.env['payment.token'].sudo().create({
+                'provider_id': self.id,
+                'payment_method_id': payment_method.id,
                 'partner_id': transaction.partner_id.id,
-                'acquirer_id': self.id,
-                'acquirer_ref': 'payment.payment_acquirer_monero_rpc',
+                'provider_ref': str(subaddress),
+                'payment_details': str(subaddress)[:20] + '...',
                 'active': False,
             })
 
-            transaction.payment_token_id = token
+            transaction.token_id = token
             transaction.state = 'pending'
 
-            # Set up cron for monitoring (copied from controller)
+            # Set up cron for monitoring
             num_conf_req = int(self.num_confirmation_required)
             if num_conf_req == 0:
                 queue_channel = "monero_zeroconf_processing"
@@ -168,7 +181,7 @@ class MoneroPaymentAcquirer(models.Model):
                 'model_id': self.env['ir.model']._get_id('sale.order'),
                 'state': 'code',
                 'code': f"""
-record = env['sale.order'].browse({transaction.sale_order_ids[0].id})
+record = env['sale.order'].browse({transaction.sale_order_ids[0].id if transaction.sale_order_ids else 0})
 record.process_transaction(
     env['payment.transaction'].browse({transaction.id}),
     env['payment.token'].browse({token.id}),
@@ -192,14 +205,3 @@ record.process_transaction(
             _logger.error(f"Monero transaction processing failed: {e}")
             transaction.state = 'error'
             return {'url': '/shop/payment'}
-
-
-class PaymentMethod(models.Model):
-    _inherit = "payment.method"
-
-    @api.model
-    def default_get(self, fields_list):
-        defaults = super().default_get(fields_list)
-        if 'code' in fields_list and not defaults.get('code'):
-            defaults['code'] = 'xmr'
-        return defaults

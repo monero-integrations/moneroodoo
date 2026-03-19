@@ -13,23 +13,20 @@
 
         <template id="xmr_acquirer_button"></template>
 
-<!--create payment method-->
+        <!-- create payment method -->
         <record id="payment_method_monero_rpc" model="payment.method">
             <field name="name">XMR</field>
-            <field name="code">xmr</field>
+            <field name="code">monero_rpc</field>
+            <field name="image" type="base64" file="monero_rpc_odoo/static/description/icon.png"/>
         </record>
 
-<!--create payment provider and link the method-->
+        <!-- create payment provider and link the method -->
         <record id="payment_provider_monero_rpc" model="payment.provider">
             <field name="name">Monero RPC</field>
-            <field name="code">monero-rpc</field>
+            <field name="code">monero_rpc</field>
             <field name="is_cryptocurrency">True</field>
             <field name="image_128" type="base64"
-                   file="monero-rpc-odoo/static/description/icon.png"/>
-
-<!--        <field name="payment_icon_ids">payment.payment_icon_monero</field>-->
-<!--         Odoo bug, the payment icon isn't generated yet so there will be an-->
-<!--           error on install, the user has to manually set the payment icon-->
+                   file="monero_rpc_odoo/static/description/icon.png"/>
             <field name="company_id" ref="base.main_company"/>
             <field name="payment_method_ids" eval="[(4, ref('payment_method_monero_rpc'))]"/>
             <field name="state">enabled</field>
@@ -44,8 +41,7 @@
             Thanks for using XMR for payment.
             </b></p><br><p>Please note your order number for future reference.</p>]]>
             </field>
-            
-            
+
             <field name="num_confirmation_required">0</field>
             <field name="rpc_protocol">http</field>
             <field name="monero_rpc_config_host">127.0.0.1</field>

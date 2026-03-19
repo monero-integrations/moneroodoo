@@ -33,7 +33,7 @@ class MoneroSalesOrder(models.Model):
                 f"experienced an Error with RPC: {e.__class__.__name__}"
             )
 
-        incoming_payment = wallet.incoming(local_address=token.name, unconfirmed=True)
+        incoming_payment = wallet.incoming(local_address=token.provider_ref, unconfirmed=True)
 
         if incoming_payment == []:
             # Get the current cron job from context
@@ -44,8 +44,8 @@ class MoneroSalesOrder(models.Model):
                 if cron.failure_count >= 4:  # Cancel on the 4th failure (before deactivation)
                     self.write({"state": "cancel", "is_expired": "true"})
                     log_msg = (
-                        f"PaymentProvider: {transaction.provider_id.provider} "
-                        f"Subaddress: {token.name} "
+                        f"PaymentProvider: {transaction.provider_id.code} "
+                        f"Subaddress: {token.provider_ref} "
                         "Status: No transaction found. Too much time has passed, "
                         "customer has most likely not sent payment. "
                         f"Cancelling order # {self.id}. "
@@ -56,8 +56,8 @@ class MoneroSalesOrder(models.Model):
 
             # If not the last retry, raise exception for cron to handle retry
             exception_msg = (
-                f"PaymentProvider: {transaction.provider_id.provider} "
-                f"Subaddress: {token.name} "
+                f"PaymentProvider: {transaction.provider_id.code} "
+                f"Subaddress: {token.provider_ref} "
                 "Status: No transaction found. "
                 "TX probably hasn't been added to a block or mem-pool yet. "
                 "This is fine. "
@@ -68,11 +68,9 @@ class MoneroSalesOrder(models.Model):
         if len(incoming_payment) > 1:
             # TODO custom logic if the end user sends
             #  multiple transactions for one order
-            # this would involve creating another "payment.transaction"
-            # and notifying both the buyer and seller
             raise MoneroAddressReuse(
-                f"PaymentProvider: {transaction.provider_id.provider} "
-                f"Subaddress: {token.name} "
+                f"PaymentProvider: {transaction.provider_id.code} "
+                f"Subaddress: {token.provider_ref} "
                 "Status: Address reuse found. "
                 "The end user most likely sent "
                 "multiple transactions for a single order. "
@@ -83,17 +81,13 @@ class MoneroSalesOrder(models.Model):
             this_payment = incoming_payment.pop()
 
             conf_err_msg = (
-                f"PaymentAcquirer: {transaction.acquirer_id.provider} "
-                f"Subaddress: {token.name} "
+                f"PaymentProvider: {transaction.provider_id.code} "
+                f"Subaddress: {token.provider_ref} "
                 "Status: Waiting for more confirmations "
                 f"Confirmations: current {this_payment.transaction.confirmations}, "
                 f"expected {num_confirmation_required} "
                 "Action: none"
             )
-            # TODO set transaction state to "authorized" once a monero transaction is
-            #  found within the transaction pool
-            # note that when the NumConfirmationsNotMe is raised any database commits
-            # are lost
             if this_payment.transaction.confirmations is None:
                 if num_confirmation_required > 0:
                     raise NumConfirmationsNotMet(conf_err_msg)
@@ -106,9 +100,9 @@ class MoneroSalesOrder(models.Model):
             )
             if transaction.amount == transaction_amount_rounded:
                 self.write({"state": "sale"})
-                transaction.write({"state": "done", "is_processed": "true"})
+                transaction._set_done()
                 _logger.info(
                     f"Monero payment recorded for sale order: {self.id}, "
-                    f"associated with subaddress: {token.name}"
+                    f"associated with subaddress: {token.provider_ref}"
                 )
-                # TODO handle situation where the transaction amount is not equal
+            # TODO handle situation where the transaction amount is not equal

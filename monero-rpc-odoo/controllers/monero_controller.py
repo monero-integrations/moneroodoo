@@ -30,8 +30,6 @@ class MoneroController(http.Controller):
         assert sales_order.partner_id.id != request.website.partner_id.id
         # at this time the sales order has to be in xmr
         # the user cannot use a fiat pricelist when checking out
-        # this won't be fixed until after a job is added to automatically
-        # update res.currency.rate
         currency = request.env["res.currency"].sudo().browse(sales_order.currency_id.id)
         if currency.name != "XMR":
             raise Exception(
@@ -39,36 +37,39 @@ class MoneroController(http.Controller):
                 "Monero Pricelist"
             )
 
-        payment_acquirer_id = int(kwargs.get("acquirer_id"))
-
+        payment_provider_id = int(kwargs.get("acquirer_id"))
         payment_partner_id = int(kwargs.get("partner_id"))
-
         wallet_sub_address = SubAddress(kwargs.get("wallet_address"))
 
         # security check, enforce one time usage of subaddresses
         payment_tokens = (
             request.env["payment.token"]
             .sudo()
-            .search([("name", "=", wallet_sub_address)])
+            .search([("provider_ref", "=", str(wallet_sub_address))])
         )
         assert len(payment_tokens) < 1
 
+        # Get the monero payment method
+        payment_method = (
+            request.env["payment.method"]
+            .sudo()
+            .search([("code", "=", "monero_rpc")], limit=1)
+        )
+
         # define payment token
-        payment_token = {
-            "name": wallet_sub_address.__repr__(),
+        payment_token_vals = {
+            "provider_ref": str(wallet_sub_address),
+            "payment_details": str(wallet_sub_address)[:20] + "...",
             "partner_id": payment_partner_id,
-            # partner_id creating sales order
             "active": False,
-            # token shoudn't be active, the subaddress shouldn't be reused
-            "acquirer_id": payment_acquirer_id,
-            # surrogate key for payment acquirer
-            "acquirer_ref": "payment.payment_acquirer_monero_rpc",
+            # token shouldn't be active, the subaddress shouldn't be reused
+            "provider_id": payment_provider_id,
+            "payment_method_id": payment_method.id,
         }
 
-        _logger.info(f"creating payment token " f"for sales_order: {sales_order.id}")
-        token = request.env["payment.token"].sudo().create(payment_token)
+        _logger.info(f"creating payment token for sales_order: {sales_order.id}")
+        token = request.env["payment.token"].sudo().create(payment_token_vals)
         token_id = token.id
-        token_short_name = token.short_name
 
         # assign values for transaction creation
         tx_val = {
@@ -76,17 +77,13 @@ class MoneroController(http.Controller):
             "reference": sales_order.name,
             "currency_id": sales_order.currency_id.id,
             "partner_id": sales_order.partner_id.id,
-            # Referencing the Sale Order Partner ID
-            "payment_token_id": token_id,  # Associating the Payment Token ID.
-            "acquirer_id": payment_acquirer_id,  # Payment Acquirer - Monero
+            "token_id": token_id,
+            "provider_id": payment_provider_id,
+            "payment_method_id": payment_method.id,
             "state": "pending",
-            # tx is pending,
-            # because the customer will know the address to send the tx to,
-            # but hasn't yet sent it
         }
 
-        _logger.info(f"getting the transaction " f"for sales_order: {sales_order.id}")
-        # transaction = sales_order._create_payment_transaction(tx_val)
+        _logger.info(f"getting the transaction for sales_order: {sales_order.id}")
         transaction = sales_order.get_portal_last_transaction()
         if transaction.id is False:
             transaction = sales_order._create_payment_transaction(tx_val)
@@ -94,40 +91,30 @@ class MoneroController(http.Controller):
         else:
             _logger.info(f"retrieved transaction: {transaction.id}")
 
-        # store the new transaction into
-        # the transaction list and if there's an old one, we remove it
-        # until the day the ecommerce supports multiple orders at the same time
+        # store the new transaction into the session
         last_tx_id = request.session.get("__website_sale_last_tx_id")
         last_tx = request.env["payment.transaction"].browse(last_tx_id).sudo().exists()
         if last_tx:
-           # PaymentProcessing.remove_payment_transaction(last_tx)
-                  PaymentPostProcessing.monitor_transaction(transaction)
-                  request.session["__website_sale_last_tx_id"] = transaction.id
+            PaymentPostProcessing.monitor_transaction(transaction)
+            request.session["__website_sale_last_tx_id"] = transaction.id
 
         # Sale Order is quotation sent
-        #   , so the state should be set to "sent"
-        #   , until the transaction has been verified
         _logger.info(
-            f'setting sales_order state to "sent" ' f"for sales_order: {sales_order.id}"
+            f'setting sales_order state to "sent" for sales_order: {sales_order.id}'
         )
         request.env.user.sale_order_ids.sudo().update(
             {"require_payment": "true", "state": "sent"}
         )
 
-        payment_acquirer = (
-            request.env["payment.provider"].sudo().browse(payment_acquirer_id)
+        payment_provider = (
+            request.env["payment.provider"].sudo().browse(payment_provider_id)
         )
-        # set queue channel and max_retries settings
-        # for queue depending on num conf settings
-        num_conf_req = int(payment_acquirer.num_confirmation_required)
+        # set queue channel and interval settings depending on num conf settings
+        num_conf_req = int(payment_provider.num_confirmation_required)
         if num_conf_req == 0:
             queue_channel = "monero_zeroconf_processing"
-            queue_max_retries = 44
         else:
             queue_channel = "monero_secure_processing"
-            queue_max_retries = num_conf_req * 25
-
-        # Add payment token and sale order to transaction processing queue
 
         # Create server action for the transaction processing
         action = request.env['ir.actions.server'].create({
@@ -145,7 +132,6 @@ record.process_transaction(
         })
 
         # Create cron job with appropriate interval based on channel
-        interval_number = 1
         if queue_channel == "monero_zeroconf_processing":
             interval_number = 15  # Check every 15 minutes for zero-conf
         else:
@@ -164,14 +150,11 @@ record.process_transaction(
         cron._trigger()
 
         if transaction:
-            # Return an HTML form that the Odoo payment frontend expects
-            # The frontend will insert this HTML into the DOM and submit it.
             redirect_form_html = (
                 f'<form action="/shop/payment/token" method="GET">'
                 f'<input type="hidden" name="pm_id" value="{token_id}" />'
                 "</form>"
             )
-
             return {"redirect_form_html": redirect_form_html}
 
     @http.route(
@@ -181,11 +164,6 @@ record.process_transaction(
         """OVERRIDING METHOD FROM odoo/addons/website_sale/controllers/main.py
         Method that handles payment using saved tokens
         :param int pm_id: id of the payment.token that we want to use to pay.
-
-        This route is requested after payment submission :
-            /shop/payment/monero/submit - it's called everytime,
-            since we will use monero sub addresses
-            as one time addresses
         """
 
         # order already created, get it
@@ -198,11 +176,9 @@ record.process_transaction(
             _logger.error("no order found")
             return request.redirect("/shop/?error=no_order")
 
-        # see overriden method
         assert sales_order.partner_id.id != request.website.partner_id.id
 
         try:
-            # pm_id is passed, make sure it's a valid int
             pm_id = int(pm_id)
         except ValueError:
             _logger.error("invalid token id")
@@ -215,27 +191,33 @@ record.process_transaction(
             return request.redirect("/shop/?error=token_not_found")
 
         # has the transaction already been created?
-        tx_id = request.session["__website_sale_last_tx_id"]
+        tx_id = request.session.get("__website_sale_last_tx_id")
         if tx_id:
-            # transaction was already
-            # established in /shop/payment/monero/submit
             transaction = request.env["payment.transaction"].sudo().browse(tx_id)
             PaymentPostProcessing.monitor_transaction(transaction)
-            # clear the tx in session, because we're done with it
             request.session["__website_sale_last_tx_id"] = None
             return request.redirect("/shop/payment/validate")
         else:
-            # transaction hasn't been created
-            tx_val = {"payment_token_id": pm_id, "return_url": "/shop/payment/validate"}
+            # Get the monero payment method
+            payment_method = (
+                request.env["payment.method"]
+                .sudo()
+                .search([("code", "=", "monero_rpc")], limit=1)
+            )
+            tx_val = {
+                "token_id": pm_id,
+                "payment_method_id": payment_method.id,
+                "landing_route": "/shop/payment/validate",
+            }
             transaction = sales_order._create_payment_transaction(tx_val)
             _logger.info(
                 f"created transaction: {transaction.id} "
                 f"for payment token: {token.id}"
             )
-            if transaction.acquirer_id.is_cryptocurrency:
+            if transaction.provider_id.is_cryptocurrency:
                 _logger.info(
                     f"Processing cryptocurrency "
-                    f"payment acquirer: {transaction.acquirer_id.name}"
+                    f"payment provider: {transaction.provider_id.name}"
                 )
                 _logger.info(
                     f"setting sales_order state to "
@@ -246,9 +228,9 @@ record.process_transaction(
                     f"setting transaction state to "
                     f'"pending" for sales_order: {sales_order.id}'
                 )
-                transaction.sudo().update({"state": "pending"})
+                transaction.sudo()._set_pending()
                 PaymentPostProcessing.monitor_transaction(transaction)
                 return request.redirect("/shop/payment/validate")
 
             PaymentPostProcessing.monitor_transaction(transaction)
-            return request.redirect("/payment/process")
+            return request.redirect("/payment/status")

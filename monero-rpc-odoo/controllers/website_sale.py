@@ -36,8 +36,8 @@ class MoneroWebsiteSale(WebsiteSale):
         render_values = self._get_shop_payment_values(order, **post)
         render_values["only_services"] = order and order.only_services or False
 
-        for acquirer in render_values.get("payment_acquirers", render_values.get("acquirers", [])):
-            if "monero-rpc" in acquirer.provider:
+        for acquirer in render_values.get("payment_providers", render_values.get("providers", [])):
+            if "monero_rpc" in acquirer.code:
                 wallet = None
                 try:
                     wallet = acquirer.get_wallet()
@@ -77,8 +77,8 @@ class MoneroWebsiteSale(WebsiteSale):
                 _logger.debug("new monero payment subaddress generated")
 
         if render_values.get("errors"):
-            render_values.pop("payment_acquirers", "")
-            render_values.pop("acquirers", "")
+            render_values.pop("payment_providers", "")
+            render_values.pop("providers", "")
             render_values.pop("tokens", "")
 
         return request.render("website_sale.payment", render_values)
