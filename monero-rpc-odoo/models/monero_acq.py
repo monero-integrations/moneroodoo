@@ -141,67 +141,124 @@ class MoneroPaymentAcquirer(models.Model):
             return {'monero_rpc'}
         return super()._get_default_payment_method_codes()
 
-    def _process_transaction(self, transaction):
+
+class MoneroPaymentTransaction(models.Model):
+    """
+    Inherits from payment.transaction to implement the Monero-specific
+    redirect flow for Odoo 19.
+    """
+
+    _inherit = "payment.transaction"
+
+    def _get_specific_rendering_values(self, processing_values):
         """
-        Process the Monero payment transaction.
-        Creates token, subaddress, and sets up monitoring.
+        Override to generate a Monero subaddress, create a payment token,
+        and set up the cron job for payment polling.
+
+        Called by _get_processing_values() when operation='online_redirect'
+        and a redirect_form_view_id is set on the provider.
+
+        :param dict processing_values: The generic processing values.
+        :return: Dict with monero-specific rendering values for the redirect form.
+        :rtype: dict
         """
+        res = super()._get_specific_rendering_values(processing_values)
+        if self.provider_code != 'monero_rpc':
+            return res
+
+        provider = self.provider_id
+
+        # Generate a fresh subaddress via Monero RPC
         try:
-            wallet = self.get_wallet()
+            wallet = provider.get_wallet()
             subaddress = wallet.new_address()[0]
-
-            # Get the monero payment method
-            payment_method = self.env['payment.method'].sudo().search(
-                [('code', '=', 'monero_rpc')], limit=1
+            _logger.info(
+                f"Generated Monero subaddress for transaction {self.reference}: {subaddress}"
             )
-
-            token = self.env['payment.token'].sudo().create({
-                'provider_id': self.id,
-                'payment_method_id': payment_method.id,
-                'partner_id': transaction.partner_id.id,
-                'provider_ref': str(subaddress),
-                'payment_details': str(subaddress)[:20] + '...',
-                'active': False,
-            })
-
-            transaction.token_id = token
-            transaction.state = 'pending'
-
-            # Set up cron for monitoring
-            num_conf_req = int(self.num_confirmation_required)
-            if num_conf_req == 0:
-                queue_channel = "monero_zeroconf_processing"
-                interval_number = 15
-            else:
-                queue_channel = "monero_secure_processing"
-                interval_number = 60
-
-            action = self.env['ir.actions.server'].create({
-                'name': f'Monero Transaction Processing ({queue_channel})',
-                'model_id': self.env['ir.model']._get_id('sale.order'),
-                'state': 'code',
-                'code': f"""
-record = env['sale.order'].browse({transaction.sale_order_ids[0].id if transaction.sale_order_ids else 0})
-record.process_transaction(
-    env['payment.transaction'].browse({transaction.id}),
-    env['payment.token'].browse({token.id}),
-    {num_conf_req}
-)
-""",
-            })
-
-            self.env['ir.cron'].create({
-                'name': f'Monero Processing ({queue_channel}) - {transaction.reference}',
-                'ir_actions_server_id': action.id,
-                'user_id': self.env.user.id,
-                'active': True,
-                'interval_number': interval_number,
-                'interval_type': 'minutes',
-            })
-
-            return {'url': '/shop/payment/validate'}
-
+        except MoneroPaymentAcquirerRPCUnauthorized:
+            _logger.error("Monero RPC: authentication failed")
+            self._set_error("Monero RPC authentication failed")
+            return res
+        except MoneroPaymentAcquirerRPCSSLError:
+            _logger.error("Monero RPC: SSL error")
+            self._set_error("Monero RPC SSL error")
+            return res
         except Exception as e:
-            _logger.error(f"Monero transaction processing failed: {e}")
-            transaction.state = 'error'
-            return {'url': '/shop/payment'}
+            _logger.error(f"Monero RPC error: {e.__class__.__name__}: {e}")
+            self._set_error(f"Monero RPC error: {e.__class__.__name__}")
+            return res
+
+        # Get the monero payment method record
+        payment_method = self.env['payment.method'].sudo().search(
+            [('code', '=', 'monero_rpc')], limit=1
+        )
+
+        # Create a one-time-use payment token for this subaddress
+        token = self.env['payment.token'].sudo().create({
+            'provider_id': provider.id,
+            'payment_method_id': payment_method.id,
+            'partner_id': self.partner_id.id,
+            'provider_ref': str(subaddress),
+            'payment_details': str(subaddress)[:20] + '...',
+            'active': False,  # One-time use, never reuse this subaddress
+        })
+
+        # Link the token to this transaction
+        self.sudo().write({'token_id': token.id})
+
+        # Set transaction to pending state
+        self._set_pending()
+
+        # Set up cron job for payment polling
+        num_conf_req = int(provider.num_confirmation_required)
+        if num_conf_req == 0:
+            queue_channel = "monero_zeroconf_processing"
+            interval_number = 15  # Poll every 15 minutes for zero-conf
+        else:
+            queue_channel = "monero_secure_processing"
+            interval_number = 60  # Poll every 60 minutes for confirmed
+
+        # Get the linked sale order (if any)
+        sale_order_id = 0
+        if hasattr(self, 'sale_order_ids') and self.sale_order_ids:
+            sale_order_id = self.sale_order_ids[0].id
+
+        action = self.env['ir.actions.server'].sudo().create({
+            'name': f'Monero TX Processing ({queue_channel}) - {self.reference}',
+            'model_id': self.env['ir.model']._get_id('sale.order'),
+            'state': 'code',
+            'code': (
+                f"record = env['sale.order'].browse({sale_order_id})\n"
+                f"record.process_transaction(\n"
+                f"    env['payment.transaction'].browse({self.id}),\n"
+                f"    env['payment.token'].browse({token.id}),\n"
+                f"    {num_conf_req}\n"
+                f")"
+            ),
+        })
+
+        cron = self.env['ir.cron'].sudo().create({
+            'name': f'Monero Processing ({queue_channel}) - {self.reference}',
+            'ir_actions_server_id': action.id,
+            'user_id': self.env.ref('base.user_root').id,
+            'active': True,
+            'interval_number': interval_number,
+            'interval_type': 'minutes',
+            'numbercall': -1,  # Run indefinitely until deactivated
+        })
+
+        # Trigger immediately for first check
+        cron._trigger()
+
+        _logger.info(
+            f"Monero cron job created for transaction {self.reference}, "
+            f"polling every {interval_number} minutes"
+        )
+
+        return {
+            'api_url': '/payment/status',
+            'subaddress': str(subaddress),
+            'amount': self.amount,
+            'currency': self.currency_id.name,
+            'reference': self.reference,
+        }

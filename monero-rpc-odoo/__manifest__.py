@@ -19,6 +19,7 @@
     "external_dependencies": {"python": ["monero"]},
     # always loaded
     "data": [
+        "views/monero_redirect_form.xml",
         "views/monero_acquirer_form.xml",
         "views/monero_payment_confirmation.xml",
         "data/currency.xml",
