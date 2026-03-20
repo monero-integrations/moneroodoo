@@ -12,8 +12,6 @@ _logger = logging.getLogger(__name__)
 
 
 class MoneroWebsiteSale(WebsiteSale):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @http.route(
         ["/shop/payment"], type="http", auth="public", website=True, sitemap=False
@@ -22,28 +20,27 @@ class MoneroWebsiteSale(WebsiteSale):
         """
         OVERRIDING METHOD FROM
         odoo/addons/website_sale/controllers/main.py
-        Payment step. This page proposes several
-        payment means based on available
-        payment.acquirer. State at this point :
+        Payment step. This page proposes several payment means based on available
+        payment.provider. State at this point:
          - a draft sales order with lines; otherwise, clean context / session and
            back to the shop
          - no transaction in context / session, or only a draft one, if the customer
-           did go to a payment.acquirer website but closed the tab without
+           did go to a payment.provider website but closed the tab without
            paying / canceling
         """
-        order = request.website.sale_get_order()
+        order_sudo = request.cart
 
-        render_values = self._get_shop_payment_values(order, **post)
-        render_values["only_services"] = order and order.only_services or False
+        render_values = self._get_shop_payment_values(order_sudo, **post)
+        render_values["only_services"] = order_sudo and order_sudo.only_services or False
 
-        for acquirer in render_values.get("payment_providers", render_values.get("providers", [])):
-            if "monero_rpc" in acquirer.code:
+        for provider in render_values.get("payment_providers", []):
+            if provider.code == "monero_rpc":
                 wallet = None
                 try:
-                    wallet = acquirer.get_wallet()
+                    wallet = provider.get_wallet()
                 except MoneroPaymentAcquirerRPCUnauthorized:
                     _logger.error(
-                        "USER IMPACT: Monero Payment Acquirer "
+                        "USER IMPACT: Monero Payment Provider "
                         "can't authenticate with RPC "
                         "due to user name or password"
                     )
@@ -54,7 +51,7 @@ class MoneroWebsiteSale(WebsiteSale):
                     )
                 except MoneroPaymentAcquirerRPCSSLError:
                     _logger.error(
-                        "USER IMPACT: Monero Payment Acquirer "
+                        "USER IMPACT: Monero Payment Provider "
                         "experienced an SSL Error with RPC"
                     )
                     raise ValidationError(
@@ -64,7 +61,7 @@ class MoneroWebsiteSale(WebsiteSale):
                     )
                 except Exception as e:
                     _logger.error(
-                        f"USER IMPACT: Monero Payment Acquirer "
+                        f"USER IMPACT: Monero Payment Provider "
                         f"experienced an Error with RPC: {e.__class__.__name__}"
                     )
                     raise ValidationError(
@@ -78,7 +75,6 @@ class MoneroWebsiteSale(WebsiteSale):
 
         if render_values.get("errors"):
             render_values.pop("payment_providers", "")
-            render_values.pop("providers", "")
             render_values.pop("tokens", "")
 
         return request.render("website_sale.payment", render_values)

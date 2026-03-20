@@ -12,24 +12,27 @@ class MoneroController(http.Controller):
     @http.route("/shop/payment/monero/submit", type="json", auth="public", website=True)
     def monero_transaction(self, verify_validity=False, **kwargs):
         """
-        Function creates a transaction and
-        payment token using the sessions sales order
-        Calls MoneroSalesOrder.salesorder_payment_sync()
+        Function creates a transaction and payment token using the sessions sales order.
         :param verify_validity:
         :param kwargs:
         :return:
         """
-        sales_order = request.website.sale_get_order()
+        # In Odoo 19, request.cart replaces request.website.sale_get_order()
+        sales_order = request.cart
+        if not sales_order:
+            _logger.error("no cart/order found")
+            return False
+
         _logger.info(f"received sales_order: {sales_order.id}")
         _logger.info(f"processing sales_order: {sales_order.id}")
 
         # Ensure there is something to proceed
-        if not sales_order or (sales_order and not sales_order.order_line):
+        if not sales_order.order_line:
             return False
 
         assert sales_order.partner_id.id != request.website.partner_id.id
+
         # at this time the sales order has to be in xmr
-        # the user cannot use a fiat pricelist when checking out
         currency = request.env["res.currency"].sudo().browse(sales_order.currency_id.id)
         if currency.name != "XMR":
             raise Exception(
@@ -162,14 +165,12 @@ record.process_transaction(
     )
     def payment_token(self, pm_id=None, **kwargs):
         """OVERRIDING METHOD FROM odoo/addons/website_sale/controllers/main.py
-        Method that handles payment using saved tokens
+        Method that handles payment using saved tokens.
         :param int pm_id: id of the payment.token that we want to use to pay.
         """
-
-        # order already created, get it
-        sales_order = request.website.sale_get_order()
-        _logger.info(f"received token for sales_order: {sales_order.id}")
-        _logger.info(f"processing token for sales_order: {sales_order.id}")
+        # In Odoo 19, request.cart replaces request.website.sale_get_order()
+        sales_order = request.cart
+        _logger.info(f"received token for sales_order: {sales_order.id if sales_order else 'None'}")
 
         # do not crash if the user has already paid and try to pay again
         if not sales_order:
@@ -180,7 +181,7 @@ record.process_transaction(
 
         try:
             pm_id = int(pm_id)
-        except ValueError:
+        except (ValueError, TypeError):
             _logger.error("invalid token id")
             return request.redirect("/shop/?error=invalid_token_id")
 
@@ -219,15 +220,7 @@ record.process_transaction(
                     f"Processing cryptocurrency "
                     f"payment provider: {transaction.provider_id.name}"
                 )
-                _logger.info(
-                    f"setting sales_order state to "
-                    f'"sent" for sales_order: {sales_order.id}'
-                )
                 sales_order.sudo().update({"state": "sent"})
-                _logger.info(
-                    f"setting transaction state to "
-                    f'"pending" for sales_order: {sales_order.id}'
-                )
                 transaction.sudo()._set_pending()
                 PaymentPostProcessing.monitor_transaction(transaction)
                 return request.redirect("/shop/payment/validate")
