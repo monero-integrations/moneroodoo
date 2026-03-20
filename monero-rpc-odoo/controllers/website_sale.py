@@ -1,43 +1,30 @@
 import logging
 
-from odoo import http
 from odoo.addons.website_sale.controllers.main import WebsiteSale
 from odoo.exceptions import ValidationError
+from odoo.http import request
 
 from ..models.exceptions import MoneroPaymentAcquirerRPCUnauthorized
 from ..models.exceptions import MoneroPaymentAcquirerRPCSSLError
-from odoo.http import request
 
 _logger = logging.getLogger(__name__)
 
 
 class MoneroWebsiteSale(WebsiteSale):
 
-    @http.route(
-        ["/shop/payment"], type="http", auth="public", website=True, sitemap=False
-    )
-    def payment(self, **post):
+    def _get_shop_payment_values(self, order, **kwargs):
         """
-        OVERRIDING METHOD FROM
-        odoo/addons/website_sale/controllers/main.py
-        Payment step. This page proposes several payment means based on available
-        payment.provider. State at this point:
-         - a draft sales order with lines; otherwise, clean context / session and
-           back to the shop
-         - no transaction in context / session, or only a draft one, if the customer
-           did go to a payment.provider website but closed the tab without
-           paying / canceling
+        Override to generate a Monero subaddress when the Monero RPC provider
+        is available, so it can be passed to the payment form.
         """
-        order_sudo = request.cart
-
-        render_values = self._get_shop_payment_values(order_sudo, **post)
-        render_values["only_services"] = order_sudo and order_sudo.only_services or False
+        render_values = super()._get_shop_payment_values(order, **kwargs)
 
         for provider in render_values.get("payment_providers", []):
             if provider.code == "monero_rpc":
-                wallet = None
                 try:
                     wallet = provider.get_wallet()
+                    request.wallet_address = wallet.new_address()[0]
+                    _logger.debug("new monero payment subaddress generated")
                 except MoneroPaymentAcquirerRPCUnauthorized:
                     _logger.error(
                         "USER IMPACT: Monero Payment Provider "
@@ -45,8 +32,7 @@ class MoneroWebsiteSale(WebsiteSale):
                         "due to user name or password"
                     )
                     raise ValidationError(
-                        "Current technical issues "
-                        "prevent Monero from being accepted, "
+                        "Current technical issues prevent Monero from being accepted, "
                         "choose another payment method"
                     )
                 except MoneroPaymentAcquirerRPCSSLError:
@@ -55,8 +41,7 @@ class MoneroWebsiteSale(WebsiteSale):
                         "experienced an SSL Error with RPC"
                     )
                     raise ValidationError(
-                        "Current technical issues "
-                        "prevent Monero from being accepted, "
+                        "Current technical issues prevent Monero from being accepted, "
                         "choose another payment method"
                     )
                 except Exception as e:
@@ -65,16 +50,8 @@ class MoneroWebsiteSale(WebsiteSale):
                         f"experienced an Error with RPC: {e.__class__.__name__}"
                     )
                     raise ValidationError(
-                        "Current technical issues "
-                        "prevent Monero from being accepted, "
+                        "Current technical issues prevent Monero from being accepted, "
                         "choose another payment method"
                     )
 
-                request.wallet_address = wallet.new_address()[0]
-                _logger.debug("new monero payment subaddress generated")
-
-        if render_values.get("errors"):
-            render_values.pop("payment_providers", "")
-            render_values.pop("tokens", "")
-
-        return request.render("website_sale.payment", render_values)
+        return render_values
