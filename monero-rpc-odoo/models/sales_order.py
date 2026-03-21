@@ -12,7 +12,19 @@ _logger = logging.getLogger(__name__)
 class MoneroSalesOrder(models.Model):
     _inherit = "sale.order"
 
-    def process_transaction(self, transaction, token, num_confirmation_required):
+    def process_transaction(self, transaction, num_confirmation_required):
+        """
+        Poll the Monero wallet RPC for an incoming payment to the subaddress
+        stored in transaction.provider_reference.
+
+        Called by the ir.cron job set up in MoneroPaymentTransaction._get_specific_rendering_values().
+
+        :param payment.transaction transaction: The pending Monero transaction.
+        :param int num_confirmation_required: Number of confirmations required.
+        """
+        # The subaddress is stored in provider_reference (not in a token)
+        subaddress = transaction.provider_reference
+
         try:
             wallet = transaction.provider_id.get_wallet()
         except MoneroPaymentAcquirerRPCUnauthorized:
@@ -33,19 +45,19 @@ class MoneroSalesOrder(models.Model):
                 f"experienced an Error with RPC: {e.__class__.__name__}"
             )
 
-        incoming_payment = wallet.incoming(local_address=token.provider_ref, unconfirmed=True)
+        incoming_payment = wallet.incoming(local_address=subaddress, unconfirmed=True)
 
         if incoming_payment == []:
             # Get the current cron job from context
             cron_id = self.env.context.get('cron_id')
             if cron_id:
                 cron = self.env['ir.cron'].browse(cron_id)
-                # Check if we're approaching the failure limit (default is 5 before deactivation)
-                if cron.failure_count >= 4:  # Cancel on the 4th failure (before deactivation)
+                # Cancel after 4 failed attempts (no payment found)
+                if cron.failure_count >= 4:
                     self.write({"state": "cancel", "is_expired": "true"})
                     log_msg = (
                         f"PaymentProvider: {transaction.provider_id.code} "
-                        f"Subaddress: {token.provider_ref} "
+                        f"Subaddress: {subaddress} "
                         "Status: No transaction found. Too much time has passed, "
                         "customer has most likely not sent payment. "
                         f"Cancelling order # {self.id}. "
@@ -54,10 +66,10 @@ class MoneroSalesOrder(models.Model):
                     _logger.warning(log_msg)
                     return log_msg
 
-            # If not the last retry, raise exception for cron to handle retry
+            # Not the last retry — raise so cron retries automatically
             exception_msg = (
                 f"PaymentProvider: {transaction.provider_id.code} "
-                f"Subaddress: {token.provider_ref} "
+                f"Subaddress: {subaddress} "
                 "Status: No transaction found. "
                 "TX probably hasn't been added to a block or mem-pool yet. "
                 "This is fine. "
@@ -66,11 +78,10 @@ class MoneroSalesOrder(models.Model):
             raise NoTXFound(exception_msg)
 
         if len(incoming_payment) > 1:
-            # TODO custom logic if the end user sends
-            #  multiple transactions for one order
+            # TODO: custom logic if the buyer sends multiple transactions for one order
             raise MoneroAddressReuse(
                 f"PaymentProvider: {transaction.provider_id.code} "
-                f"Subaddress: {token.provider_ref} "
+                f"Subaddress: {subaddress} "
                 "Status: Address reuse found. "
                 "The end user most likely sent "
                 "multiple transactions for a single order. "
@@ -82,7 +93,7 @@ class MoneroSalesOrder(models.Model):
 
             conf_err_msg = (
                 f"PaymentProvider: {transaction.provider_id.code} "
-                f"Subaddress: {token.provider_ref} "
+                f"Subaddress: {subaddress} "
                 "Status: Waiting for more confirmations "
                 f"Confirmations: current {this_payment.transaction.confirmations}, "
                 f"expected {num_confirmation_required} "
@@ -103,6 +114,6 @@ class MoneroSalesOrder(models.Model):
                 transaction._set_done()
                 _logger.info(
                     f"Monero payment recorded for sale order: {self.id}, "
-                    f"associated with subaddress: {token.provider_ref}"
+                    f"associated with subaddress: {subaddress}"
                 )
-            # TODO handle situation where the transaction amount is not equal
+            # TODO: handle situation where the transaction amount is not equal

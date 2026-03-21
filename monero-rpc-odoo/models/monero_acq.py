@@ -188,23 +188,11 @@ class MoneroPaymentTransaction(models.Model):
             self._set_error(f"Monero RPC error: {e.__class__.__name__}")
             return res
 
-        # Get the monero payment method record
-        payment_method = self.env['payment.method'].sudo().search(
-            [('code', '=', 'monero_rpc')], limit=1
-        )
-
-        # Create a one-time-use payment token for this subaddress
-        token = self.env['payment.token'].sudo().create({
-            'provider_id': provider.id,
-            'payment_method_id': payment_method.id,
-            'partner_id': self.partner_id.id,
-            'provider_ref': str(subaddress),
-            'payment_details': str(subaddress)[:20] + '...',
-            'active': False,  # One-time use, never reuse this subaddress
-        })
-
-        # Link the token to this transaction
-        self.sudo().write({'token_id': token.id})
+        # Store the subaddress as the provider_reference on the transaction.
+        # We do NOT use payment.token here — tokens are for saved payment methods
+        # (credit cards etc.). A Monero subaddress is a one-time-use address and
+        # should never be stored as a reusable token.
+        self.sudo().write({'provider_reference': str(subaddress)})
 
         # Set transaction to pending state
         self._set_pending()
@@ -231,7 +219,6 @@ class MoneroPaymentTransaction(models.Model):
                 f"record = env['sale.order'].browse({sale_order_id})\n"
                 f"record.process_transaction(\n"
                 f"    env['payment.transaction'].browse({self.id}),\n"
-                f"    env['payment.token'].browse({token.id}),\n"
                 f"    {num_conf_req}\n"
                 f")"
             ),
