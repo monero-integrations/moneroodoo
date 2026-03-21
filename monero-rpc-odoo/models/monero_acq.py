@@ -231,7 +231,6 @@ class MoneroPaymentTransaction(models.Model):
             'active': True,
             'interval_number': interval_number,
             'interval_type': 'minutes',
-            'numbercall': -1,  # Run indefinitely until deactivated
         })
 
         # Trigger immediately for first check
