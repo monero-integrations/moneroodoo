@@ -25,6 +25,11 @@
         "data/currency.xml",
         "data/monero_xmr_payment_acquirer.xml",
     ],
+    "assets": {
+        "web.assets_frontend": [
+            "monero_rpc_odoo/static/src/js/monero_payment.js",
+        ],
+    },
     # only loaded in demonstration mode
     # TODO add demo data
     "demo": [
