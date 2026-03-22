@@ -45,7 +45,8 @@ class MoneroSalesOrder(models.Model):
                 f"experienced an Error with RPC: {e.__class__.__name__}"
             )
 
-        incoming_payment = wallet.incoming(local_address=subaddress, unconfirmed=True)
+        all_incoming = wallet.incoming(unconfirmed=True)
+        incoming_payment = [p for p in all_incoming if str(p.local_address) == subaddress]
 
         if incoming_payment == []:
             # Get the current cron job from context
