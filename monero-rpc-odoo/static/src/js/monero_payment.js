@@ -1,74 +1,58 @@
-/** @odoo-module **/
-/**
- * Monero payment confirmation page JS.
- * Handles QR code generation and clipboard copy for the Monero subaddress.
- *
- * Loaded as a frontend asset on all pages, but only activates when the
- * Monero payment confirmation elements are present in the DOM.
- */
+(function () {
+    function init() {
+        var addressDiv = document.getElementById("monero_payment_address");
+        if (!addressDiv) return;
 
-import { loadJS } from "@web/core/assets";
+        var subaddress = addressDiv.textContent.trim();
 
-// Only run on pages that have the Monero payment address element
-document.addEventListener("DOMContentLoaded", async () => {
-    const addressDiv = document.getElementById("monero_payment_address");
-    if (!addressDiv) {
-        return; // Not on a Monero payment page
-    }
+        // Copy button
+        var copyBtn = document.getElementById("copy_address_button");
+        if (copyBtn) {
+            copyBtn.addEventListener("click", function () {
+                navigator.clipboard.writeText(subaddress).then(function () {
+                    copyBtn.title = "Copied!";
+                    setTimeout(function () { copyBtn.title = "Copy address to clipboard"; }, 1500);
+                }).catch(function () {
+                    // fallback
+                    var el = document.createElement("textarea");
+                    el.value = subaddress;
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand("copy");
+                    document.body.removeChild(el);
+                });
+            });
+        }
 
-    const subaddress = addressDiv.textContent.trim();
+        // QR button
+        var qrBtn = document.getElementById("show_qr");
+        if (qrBtn) {
+            var qrDiv1 = document.getElementById("qr_div1");
+            var qrDiv2 = document.getElementById("qr_div2");
+            var qrCanvas = document.getElementById("qrcode_monero_payment");
+            var qrGenerated = false;
 
-    // --- Copy to clipboard ---
-    const copyBtn = document.getElementById("copy_address_button");
-    if (copyBtn) {
-        copyBtn.addEventListener("click", async () => {
-            try {
-                await navigator.clipboard.writeText(subaddress);
-                const originalTitle = copyBtn.getAttribute("title");
-                copyBtn.setAttribute("title", "Copied!");
-                setTimeout(() => copyBtn.setAttribute("title", originalTitle), 1500);
-            } catch (e) {
-                // Fallback for older browsers
-                const el = document.createElement("textarea");
-                el.value = subaddress;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand("copy");
-                document.body.removeChild(el);
-            }
-        });
-    }
-
-    // --- QR Code ---
-    const showQrBtn = document.getElementById("show_qr");
-    if (showQrBtn) {
-        // Load the qrcode library dynamically
-        await loadJS("/monero_rpc_odoo/static/src/js/jquery.qrcode.min.js");
-
-        let qrShown = false;
-        const qrDiv1 = document.getElementById("qr_div1");
-        const qrDiv2 = document.getElementById("qr_div2");
-        const qrCanvas = document.getElementById("qrcode_monero_payment");
-
-        showQrBtn.addEventListener("click", () => {
-            if (!qrShown && qrCanvas) {
-                const amount = showQrBtn.dataset.amount || "";
-                const description = showQrBtn.dataset.description || "";
-                const recipient = showQrBtn.dataset.recipient || "";
-                const uri = encodeURI(
-                    `monero:${subaddress}?tx_amount=${amount}&tx_description=${description}&recipient_name=${recipient}`
-                );
-                // jquery.qrcode uses jQuery
-                if (window.jQuery && jQuery(qrCanvas).qrcode) {
-                    jQuery(qrCanvas).qrcode({ text: uri, width: 240, height: 240 });
+            qrBtn.addEventListener("click", function () {
+                if (!qrGenerated && qrCanvas) {
+                    var amount = qrBtn.getAttribute("data-amount") || "";
+                    var desc = qrBtn.getAttribute("data-description") || "";
+                    var uri = "monero:" + subaddress + "?tx_amount=" + amount + "&tx_description=" + encodeURIComponent(desc);
+                    // jquery.qrcode is loaded as a static asset
+                    if (window.jQuery && typeof jQuery(qrCanvas).qrcode === "function") {
+                        jQuery(qrCanvas).qrcode({ text: uri, width: 240, height: 240 });
+                        qrGenerated = true;
+                    }
                 }
-                qrShown = true;
-            }
-            if (qrDiv1 && qrDiv2) {
-                const isVisible = qrDiv1.style.display === "block";
-                qrDiv1.style.display = isVisible ? "none" : "block";
-                qrDiv2.style.display = isVisible ? "none" : "block";
-            }
-        });
+                if (qrDiv1) {
+                    qrDiv1.style.display = qrDiv1.style.display === "block" ? "none" : "block";
+                }
+            });
+        }
     }
-});
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+})();

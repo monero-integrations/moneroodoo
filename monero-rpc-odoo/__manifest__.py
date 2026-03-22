@@ -27,6 +27,7 @@
     ],
     "assets": {
         "web.assets_frontend": [
+            "monero_rpc_odoo/static/src/js/jquery.qrcode.min.js",
             "monero_rpc_odoo/static/src/js/monero_payment.js",
         ],
     },

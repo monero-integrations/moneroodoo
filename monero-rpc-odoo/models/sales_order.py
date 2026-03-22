@@ -106,14 +106,24 @@ class MoneroSalesOrder(models.Model):
                 if this_payment.transaction.confirmations < num_confirmation_required:
                     raise NumConfirmationsNotMet(conf_err_msg)
 
-            transaction_amount_rounded = float(
-                round(this_payment.amount, self.currency_id.decimal_places)
-            )
-            if transaction.amount == transaction_amount_rounded:
-                self.write({"state": "sale"})
+            # Compare amounts with 12 decimal places (XMR precision)
+            received = round(float(this_payment.amount), 12)
+            expected = round(float(transaction.amount), 12)
+
+            if received >= expected:
                 transaction._set_done()
+                transaction._post_process()
                 _logger.info(
-                    f"Monero payment recorded for sale order: {self.id}, "
-                    f"associated with subaddress: {subaddress}"
+                    f"Monero payment confirmed for sale order: {self.id}, "
+                    f"subaddress: {subaddress}, "
+                    f"received: {received} XMR"
                 )
-            # TODO: handle situation where the transaction amount is not equal
+                # Deactivate the cron — payment is done
+                cron_id = self.env.context.get('cron_id')
+                if cron_id:
+                    self.env['ir.cron'].browse(cron_id).write({'active': False})
+            else:
+                _logger.warning(
+                    f"Monero underpayment for order {self.id}: "
+                    f"expected {expected}, received {received}"
+                )
