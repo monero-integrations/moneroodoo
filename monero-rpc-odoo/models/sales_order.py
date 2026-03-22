@@ -28,6 +28,14 @@ class MoneroSalesOrder(models.Model):
         :param payment.transaction transaction: The pending Monero transaction.
         :param int num_confirmation_required: Number of confirmations required.
         """
+        # If the sale order was deleted, deactivate this cron silently
+        if not self.exists():
+            cron_id = self.env.context.get('cron_id')
+            if cron_id:
+                self.env['ir.cron'].browse(cron_id).write({'active': False})
+            _logger.info(f"Monero cron: sale order no longer exists, deactivating cron.")
+            return
+
         subaddress = transaction.provider_reference
         provider = transaction.provider_id
 
@@ -125,7 +133,13 @@ class MoneroSalesOrder(models.Model):
 
         if received_piconero >= expected_piconero:
             transaction._set_done()
-            transaction._post_process()
+            # Confirm the sale order directly.
+            # We skip _post_process() because it requires an accounting
+            # payment method line on the journal, which is not needed for
+            # a crypto payment. The transaction state change to 'done' is
+            # enough for the /payment/status JS to redirect the buyer.
+            if self.exists() and self.state in ('draft', 'sent'):
+                self.action_confirm()
             _logger.info(
                 f"Monero payment confirmed for sale order {self.id}, "
                 f"subaddress {subaddress}, received {received} XMR"
