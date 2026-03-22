@@ -201,10 +201,8 @@ class MoneroPaymentTransaction(models.Model):
         num_conf_req = int(provider.num_confirmation_required)
         if num_conf_req == 0:
             queue_channel = "monero_zeroconf_processing"
-            interval_number = 30  # Poll every 30 seconds for zero-conf
         else:
             queue_channel = "monero_secure_processing"
-            interval_number = 60  # Poll every 60 seconds for confirmed
 
         # Get the linked sale order (if any)
         sale_order_id = 0
@@ -229,16 +227,15 @@ class MoneroPaymentTransaction(models.Model):
             'ir_actions_server_id': action.id,
             'user_id': self.env.ref('base.user_root').id,
             'active': True,
-            'interval_number': interval_number,
-            'interval_type': 'seconds',
+            'interval_number': 1,
+            'interval_type': 'minutes',
         })
 
         # Trigger immediately for first check
         cron._trigger()
 
         _logger.info(
-            f"Monero cron job created for transaction {self.reference}, "
-            f"polling every {interval_number} seconds"
+            f"Monero cron job created for transaction {self.reference}, polling every 1 minute"
         )
 
         return {
