@@ -28,12 +28,13 @@ class MoneroSalesOrder(models.Model):
         :param payment.transaction transaction: The pending Monero transaction.
         :param int num_confirmation_required: Number of confirmations required.
         """
-        # If the sale order was deleted, deactivate this cron silently
+        # If already confirmed, nothing to do
+        if transaction.state == 'done':
+            return
+
+        # If the sale order was deleted, skip silently
         if not self.exists():
-            cron_id = self.env.context.get('cron_id')
-            if cron_id:
-                self.env['ir.cron'].browse(cron_id).write({'active': False})
-            _logger.info(f"Monero cron: sale order no longer exists, deactivating cron.")
+            _logger.info(f"Monero cron: sale order no longer exists, skipping.")
             return
 
         subaddress = transaction.provider_reference
@@ -144,10 +145,9 @@ class MoneroSalesOrder(models.Model):
                 f"Monero payment confirmed for sale order {self.id}, "
                 f"subaddress {subaddress}, received {received} XMR"
             )
-            # Deactivate the cron — payment is done
-            cron_id = self.env.context.get('cron_id')
-            if cron_id:
-                self.env['ir.cron'].browse(cron_id).write({'active': False})
+            # Note: we do not deactivate the cron here because Odoo locks
+            # the cron record while it is running. The 'done' guard at the
+            # top of this method ensures subsequent runs are no-ops.
         else:
             _logger.warning(
                 f"Monero underpayment for order {self.id}: "
