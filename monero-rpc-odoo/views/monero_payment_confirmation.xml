@@ -96,7 +96,21 @@
             <xpath expr="//div[@name='o_payment_status']" position="inside">
                 <t t-if="tx and tx.provider_code == 'monero_rpc' and tx.provider_reference and tx.state == 'pending'">
                     <div class="mt-3 p-3 border rounded bg-light">
-                        <p class="mb-2"><strong>Send exactly <t t-out="tx.amount"/> XMR to this address:</strong></p>
+                        <!-- XMR amount to send, with original currency shown if converted -->
+                        <div class="mb-3">
+                            <p class="mb-1 text-muted small">Amount to send</p>
+                            <h4 class="mb-0 text-dark">
+                                <strong><t t-esc="'%.8f' % tx.amount"/> XMR</strong>
+                            </h4>
+                            <t t-if="tx.monero_currency_original and tx.monero_currency_original != 'XMR' and tx.monero_amount_original">
+                                <span class="text-muted small">
+                                    ≈ <t t-esc="'%.2f' % tx.monero_amount_original"/>
+                                    <t t-out="tx.monero_currency_original"/>
+                                    at today's rate
+                                </span>
+                            </t>
+                        </div>
+                        <p class="mb-2"><strong>Send to this Monero address:</strong></p>
 
                         <!-- QR code container (hidden until button clicked) -->
                         <div id="qr_div1" class="mb-2" style="display:none">

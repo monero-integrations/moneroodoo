@@ -201,6 +201,16 @@ class MoneroPaymentTransaction(models.Model):
 
     _inherit = "payment.transaction"
 
+    monero_amount_original = fields.Float(
+        string="Original Amount (before XMR conversion)",
+        digits=(16, 8),
+        help="The order amount in the original currency before converting to XMR.",
+    )
+    monero_currency_original = fields.Char(
+        string="Original Currency",
+        help="The original currency code before converting to XMR (e.g. USD).",
+    )
+
     def _get_specific_rendering_values(self, processing_values):
         """
         Override to generate a Monero subaddress, create a payment token,
@@ -269,6 +279,8 @@ class MoneroPaymentTransaction(models.Model):
         self.sudo().write({
             'provider_reference': str(subaddress),
             'amount': xmr_amount,
+            'monero_amount_original': self.amount,
+            'monero_currency_original': order_currency.name if order_currency else 'XMR',
         })
 
         # Set transaction to pending state

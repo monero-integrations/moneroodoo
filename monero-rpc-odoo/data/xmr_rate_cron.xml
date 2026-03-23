@@ -10,7 +10,6 @@
             <field name="active">True</field>
             <field name="interval_number">15</field>
             <field name="interval_type">minutes</field>
-            <field name="numbercall">-1</field>
         </record>
     </data>
 </odoo>
