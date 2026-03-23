@@ -245,3 +245,25 @@ class MoneroPaymentTransaction(models.Model):
             'currency': self.currency_id.name,
             'reference': self.reference,
         }
+
+    def _post_process(self):
+        """
+        Override to skip Odoo's default accounting journal entry creation.
+
+        Odoo's /payment/status/poll endpoint calls _post_process() automatically
+        when transaction.state == 'done'. The default implementation tries to
+        create an account.payment record which requires a payment method line
+        on the journal. For Monero (crypto), we skip that and just confirm
+        the sale order directly.
+        """
+        if self.provider_code != 'monero_rpc':
+            return super()._post_process()
+
+        # Confirm the linked sale order(s) if not already confirmed
+        for order in self.sale_order_ids:
+            if order.state in ('draft', 'sent'):
+                order.action_confirm()
+                _logger.info(
+                    f"Monero _post_process: confirmed sale order {order.id} "
+                    f"for transaction {self.reference}"
+                )
