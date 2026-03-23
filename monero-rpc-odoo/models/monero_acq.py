@@ -201,9 +201,14 @@ class MoneroPaymentTransaction(models.Model):
 
     _inherit = "payment.transaction"
 
+    monero_amount_xmr = fields.Float(
+        string="Amount in XMR",
+        digits=(16, 12),
+        help="The exact XMR amount the buyer must send, converted at checkout time.",
+    )
     monero_amount_original = fields.Float(
         string="Original Amount (before XMR conversion)",
-        digits=(16, 8),
+        digits=(16, 2),
         help="The order amount in the original currency before converting to XMR.",
     )
     monero_currency_original = fields.Char(
@@ -249,38 +254,63 @@ class MoneroPaymentTransaction(models.Model):
             self._set_error(f"Monero RPC error: {e.__class__.__name__}")
             return res
 
-        # Convert amount to XMR if the transaction currency is not XMR
-        xmr_amount = self.amount
+        # Fetch live XMR/USD price from CoinGecko at the exact moment of checkout.
+        # This gives the buyer the most accurate amount to send.
         order_currency = self.currency_id
-        xmr_currency = self.env['res.currency'].search([('name', '=', 'XMR')], limit=1)
+        original_amount = self.amount
+        xmr_amount = original_amount  # fallback: use original if conversion fails
 
-        if xmr_currency and order_currency and order_currency.name != 'XMR':
-            try:
-                xmr_amount = order_currency._convert(
-                    self.amount,
-                    xmr_currency,
-                    self.company_id or self.env.company,
-                    date_type.today(),
-                )
+        try:
+            rate_resp = http_requests.get(
+                'https://api.coingecko.com/api/v3/simple/price',
+                params={'ids': 'monero', 'vs_currencies': order_currency.name.lower()},
+                timeout=10,
+            )
+            rate_resp.raise_for_status()
+            rate_data = rate_resp.json()
+            xmr_price = rate_data.get('monero', {}).get(order_currency.name.lower())
+            if xmr_price and xmr_price > 0:
+                xmr_amount = original_amount / xmr_price
                 _logger.info(
-                    f"Converted {self.amount} {order_currency.name} → "
+                    f"Live rate: 1 XMR = {xmr_price} {order_currency.name}. "
+                    f"Converted {original_amount} {order_currency.name} → "
                     f"{xmr_amount:.12f} XMR for transaction {self.reference}"
                 )
-            except Exception as e:
+            else:
                 _logger.warning(
-                    f"XMR conversion failed for {self.reference}: {e}. "
-                    f"Using original amount {self.amount}."
+                    f"CoinGecko did not return a rate for XMR/{order_currency.name}. "
+                    f"Falling back to Odoo currency rate."
                 )
+                xmr_currency = self.env['res.currency'].search([('name', '=', 'XMR')], limit=1)
+                if xmr_currency and order_currency.name != 'XMR':
+                    xmr_amount = order_currency._convert(
+                        original_amount, xmr_currency,
+                        self.company_id or self.env.company, date_type.today(),
+                    )
+        except Exception as e:
+            _logger.warning(
+                f"Live XMR rate fetch failed for {self.reference}: {e}. "
+                f"Falling back to Odoo currency rate."
+            )
+            xmr_currency = self.env['res.currency'].search([('name', '=', 'XMR')], limit=1)
+            if xmr_currency and order_currency and order_currency.name != 'XMR':
+                try:
+                    xmr_amount = order_currency._convert(
+                        original_amount, xmr_currency,
+                        self.company_id or self.env.company, date_type.today(),
+                    )
+                except Exception:
+                    pass  # keep xmr_amount = original_amount as last resort
 
-        # Store the subaddress as the provider_reference on the transaction.
-        # We do NOT use payment.token here — tokens are for saved payment methods
-        # (credit cards etc.). A Monero subaddress is a one-time-use address and
-        # should never be stored as a reusable token.
+        # Store the subaddress and XMR amount.
+        # IMPORTANT: we do NOT overwrite tx.amount — Odoo uses it to validate
+        # the payment against the sale order total. We store the XMR amount
+        # in monero_amount_xmr for display and wallet comparison.
         self.sudo().write({
             'provider_reference': str(subaddress),
-            'amount': xmr_amount,
-            'monero_amount_original': self.amount,
-            'monero_currency_original': order_currency.name if order_currency else 'XMR',
+            'monero_amount_xmr': xmr_amount,
+            'monero_amount_original': original_amount,
+            'monero_currency_original': order_currency.name if order_currency else 'USD',
         })
 
         # Set transaction to pending state

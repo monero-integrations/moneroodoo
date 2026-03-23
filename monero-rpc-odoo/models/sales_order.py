@@ -123,7 +123,10 @@ class MoneroSalesOrder(models.Model):
         else:
             received_piconero = sub_entry.get('balance', 0)
 
-        expected_piconero = int(round(float(transaction.amount) * PICONERO))
+        # Use monero_amount_xmr (the exact XMR amount at checkout) if available,
+        # otherwise fall back to tx.amount (which may be in USD).
+        xmr_expected = transaction.monero_amount_xmr or transaction.amount
+        expected_piconero = int(round(float(xmr_expected) * PICONERO))
         received = received_piconero / PICONERO
         expected = expected_piconero / PICONERO
 

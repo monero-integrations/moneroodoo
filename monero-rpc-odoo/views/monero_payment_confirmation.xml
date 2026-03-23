@@ -100,13 +100,15 @@
                         <div class="mb-3">
                             <p class="mb-1 text-muted small">Amount to send</p>
                             <h4 class="mb-0 text-dark">
-                                <strong><t t-esc="'%.8f' % tx.amount"/> XMR</strong>
+                                <strong>
+                                    <t t-esc="'%.12f' % (tx.monero_amount_xmr or tx.amount)"/> XMR
+                                </strong>
                             </h4>
                             <t t-if="tx.monero_currency_original and tx.monero_currency_original != 'XMR' and tx.monero_amount_original">
                                 <span class="text-muted small">
                                     ≈ <t t-esc="'%.2f' % tx.monero_amount_original"/>
                                     <t t-out="tx.monero_currency_original"/>
-                                    at today's rate
+                                    at checkout rate
                                 </span>
                             </t>
                         </div>
@@ -128,7 +130,7 @@
                             </button>
 
                             <!-- Open in Monero wallet app -->
-                            <a t-att-href="'monero:%s?tx_amount=%s' % (tx.provider_reference, tx.amount)"
+                            <a t-att-href="'monero:%s?tx_amount=%s' % (tx.provider_reference, tx.monero_amount_xmr or tx.amount)"
                                target="_blank"
                                class="btn btn-sm btn-outline-secondary"
                                title="Open with Monero Wallet">
@@ -139,7 +141,7 @@
                             <button id="show_qr"
                                     class="btn btn-sm btn-outline-secondary"
                                     title="Show QR Code"
-                                    t-att-data-amount="tx.amount"
+                                    t-att-data-amount="tx.monero_amount_xmr or tx.amount"
                                     t-att-data-description="tx.reference"
                                     t-att-data-recipient="tx.provider_id.sudo().name">
                                 <i class="fa fa-qrcode me-1"></i> QR Code
