@@ -1,5 +1,7 @@
 import logging
+from datetime import date as date_type
 
+import requests as http_requests
 from monero.backends.jsonrpc import JSONRPCWallet, Unauthorized
 from monero.wallet import Wallet
 from odoo import api, fields, models
@@ -141,6 +143,55 @@ class MoneroPaymentAcquirer(models.Model):
             return {'monero_rpc'}
         return super()._get_default_payment_method_codes()
 
+    @api.model
+    def update_xmr_rate(self):
+        """
+        Fetch the current XMR/USD rate from CoinGecko and update the XMR
+        currency rate in Odoo. Called by the scheduled cron every 15 minutes.
+        """
+        try:
+            resp = http_requests.get(
+                'https://api.coingecko.com/api/v3/simple/price',
+                params={'ids': 'monero', 'vs_currencies': 'usd'},
+                timeout=10,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            xmr_usd = data['monero']['usd']  # e.g. 150.0 means 1 XMR = $150
+        except Exception as e:
+            _logger.warning(f"Monero rate update failed: {e}")
+            return
+
+        xmr_currency = self.env['res.currency'].search([('name', '=', 'XMR')], limit=1)
+        if not xmr_currency:
+            _logger.warning("XMR currency not found in Odoo. Cannot update rate.")
+            return
+
+        # Odoo stores rates as: 1 unit of company currency = rate units of this currency
+        # If company currency is USD and 1 XMR = $150, then rate = 1/150
+        # But Odoo's rate field means: 1 USD = rate XMR, so rate = 1/xmr_usd
+        # Actually in Odoo 17+: rate = (1 / xmr_usd) means 1 USD buys 1/150 XMR
+        # We store: how many XMR per 1 USD = 1/xmr_usd
+        rate = 1.0 / xmr_usd
+
+        # Update or create today's rate
+        today = date_type.today()
+        existing = self.env['res.currency.rate'].search([
+            ('currency_id', '=', xmr_currency.id),
+            ('name', '=', today),
+        ], limit=1)
+
+        if existing:
+            existing.write({'rate': rate})
+        else:
+            self.env['res.currency.rate'].create({
+                'currency_id': xmr_currency.id,
+                'name': today,
+                'rate': rate,
+            })
+
+        _logger.info(f"XMR rate updated: 1 XMR = ${xmr_usd} USD (rate={rate:.8f})")
+
 
 class MoneroPaymentTransaction(models.Model):
     """
@@ -188,11 +239,37 @@ class MoneroPaymentTransaction(models.Model):
             self._set_error(f"Monero RPC error: {e.__class__.__name__}")
             return res
 
+        # Convert amount to XMR if the transaction currency is not XMR
+        xmr_amount = self.amount
+        order_currency = self.currency_id
+        xmr_currency = self.env['res.currency'].search([('name', '=', 'XMR')], limit=1)
+
+        if xmr_currency and order_currency and order_currency.name != 'XMR':
+            try:
+                xmr_amount = order_currency._convert(
+                    self.amount,
+                    xmr_currency,
+                    self.company_id or self.env.company,
+                    date_type.today(),
+                )
+                _logger.info(
+                    f"Converted {self.amount} {order_currency.name} → "
+                    f"{xmr_amount:.12f} XMR for transaction {self.reference}"
+                )
+            except Exception as e:
+                _logger.warning(
+                    f"XMR conversion failed for {self.reference}: {e}. "
+                    f"Using original amount {self.amount}."
+                )
+
         # Store the subaddress as the provider_reference on the transaction.
         # We do NOT use payment.token here — tokens are for saved payment methods
         # (credit cards etc.). A Monero subaddress is a one-time-use address and
         # should never be stored as a reusable token.
-        self.sudo().write({'provider_reference': str(subaddress)})
+        self.sudo().write({
+            'provider_reference': str(subaddress),
+            'amount': xmr_amount,
+        })
 
         # Set transaction to pending state
         self._set_pending()
@@ -241,8 +318,8 @@ class MoneroPaymentTransaction(models.Model):
         return {
             'api_url': '/payment/status',
             'subaddress': str(subaddress),
-            'amount': self.amount,
-            'currency': self.currency_id.name,
+            'amount': xmr_amount,
+            'currency': 'XMR',
             'reference': self.reference,
         }
 

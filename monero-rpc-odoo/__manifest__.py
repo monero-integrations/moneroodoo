@@ -24,6 +24,7 @@
         "views/monero_payment_confirmation.xml",
         "data/currency.xml",
         "data/monero_xmr_payment_acquirer.xml",
+        "data/xmr_rate_cron.xml",
     ],
     "assets": {
         "web.assets_frontend": [
