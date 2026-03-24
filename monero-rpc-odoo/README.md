@@ -91,6 +91,8 @@ You can access the store, browse products, and test the full checkout flow.
 ![Confirmation](./static/src/img/screenshots/confirmation-page.png)
 
 
+[Watch](https://youtu.be/4L7DzkyNuYI?si=tHmj3XkGnLrgoi3v)
+
 ---
 
 ## Important Notice
