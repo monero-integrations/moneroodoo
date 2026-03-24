@@ -74,6 +74,52 @@ See the [Monero Wallet RPC docs](https://www.getmonero.org/resources/developer-g
 
 ---
 
+
+## 🌐 Live Demo
+- We now have a *live demo environment* available;
+
+👉 https://griffinish-yuette-nonevadingly.ngrok-free.dev
+
+You can access the store, browse products, and test the full checkout flow.
+
+---
+
+## ⚠️ Important Notice
+
+- This is a **demo / testing environment**
+- It uses **Monero Stagenet (sXMR)** — NOT real XMR
+- **Do NOT send real funds**
+- Products are **not real** and orders are for testing only
+
+---
+
+## 💰 Getting sXMR (Test Funds)
+
+To test checkout, you’ll need a small amount of **stagenet XMR (sXMR)**.
+
+You can get free test coins from a faucet:
+
+👉 https://cypherfaucet.com/xmr-stagenet
+
+- Request a small amount (enough for testing payments)
+- Use a **stagenet-enabled Monero wallet**
+- Ensure your wallet is connected to a **stagenet node**
+
+---
+
+✅ **Guest checkout is enabled** — no login or account required  
+
+---
+
+## 🎥 Example
+
+![Products](.\static\src\img\screenshots\products-page.png)
+![Status](.\static\src\img\screenshots\payment-status.png)
+![Confirmation](.\static\src\img\screenshots\confirmation-page.png)
+
+
+---
+
 ## Bug Tracker
 
 Report issues on [GitHub Issues](https://github.com/Apha205/moneroodoo/issues).
