@@ -75,3 +75,10 @@ docs/_build/
 
 # OCA rules
 !static/lib/
+payment_monero_rpc/docs/node_modules/
+payment_monero_rpc/docs/_build/
+payment_monero_rpc/docs/out/
+payment_monero_rpc/docs/generated/
+payment_monero_rpc/docs/locales/
+monero-rpc-odoo/
+monero-rpc-odoo-pos/

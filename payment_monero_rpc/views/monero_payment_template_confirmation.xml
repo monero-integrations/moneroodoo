@@ -1,0 +1,21 @@
+<odoo>
+    <template id="monero_confirmation" inherit_id="website_sale.payment">
+        <!-- Target the main payment form container instead of 'card mt-3' -->
+        <xpath expr="//div[contains(@class, 'o_payment_form')]" position="inside">
+            <div class="monero-confirmation">
+                <h3>Monero Payment Details</h3>
+                <p>
+                    Please use the following Monero address to complete your payment:
+                </p>
+                <t t-esc="payment_tx.address"/>
+                <p>
+                    Amount: <t t-esc="payment_tx.amount"/> XMR
+                </p>
+                <p>
+                    Payment ID: <t t-esc="payment_tx.payment_id"/>
+                </p>
+            </div>
+        </xpath>
+    </template>
+</odoo>
+
