@@ -80,9 +80,12 @@ See the [Monero Wallet RPC docs](https://www.getmonero.org/resources/developer-g
 
   https://griffinish-yuette-nonevadingly.ngrok-free.dev
 
-You can access the store, browse products, and test the full checkout flow.
+You can access the store, browse products, and test the full checkout flow. 
 
- **Guest checkout is enabled** — no login or account required  
+
+ **Guest checkout is enabled** — no login or account required
+
+ **Privacy tip:** You can use any name and a dummy email address at checkout — no personal details are required or verified.
 
  ##
 
