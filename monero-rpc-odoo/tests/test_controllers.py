@@ -22,7 +22,7 @@ class TestMoneroWebsiteSale(TransactionCase):
             "monero_rpc_config_port": "18082",
         })
 
-    @patch("odoo.addons.monero-rpc-odoo.controllers.website_sale.WebsiteSale._get_shop_payment_values")
+    @patch("odoo.addons.monero_rpc_odoo.controllers.website_sale.WebsiteSale._get_shop_payment_values")
     def test_rpc_unauthorized_raises_validation_error(self, mock_super):
         """_get_shop_payment_values raises ValidationError when RPC auth fails."""
         mock_super.return_value = {"payment_providers": [self.provider]}
@@ -35,7 +35,7 @@ class TestMoneroWebsiteSale(TransactionCase):
         with self.assertRaises(ValidationError):
             controller._get_shop_payment_values(order=MagicMock())
 
-    @patch("odoo.addons.monero-rpc-odoo.controllers.website_sale.WebsiteSale._get_shop_payment_values")
+    @patch("odoo.addons.monero_rpc_odoo.controllers.website_sale.WebsiteSale._get_shop_payment_values")
     def test_no_monero_provider_passes_through(self, mock_super):
         """No monero provider in list → render values returned unchanged, no wallet call."""
         other_provider = MagicMock()

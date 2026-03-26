@@ -1,9 +1,10 @@
 from unittest.mock import patch, MagicMock
 
-from odoo.tests import tagged
-from odoo.addons.sale.tests.common import TestSaleCommon
+from odoo.tests import tagged, TransactionCase
 
 from ..models.exceptions import NoTXFound, NumConfirmationsNotMet
+
+_MODULE = "odoo.addons.monero_rpc_odoo.models.sales_order"
 
 # 1 XMR = 1_000_000_000_000 piconero
 PICONERO = 1_000_000_000_000
@@ -25,16 +26,14 @@ def _make_rpc_response(subaddress, balance=0, unlocked_balance=0):
 
 
 @tagged("post_install", "-at_install")
-class TestMoneroSalesOrder(TestSaleCommon):
+class TestMoneroSalesOrder(TransactionCase):
 
     @classmethod
-    def setUpClass(cls, chart_template_ref=None):
-        super().setUpClass(chart_template_ref=chart_template_ref)
-
+    def setUpClass(cls):
+        super().setUpClass()
         cls.partner = cls.env["res.partner"].create({
             "name": "XMR Buyer",
             "email": "buyer@example.com",
-            "country_id": 1,
         })
         cls.provider = cls.env["payment.provider"].create({
             "name": "Monero RPC",
@@ -62,7 +61,7 @@ class TestMoneroSalesOrder(TestSaleCommon):
         tx.sale_order_ids = order
         return order, tx
 
-    @patch("odoo.addons.monero-rpc-odoo.models.sales_order.http_requests.post")
+    @patch(f"{_MODULE}.http_requests.post")
     def test_payment_confirmed(self, mock_post):
         """Happy path: sufficient balance → transaction done, order confirmed."""
         subaddress = "TestSubAddr1"
@@ -76,22 +75,21 @@ class TestMoneroSalesOrder(TestSaleCommon):
         self.assertEqual(tx.state, "done")
         self.assertEqual(order.state, "sale")
 
-    @patch("odoo.addons.monero-rpc-odoo.models.sales_order.http_requests.post")
+    @patch(f"{_MODULE}.http_requests.post")
     def test_no_tx_found(self, mock_post):
         """Subaddress absent from RPC response → raises NoTXFound."""
-        mock_post.return_value = _make_rpc_response(None)  # empty per_subaddress
+        mock_post.return_value = _make_rpc_response(None)
 
         order, tx = self._make_order_and_tx("MissingAddr1")
         with self.assertRaises(NoTXFound):
             order.process_transaction(tx, num_confirmation_required=0)
 
-    @patch("odoo.addons.monero-rpc-odoo.models.sales_order.http_requests.post")
+    @patch(f"{_MODULE}.http_requests.post")
     def test_confirmations_not_met(self, mock_post):
         """unlocked_balance < balance with confirmations required → raises NumConfirmationsNotMet."""
         subaddress = "TestSubAddr2"
         xmr_amount = 1.0
         balance = int(xmr_amount * PICONERO)
-        # unlocked_balance is 0 — funds not yet confirmed
         mock_post.return_value = _make_rpc_response(subaddress, balance=balance, unlocked_balance=0)
 
         order, tx = self._make_order_and_tx(subaddress, xmr_amount)
@@ -102,17 +100,15 @@ class TestMoneroSalesOrder(TestSaleCommon):
         """process_transaction() is a no-op when transaction is already done."""
         order, tx = self._make_order_and_tx("DoneAddr1", xmr_amount=1.0)
         tx._set_done()
-        # Should return without raising or changing anything
         order.process_transaction(tx, num_confirmation_required=0)
         self.assertEqual(tx.state, "done")
 
-    @patch("odoo.addons.monero-rpc-odoo.models.sales_order.http_requests.post")
+    @patch(f"{_MODULE}.http_requests.post")
     def test_zeroconf_ignores_unlocked(self, mock_post):
-        """0-conf: balance present but unlocked=0 → still confirms (no confirmation wait)."""
+        """0-conf: balance present but unlocked=0 → still confirms."""
         subaddress = "ZeroConfAddr1"
         xmr_amount = 1.0
         balance = int(xmr_amount * PICONERO)
-        # unlocked_balance=0 but num_confirmation_required=0 → should confirm
         mock_post.return_value = _make_rpc_response(subaddress, balance=balance, unlocked_balance=0)
 
         order, tx = self._make_order_and_tx(subaddress, xmr_amount)
@@ -121,16 +117,16 @@ class TestMoneroSalesOrder(TestSaleCommon):
         self.assertEqual(tx.state, "done")
         self.assertEqual(order.state, "sale")
 
-    @patch("odoo.addons.monero-rpc-odoo.models.sales_order.http_requests.post")
+    @patch(f"{_MODULE}.http_requests.post")
     def test_underpayment(self, mock_post):
-        """Received less than expected → order NOT confirmed, transaction stays pending."""
+        """Received less than expected → order NOT confirmed."""
         subaddress = "TestSubAddr3"
         xmr_amount = 2.0
-        received = int(0.5 * PICONERO)  # only half paid
+        received = int(0.5 * PICONERO)
         mock_post.return_value = _make_rpc_response(subaddress, balance=received, unlocked_balance=received)
 
         order, tx = self._make_order_and_tx(subaddress, xmr_amount)
         order.process_transaction(tx, num_confirmation_required=0)
 
-        self.assertNotEqual(tx.state, "done", "Underpayment should not confirm the transaction")
-        self.assertNotEqual(order.state, "sale", "Underpayment should not confirm the order")
+        self.assertNotEqual(tx.state, "done")
+        self.assertNotEqual(order.state, "sale")
