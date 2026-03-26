@@ -45,12 +45,19 @@ class TestMoneroSalesOrder(TransactionCase):
             "monero_rpc_config_host": "127.0.0.1",
             "monero_rpc_config_port": "18082",
         })
+        # Odoo 19 requires payment_method_id on payment.transaction
+        cls.payment_method = cls.env["payment.method"].search(
+            [("code", "=", "monero_rpc")], limit=1
+        )
+        if not cls.payment_method:
+            cls.payment_method = cls.env["payment.method"].search([], limit=1)
 
     def _make_order_and_tx(self, subaddress, xmr_amount=1.0):
         """Create a minimal sale order + pending payment transaction."""
         order = self.env["sale.order"].create({"partner_id": self.partner.id})
         tx = self.env["payment.transaction"].create({
             "provider_id": self.provider.id,
+            "payment_method_id": self.payment_method.id,
             "amount": xmr_amount,
             "currency_id": self.env.ref("base.USD").id,
             "partner_id": self.partner.id,

@@ -100,8 +100,13 @@ class TestMoneroPaymentAcquirer(TransactionCase):
         order = self.env["sale.order"].create({"partner_id": partner.id})
         self.assertEqual(order.state, "draft")
 
+        payment_method = self.env["payment.method"].search(
+            [("code", "=", "monero_rpc")], limit=1
+        ) or self.env["payment.method"].search([], limit=1)
+
         tx = self.env["payment.transaction"].create({
             "provider_id": self.provider.id,
+            "payment_method_id": payment_method.id,
             "amount": 10.0,
             "currency_id": self.env.ref("base.USD").id,
             "partner_id": partner.id,
