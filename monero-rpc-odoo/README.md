@@ -76,46 +76,66 @@ See the [Monero Wallet RPC docs](https://www.getmonero.org/resources/developer-g
 
 
 ## 🌐 Live Demo
-- We now have a *live demo environment* available;
 
-  https://griffinish-yuette-nonevadingly.ngrok-free.dev
+The demo runs on a self-hosted Odoo 19 instance tunnelled through **ngrok** — providing a public HTTPS URL without a dedicated server or SSL certificate.
 
-You can access the store, browse products, and test the full checkout flow. 
+**Demo store:** https://griffinish-yuette-nonevadingly.ngrok-free.app
 
+Browse products, go through checkout, and pay with stagenet XMR.
 
- **Guest checkout is enabled** — no login or account required
+- **Guest checkout enabled** — no account required
+- **Privacy tip:** Use any name and a dummy email — no personal details are required or verified
+- Uses **Monero Stagenet (sXMR)** — NOT real XMR. Do not send real funds.
 
- **Privacy tip:** You can use any name and a dummy email address at checkout — no personal details are required or verified.
+Get free stagenet XMR: https://cypherfaucet.com/xmr-stagenet
 
- ##
+[▶ Watch the video walkthrough](https://youtu.be/4L7DzkyNuYI?si=tHmj3XkGnLrgoi3v)
 
 ![Products](./static/src/img/screenshots/products-page.png)
 ![Status](./static/src/img/screenshots/payment-status.png)
 ![Confirmation](./static/src/img/screenshots/confirmation-page.png)
 
-
-[Watch](https://youtu.be/4L7DzkyNuYI?si=tHmj3XkGnLrgoi3v)
-
 ---
 
-## Important Notice
+## Exposing Odoo with ngrok
 
-- This is a **demo / testing environment**
-- It uses **Monero Stagenet (sXMR)** — NOT real XMR
-- **Do NOT send real funds**
-- Products are **not real** and orders are for testing only
+ngrok is the easiest way to get a public HTTPS URL for a local or server-hosted Odoo instance — useful for demos, testing webhooks, or sharing access without a domain.
 
-## Getting sXMR (Test Funds)
+**1. Install ngrok**
 
-To test checkout, you’ll need a small amount of **stagenet XMR (sXMR)**.
+```bash
+curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
+  | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
+  | sudo tee /etc/apt/sources.list.d/ngrok.list
+sudo apt update && sudo apt install ngrok
+```
 
-You can get free test coins from a faucet:
+**2. Authenticate**
 
-  https://cypherfaucet.com/xmr-stagenet
+```bash
+ngrok config add-authtoken YOUR_TOKEN
+```
 
-- Request a small amount (enough for testing payments)
-- Use a **stagenet-enabled Monero wallet**
-- Ensure your wallet is connected to a **stagenet node**
+Get your token at https://dashboard.ngrok.com
+
+**3. Start the tunnel**
+
+```bash
+ngrok http 8069
+```
+
+ngrok prints a public HTTPS URL (e.g. `https://abc123.ngrok-free.app`) that forwards to your Odoo instance.
+
+**4. Configure Odoo**
+
+Add to `odoo.conf`:
+
+```ini
+proxy_mode = True
+```
+
+Then go to **Settings → Technical → System Parameters** and set `web.base.url` to your ngrok URL.
 
 
 ---
