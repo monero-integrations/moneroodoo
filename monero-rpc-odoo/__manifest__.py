@@ -16,7 +16,9 @@
         "base_setup",
         "web",
     ],
-    "external_dependencies": {"python": ["monero"]},
+    # Odoo only checks for package existence, not versions.
+    # Version pins (urllib3>=2.6.0, requests>=2.32.0) are enforced via requirements.txt.
+    "external_dependencies": {"python": ["monero", "requests", "urllib3"]},
     # always loaded
     "data": [
         "views/monero_redirect_form.xml",
