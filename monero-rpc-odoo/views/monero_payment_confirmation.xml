@@ -1,115 +1,159 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
     <data>
+        <!--
+            Inject QR code container into the main confirmation page.
+            JS is loaded via web.assets_frontend (monero_payment.js).
+        -->
         <template id="monero_confirmation"
                   inherit_id="website_sale.confirmation">
-            <xpath expr="." position="inside">
-<!--                <script>$(document).ready(function() { $.getScript("/monero-rpc-odoo/static/src/js/jquery.qrcode.min.js") });</script>-->
-                <script>
-                    var show_qr = false;
-                </script>
-                <script>function enable_qr(uri)
-                    {
-                    if (show_qr === false) {
-                        uri = encodeURI(uri);
-                        jQuery('#qrcode_monero_payment').qrcode({text: uri, width:
-                    240, height: 240});
-                        show_qr = true;
-                    }
-                    if (document.getElementById("qr_div1").style.display == "block") {
-                        document.getElementById("qr_div1").style.display = "none";
-                        document.getElementById("qr_div2").style.display = "none";
-                    } else if (document.getElementById("qr_div1").style.display == "none") {
-                        document.getElementById("qr_div1").style.display = "block";
-                        document.getElementById("qr_div2").style.display = "block";
-                    }
-                    }
-                </script>
-            </xpath>
-            <xpath expr="//*[@class='card mt-3']" position="before">
-                <div id="qr_div1" class="card mt-3" style="display:none">
-                    <div id="qr_div2" class="card-body" style="display:none">
+            <xpath expr="//div[@id='oe_structure_website_sale_confirmation_1']" position="before">
+                <div id="qr_div1" class="mt-3" style="display:none">
+                    <div id="qr_div2" style="display:none">
                         <div id="qrcode_monero_payment"></div>
                     </div>
                 </div>
             </xpath>
         </template>
 
-
+        <!--
+            Inject Monero payment address display into the payment confirmation status block.
+            In Odoo 19:
+              - transaction variable is tx_sudo (not payment_tx_id)
+              - subaddress is in tx_sudo.provider_reference (not token_id.provider_ref)
+            JS (copy + QR) is handled by monero_payment.js loaded as a frontend asset.
+            Data attributes on the QR button pass values to the JS without inline scripts.
+        -->
         <template id="monero_payment_confirmation"
                   inherit_id="website_sale.payment_confirmation_status">
-            <xpath expr="//*[@class='card-header']" position="inside">
-                <script type="text/javascript" src="/monero-rpc-odoo/static/src/js/jquery.qrcode.min.js"></script>
-                <script>
-                    var btn = document.getElementById('copy_address_button');
+            <xpath expr="//div[@name='order_confirmation']" position="inside">
 
-                        $('.copy_btn').tooltip({
-                            trigger: 'click',
-                            placement: 'bottom'
-                        });
-                        var clipboard = new ClipboardJS(btn);
-
-                        clipboard.on('success', function(e) {
-                            $('.copy_btn').tooltip('hide').attr('data-original-title',
-                                'Copied payment address!').tooltip('show');
-                            setTimeout(function() {
-                                $('.copy_btn').tooltip('hide');
-                            }, 500);
-                        });
-
-                        clipboard.on('error', function(e) {
-                            console.log(e);
-                        });
-                </script>
-                <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.state == 'done'">
-                    <!--    PATCH when the payment is done the page refreshes and
-                    clipboardjs still expects a button to be there
-                        would be better to do clipboard.destroy(); but I don't know
-                        where / when / how that would be executed
-                         -->
-                        <button id="copy_address_button" class="copy_btn"
-                                name="copy_address_button"
-                                t-att-data-clipboard-text="payment_tx_id.payment_token_id.name"
-                                style="font-size:20px"
-                                hidden="true"
-                                title="Copy payment address">
-                            <i class="fa fa-clipboard"></i>
-                        </button>
+                <!-- Payment done: show copy button for reference -->
+                <t t-if="tx_sudo and tx_sudo.provider_id.is_cryptocurrency == True and tx_sudo.state == 'done'">
+                    <button id="copy_address_button" class="btn btn-sm btn-outline-secondary copy_btn"
+                            name="copy_address_button"
+                            style="font-size:20px"
+                            title="Copy payment address">
+                        <i class="fa fa-clipboard"></i>
+                    </button>
+                    <div id="monero_payment_address" style="display:none">
+                        <t t-out="tx_sudo.provider_reference"/>
+                    </div>
                 </t>
-                <t t-if="payment_tx_id.acquirer_id.is_cryptocurrency == True and payment_tx_id.payment_token_id.name and payment_tx_id.state == 'pending'">
-                    <p>Payment should be made to the address below:
-                        <ul>
-                            <b>
-                                <li style="clear: both;">
-                                    <button id="copy_address_button" class="copy_btn"
-                                            name="copy_address_button"
-                                            t-att-data-clipboard-text="payment_tx_id.payment_token_id.name"
-                                            style="font-size:20px"
-                                            title="Copy payment address">
-                                        <i class="fa fa-clipboard"></i>
-                                    </button>
-                                    <a
-                                            t-att-href="'monero:%s?tx_amount=%s&amp;tx_description=%s' % (payment_tx_id.payment_token_id.name, payment_tx_id.amount, order.name)" target="_blank">
-                                        <button id="open_wallet" class="open_btn"
-                                            name="open_wallet"
-                                            style="font-size:20px"
-                                            title="Open with Monero Wallet">
-                                            <i class="fa fa-external-link"></i>
-                                        </button>
-                                    </a>
-                                    <button id="show_qr" class="show_qr"
-                                            name="show_qr" style="font-size:20px"
-                                            title="Show QR Code"
-                                            t-attf-onclick="enable_qr('monero:{{payment_tx_id.payment_token_id.name}}?tx_amount={{payment_tx_id.amount}}&amp;tx_description={{order.name}}&amp;recipient_name={{order.company_id.name}}')">
-                                        <i class="fa fa-qrcode"></i>
-                                    </button>
-                                    <div id="monero_payment_address">
-                                       <t t-raw="payment_tx_id.payment_token_id.name"/>
-                                    </div>
-                                </li>
-                            </b>
-                        </ul>
-                    </p>
+
+                <!-- Payment pending: show the subaddress to pay to -->
+                <t t-if="tx_sudo and tx_sudo.provider_id.is_cryptocurrency == True and tx_sudo.provider_reference and tx_sudo.state == 'pending'">
+                    <p>Payment should be made to the address below:</p>
+                    <ul>
+                        <li style="clear: both; list-style: none;">
+                            <!-- Copy button — JS reads address from #monero_payment_address -->
+                            <button id="copy_address_button" class="btn btn-sm btn-outline-secondary copy_btn"
+                                    name="copy_address_button"
+                                    style="font-size:20px"
+                                    title="Copy payment address">
+                                <i class="fa fa-clipboard"></i>
+                            </button>
+
+                            <!-- Open in Monero wallet app -->
+                            <a t-att-href="'monero:%s?tx_amount=%s&amp;tx_description=%s' % (tx_sudo.provider_reference, tx_sudo.amount, order.name)"
+                               target="_blank">
+                                <button class="btn btn-sm btn-outline-secondary open_btn"
+                                        style="font-size:20px"
+                                        title="Open with Monero Wallet">
+                                    <i class="fa fa-external-link"></i>
+                                </button>
+                            </a>
+
+                            <!-- QR code button — data attributes pass values to monero_payment.js -->
+                            <button id="show_qr" class="btn btn-sm btn-outline-secondary show_qr"
+                                    style="font-size:20px"
+                                    title="Show QR Code"
+                                    t-att-data-amount="tx_sudo.amount"
+                                    t-att-data-description="order.name"
+                                    t-att-data-recipient="order.company_id.name">
+                                <i class="fa fa-qrcode"></i>
+                            </button>
+
+                            <!-- The subaddress text — JS reads this for copy and QR -->
+                            <div id="monero_payment_address" class="mt-2">
+                                <t t-out="tx_sudo.provider_reference"/>
+                            </div>
+                        </li>
+                    </ul>
+                </t>
+
+            </xpath>
+        </template>
+
+        <!--
+            Inject Monero subaddress display into the /payment/status page.
+            This is the page the buyer sees immediately after clicking Pay,
+            while the payment is pending. The transaction variable here is 'tx'.
+            The subaddress is in tx.provider_reference.
+        -->
+        <template id="monero_payment_status"
+                  inherit_id="payment.payment_status">
+            <xpath expr="//div[@name='o_payment_status']" position="inside">
+                <t t-if="tx and tx.provider_code == 'monero_rpc' and tx.provider_reference and tx.state == 'pending'">
+                    <div class="mt-3 p-3 border rounded bg-light">
+                        <!-- XMR amount to send, with original currency shown if converted -->
+                        <div class="mb-3">
+                            <p class="mb-1 text-muted small">Amount to send</p>
+                            <h4 class="mb-0 text-dark">
+                                <strong>
+                                    <t t-esc="'%.12f' % (tx.monero_amount_xmr or tx.amount)"/> XMR
+                                </strong>
+                            </h4>
+                            <t t-if="tx.monero_currency_original and tx.monero_currency_original != 'XMR' and tx.monero_amount_original">
+                                <span class="text-muted small">
+                                    ≈ <t t-esc="'%.2f' % tx.monero_amount_original"/>
+                                    <t t-out="tx.monero_currency_original"/>
+                                    at checkout rate
+                                </span>
+                            </t>
+                        </div>
+                        <p class="mb-2"><strong>Send to this Monero address:</strong></p>
+
+                        <!-- QR code container (hidden until button clicked) -->
+                        <div id="qr_div1" class="mb-2" style="display:none">
+                            <div id="qr_div2">
+                                <div id="qrcode_monero_payment"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <!-- Copy button -->
+                            <button id="copy_address_button"
+                                    class="btn btn-sm btn-outline-secondary"
+                                    title="Copy address to clipboard">
+                                <i class="fa fa-clipboard me-1"></i> Copy
+                            </button>
+
+                            <!-- Open in Monero wallet app -->
+                            <a t-att-href="'monero:%s?tx_amount=%s' % (tx.provider_reference, tx.monero_amount_xmr or tx.amount)"
+                               target="_blank"
+                               class="btn btn-sm btn-outline-secondary"
+                               title="Open with Monero Wallet">
+                                <i class="fa fa-external-link me-1"></i> Open Wallet
+                            </a>
+
+                            <!-- QR code toggle button -->
+                            <button id="show_qr"
+                                    class="btn btn-sm btn-outline-secondary"
+                                    title="Show QR Code"
+                                    t-att-data-amount="tx.monero_amount_xmr or tx.amount"
+                                    t-att-data-description="tx.reference"
+                                    t-att-data-recipient="tx.provider_id.sudo().name">
+                                <i class="fa fa-qrcode me-1"></i> QR Code
+                            </button>
+                        </div>
+
+                        <!-- The subaddress — JS reads this for copy and QR generation -->
+                        <div id="monero_payment_address"
+                             class="mt-2 p-2 bg-white border rounded font-monospace small text-break">
+                            <t t-out="tx.provider_reference"/>
+                        </div>
+                    </div>
                 </t>
             </xpath>
         </template>

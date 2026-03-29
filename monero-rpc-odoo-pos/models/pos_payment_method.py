@@ -81,7 +81,7 @@ class MoneroPosPaymentMethod(models.Model):
 
     is_cryptocurrency = fields.Boolean("Cryptocurrency?", default=False)
     # not used right now, could be used to update price data?
-    type = fields.Selection(
+    crypto_type = fields.Selection(
         [("xmr", "XMR")],
         "none",
         default="xmr",

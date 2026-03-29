@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Monero redirect form template.
+        Rendered by _get_processing_values() when operation='online_redirect'.
+        The form auto-submits to /payment/status so the buyer is redirected
+        to the standard Odoo payment status page (which shows "Pending").
+        The subaddress is passed as a hidden field so it can be displayed
+        on the confirmation page.
+    -->
+    <template id="monero_redirect_form" name="Monero Redirect Form">
+        <form
+            id="monero_redirect_form"
+            action="/payment/status"
+            method="GET"
+        >
+            <input type="hidden" name="subaddress" t-att-value="subaddress"/>
+            <input type="hidden" name="amount" t-att-value="amount"/>
+            <input type="hidden" name="currency" t-att-value="currency"/>
+            <input type="hidden" name="reference" t-att-value="reference"/>
+        </form>
+    </template>
+</odoo>
