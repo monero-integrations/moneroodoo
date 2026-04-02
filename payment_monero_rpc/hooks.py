@@ -18,7 +18,7 @@ def get_monero_logo_path():
     """Return the absolute filesystem path to the Monero logo."""
     return os.path.join(
         module.get_module_path('payment_monero_rpc'),
-        'static', 'src', 'img', 'logo.png'
+        'static', 'src', 'img', 'logo_chain.png'
     )
 
 

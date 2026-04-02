@@ -164,7 +164,7 @@ class PaymentProviderMonero(models.Model):
             from odoo.modules import module as odoo_module
             image_path = os.path.join(
                 odoo_module.get_module_path('payment_monero_rpc'),
-                'static', 'src', 'img', 'logo.png'
+                'static', 'src', 'img', 'logo_chain.png'
             )
             with open(image_path, 'rb') as f:
                 return base64.b64encode(f.read()).decode('utf-8')
